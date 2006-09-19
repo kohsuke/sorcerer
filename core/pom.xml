@@ -1,18 +1,14 @@
-<project>
-  <modelVersion>4.0.0</modelVersion>
-
+<?xml version="1.0" encoding="UTF-8"?><project>
   <parent>
-    <groupId>org.jvnet.sorcerer</groupId>
     <artifactId>sorcerer</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <groupId>org.jvnet.sorcerer</groupId>
+    <version>0.1</version>
   </parent>
-
+  <modelVersion>4.0.0</modelVersion>
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>sorcerer-core</artifactId>
   <name>Sorcerer Core</name>
-
-  <packaging>jar</packaging>
-
+  <version>0.1</version>
   <build>
     <resources>
       <resource>
@@ -26,10 +22,6 @@
     <plugins>
       <plugin>
         <artifactId>maven-antlr-plugin</artifactId>
-        <configuration>
-          <sourceDirectory>${basedir}</sourceDirectory>
-          <grammars>java.g</grammars>
-        </configuration>
         <executions>
           <execution>
             <goals>
@@ -37,16 +29,14 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <sourceDirectory>${basedir}</sourceDirectory>
+          <grammars>java.g</grammars>
+        </configuration>
       </plugin>
     </plugins>
   </build>
-
   <dependencies>
-    <dependency>
-      <groupId>antlr</groupId>
-      <artifactId>antlr</artifactId>
-      <version>2.7.6</version>
-    </dependency>
     <dependency>
       <groupId>sun.jdk</groupId>
       <artifactId>tools</artifactId>
@@ -54,17 +44,10 @@
       <scope>system</scope>
       <systemPath>${java.home}/../lib/tools.jar</systemPath>
     </dependency>
-    <!-- mustang version doesn't work
     <dependency>
-      <groupId>sun.jdk</groupId>
-      <artifactId>javac-api</artifactId>
-      <version>1.6.0-beta</version>
+      <groupId>antlr</groupId>
+      <artifactId>antlr</artifactId>
+      <version>2.7.6</version>
     </dependency>
-    <dependency>
-      <groupId>sun.jdk</groupId>
-      <artifactId>javac-impl</artifactId>
-      <version>1.6.0-beta</version>
-    </dependency>
-    -->
   </dependencies>
 </project>

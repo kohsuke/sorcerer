@@ -1,19 +1,21 @@
-<project>
-  <modelVersion>4.0.0</modelVersion>
-
+<?xml version="1.0" encoding="UTF-8"?><project>
   <parent>
-    <groupId>org.jvnet.sorcerer</groupId>
     <artifactId>sorcerer</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <groupId>org.jvnet.sorcerer</groupId>
+    <version>0.1</version>
   </parent>
-
+  <modelVersion>4.0.0</modelVersion>
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>maven-sorcerer-plugin</artifactId>
-  <name>Maven Sorcerer Plugin</name>
-  
   <packaging>maven-plugin</packaging>
-  
+  <name>Maven Sorcerer Plugin</name>
+  <version>0.1</version>
   <dependencies>
+    <dependency>
+      <groupId>org.jvnet.sorcerer</groupId>
+      <artifactId>sorcerer-core</artifactId>
+      <version>0.1</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.maven.reporting</groupId>
       <artifactId>maven-reporting-api</artifactId>
@@ -24,19 +26,13 @@
       <artifactId>maven-reporting-impl</artifactId>
       <version>2.0.2</version>
     </dependency>
-    <dependency>
-      <groupId>org.jvnet.sorcerer</groupId>
-      <artifactId>sorcerer-core</artifactId>
-      <version>${pom.version}</version>
-    </dependency>
   </dependencies>
-
-  <!-- test -->
   <reporting>
     <plugins>
       <plugin>
         <groupId>org.jvnet.sorcerer</groupId>
         <artifactId>maven-sorcerer-plugin</artifactId>
+        <version>0.1</version>
         <configuration>
           <javadocs>
             <javadoc>
