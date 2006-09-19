@@ -115,7 +115,7 @@ public class JavadocLinkResolverFactory implements LinkResolverFactory {
             if(!isInPackageList(e))
                 return null;    // outside the package
 
-            StringBuilder builder = buildTypeHref(e,useFrame);
+            StringBuilder builder = buildTypeHref(e);
             if(builder==null)   return null;
             return builder.append(".html").toString();
         }
@@ -126,12 +126,8 @@ public class JavadocLinkResolverFactory implements LinkResolverFactory {
          * The general form of link is:
          * org/acme/Foo.Bar.html (where Bar is nested inside Foo)
          *
-         * @param useFrame
-         *      Generate a link to the whole javadoc frame.
-         *      Not possible when you are trying to jump to a certain fragment identifier
-         *      in the main document as "foo?bar#zot" means "#zot" in foo document.
          */
-        private StringBuilder buildTypeHref(TypeElement e, boolean useFrame) {
+        private StringBuilder buildTypeHref(TypeElement e) {
             StringBuilder builder;
             switch (e.getNestingKind()) {
             case ANONYMOUS:
@@ -139,13 +135,12 @@ public class JavadocLinkResolverFactory implements LinkResolverFactory {
                 // no javadoc for local and anonymous types (TODO:check)
                 return null;
             case MEMBER:
-                builder = buildTypeHref((TypeElement) e.getEnclosingElement(),useFrame);
+                builder = buildTypeHref((TypeElement) e.getEnclosingElement());
                 if(builder==null)   return null;
                 return builder.append('.').append(e.getSimpleName());
             case TOP_LEVEL:
                 String fullName = e.getQualifiedName().toString();
                 builder = new StringBuilder(baseUrl);
-                if(useFrame)    builder.append('?');
                 return builder.append(fullName.replace('.', '/'));
             default:
                 throw new IllegalStateException(e.toString());
