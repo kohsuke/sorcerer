@@ -1,0 +1,32 @@
+<!--
+ release command: "mvn -o clean package assembly:assembly
+ See http://maven.apache.org/plugins/maven-assembly-plugin/assembly.html
+-->
+<assembly>
+  <id>bin</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <fileSets>
+    <fileSet>
+      <includes>
+        <include>README*</include>
+        <include>LICENSE*</include>
+        <include>NOTICE*</include>
+      </includes>
+    </fileSet>
+    <!--fileSet>
+      <directory>core/target</directory>
+      <outputDirectory></outputDirectory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+    </fileSet-->
+  </fileSets>
+  <files>
+    <file>
+      <source>cli/target/sorcerer-cli-${version}-uberjar.jar</source>
+      <destName>sorcerer.jar</destName>
+    </file>
+  </files>
+</assembly>

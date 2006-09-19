@@ -1,0 +1,28 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jvnet.sorcerer</groupId>
+    <artifactId>sorcerer</artifactId>
+    <version>0.1-SNAPSHOT</version>
+  </parent>
+
+  <groupId>org.jvnet.sorcerer</groupId>
+  <artifactId>sorcerer-ant</artifactId>
+  <name>Sorcerer Ant task</name>
+
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>ant</groupId>
+      <artifactId>ant</artifactId>
+      <version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jvnet.sorcerer</groupId>
+      <artifactId>sorcerer-core</artifactId>
+      <version>${pom.version}</version>
+    </dependency>
+  </dependencies>
+</project>

@@ -1,0 +1,191 @@
+<!DOCTYPE html public "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="left-pane.css">
+  <link rel="stylesheet" type="text/css" href="resource-files/tree/folder.css">
+  <script type="text/javascript" src="resource-files/yahoo.js" ></script>
+  <script type="text/javascript" src="resource-files/tree/treeview.js" ></script>
+  <script type="text/javascript" src="left-pane.js" ></script>
+</head>
+<body onload="start()">
+<div id="treeDiv" style="white-space:nowrap;"></div>
+
+<script type="text/javascript">
+  var treeDiv = document.getElementById("treeDiv");
+  var tree;
+  var packageList;
+
+  function setPackageList(o) {
+    packageList = o;
+
+
+    // augument the model objects by adding inferable properties to it
+    function build(model,prefix) {
+      model.fullName = (prefix+model.name).substring(1);
+
+      // path to class-list.js
+      model.classList = model.fullName=="" ? "./class-list.js" : model.fullName.replace(/\./g,"/")+"/class-list.js";
+
+      // true if this is intermediate node and thus collapsed even for hierarchical view
+      if(!model.hasClasses && model.children.length==1)
+        model.intermediate = model.children[0]; // point to the sole child
+
+      for( var i=0; i<model.children.length; i++ )
+        build(model.children[i], prefix+model.name+".");
+    }
+    build(packageList,"");
+  }
+
+  // stores on-going class-list loading activities
+  var pendingLoads = {};
+
+  // display packages in a nested tree view
+  var hierarchicalView = {
+    icon: "resource-files/layout-hierarchical.gif",
+    tooltip: "Hierarchical view",
+
+    loadPackage : function() {
+      // adds the child packages and classes to the given treeNode asynchronously,
+      // and when ready, call back.
+      function addChildPackagesTo(treeNode,model,callback) {
+        // first add child packages
+        for( var i=0; i<model.children.length; i++ ) {
+          var cmodel = model.children[i];
+
+          // skip any intermediate nodes
+          var prefix="";
+          while(cmodel.intermediate!=null) {
+            prefix += cmodel.name+".";
+            cmodel = cmodel.intermediate;
+          }
+          var o = {};
+          o.label = prefix+cmodel.name;
+          o.model = cmodel;
+          var n = new YAHOO.widget.TextNode(o,treeNode,false);
+          n.setDynamicLoad(function(node,onCompleteCallback) {
+            addChildPackagesTo(node, node.data.model, onCompleteCallback);
+          });
+        }
+
+        // then load class list, if any
+        if(model.hasClasses) {
+          pendingLoads[model.fullName] = { node:treeNode, onComplete:callback };
+          loadScript(model.classList);
+        } else {
+          // if no class is in there, we are done
+          callback();
+        }
+      }
+
+      addChildPackagesTo(tree.getRoot(),packageList,function(){tree.draw();});
+    },
+
+    setClassList : function(packageName,classList) {
+    }
+  };
+
+  // display packages in a flat view
+  var flatView = {
+    icon: "resource-files/layout-flat.gif",
+    tooltip: "Flat view",
+
+    loadPackage : function() {
+      var root = tree.getRoot();
+
+      // load class-list.js when a package name is clicked
+      function loadClassList(node,onCompleteCallback) {
+        var p = node.data.model;
+        pendingLoads[p.fullName] = { node:node, onComplete:onCompleteCallback };
+        loadScript(p.classList);
+      }
+
+      // recursively add model nodes as flat pacakge list
+      function buildTree(model) {
+        if(model.hasClasses) {
+          var o = {};
+          o.model = model;
+          if(model.fullName=="")
+            o.label="(unnamed package)";
+          else
+            o.label=model.fullName;
+
+          var n = new YAHOO.widget.TextNode(o,root,false);
+          n.setDynamicLoad(loadClassList);
+        }
+        for( var i=0; i<model.children.length; i++ )
+          buildTree(model.children[i]);
+      }
+
+      buildTree(packageList);
+
+      tree.draw();
+    }
+  };
+
+  // currently selected view mode
+  var currentView = flatView;
+
+  // called when class-list.js is loaded
+  function setClassList(packageName,classList) {
+    var o = pendingLoads[packageName];
+
+    if(packageName=="")
+      base = "";
+    else
+      base = packageName.replace(/\./g,"/")+"/";
+
+    for( var j=0; j<classList.length; j++ ) {
+      var c = classList[j];
+      c.label = "<img src='resource-files/"+c.kind+"_"+c.access+".gif'> "+c.name;
+      c.target = "main";
+      c.href = base+c.href;
+
+      var cnode = new YAHOO.widget.TextNode(c, o.node, false);
+      cnode.onLabelClick = function(me) {
+        top.main.location = me.data.href;
+        return false;
+      }
+      // href is the only way to get link. you have to put javascript fragment in there
+    }
+    o.onComplete();
+  }
+
+  function errorCheck() {
+    if(packageList==null) {
+      // by now JSON should have been loaded,
+      // but check anyway
+      treeDiv.innerHTML = "<div class='error'>failed to load package list</div>";
+      return true;
+    }
+    return false;
+  }
+
+  function start() {
+    if(errorCheck())
+      return;
+
+    flatView.nextView = hierarchicalView;
+    hierarchicalView.nextView = flatView; // couldn't figure out how to set this up with literal syntax
+
+    tree = new YAHOO.widget.TreeView(treeDiv);
+    currentView.loadPackage();
+  }
+
+  function toggleView(img) {
+    pendingLoads = {}; // reset the pending activities
+
+    img.src = currentView.icon;
+    currentView = currentView.nextView;
+
+    // create a new tree
+    treeDiv.innerHTML="";
+    tree = new YAHOO.widget.TreeView(treeDiv);
+    currentView.loadPackage();
+  }
+</script>
+
+<!-- load package list -->
+<script type="text/javascript" src="package-list.js" ></script>
+  </body>
+</html>
+ 

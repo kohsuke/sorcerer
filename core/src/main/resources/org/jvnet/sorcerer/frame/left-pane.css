@@ -1,0 +1,33 @@
+html, body {
+  padding: 0px 0px 10px 0px;
+  border: 0;
+  margin: 0;
+}
+
+body {
+  font-family: verdana, sans-serif;
+  font-size: smaller;
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}
+
+a:hover {
+  text-decoration: none;
+  color: #888;
+}
+
+img {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  vertical-align: middle;
+}
+
+DIV.error {
+  text-align: center;
+  width: 100%;
+}

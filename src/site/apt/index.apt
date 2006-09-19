@@ -1,0 +1,20 @@
+                                    ------
+                                    Overview
+                                    ------
+
+  Sorcerer is a source code cross reference generator. It analyzes a set of Java source files and produce HTML files that shows annotated source code. Unlike some of the other similar tools like {{{http://maven.apache.org/jxr/}JXR}}, sorcerer understands Java AST like IDEs, and therefore provide much richer navigation in the HTML files. For example, you can jump to the definition to the method from every invocation (it even handles overloaded methods correctly), or jump to the derived classes from any class, etc.
+
+  Take a look at the {{{sorcerer/index.html}sample report}} to see it in action.
+
+  Running sorcerer requires {{{https://jdk6.dev.java.net/}JDK6}}.
+
+Features
+
+	* Sorcerer builds Java AST, and therefore its navigation parallels that of modern IDEs.
+	* Jump to subclasses, overriding methods, etc.
+	* Usable clean URLs. Every declaration has a permalink.
+
+Acknowledgements
+
+	* Sorcerer is built on top of javac tree API.
+	* Icons are licensed under {{{http://www.eclipse.org/legal/epl-v10.html}Eclipse Public License}}.

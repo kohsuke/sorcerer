@@ -1,0 +1,80 @@
+<!DOCTYPE html public "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="left-pane.css">
+  <link rel="stylesheet" type="text/css" href="resource-files/tree/noicon.css">
+  <script type="text/javascript" src="resource-files/yahoo.js" ></script>
+  <script type="text/javascript" src="resource-files/tree/treeview.js" ></script>
+  <script type="text/javascript" src="left-pane.js" ></script>
+</head>
+<body onload="start()">
+
+<div id="treeDiv" style="white-space:nowrap;"></div>
+
+
+<script type="text/javascript">
+  var tree;
+  var model;
+
+  var mainLoc = new String(top.main.location.href);
+  idx = mainLoc.lastIndexOf('#');
+  if(idx>=0)
+    mainLoc = mainLoc.substring(0,idx);
+
+  function start() {
+    targetPage = "" + window.location.search;
+    if (targetPage != "" && targetPage != "undefined") {
+       targetPage = targetPage.substring(1);
+       loadScript(targetPage);
+    }
+  }
+  
+  function loadOutline(def) {
+    // figure out the root package
+    if(def.packageName=="")
+      base = "";
+    else
+      base = def.packageName.replace(/\./g,"/")+"/";
+    model = def;
+    refresh();
+  }
+
+  function refresh() {
+    var div = document.getElementById("treeDiv");
+    div.innerHTML=""; // reset
+
+    tree = new YAHOO.widget.TreeView(div);
+    addChildren( model.children, tree.getRoot(), true );
+    tree.draw();
+  }
+  
+  function addChildren( children, node, expanded ) {
+    if(children==null)  return;
+
+    if(window.parent.toolbar.sort) // work defensively in case it's not fully loaded yet
+      children = window.parent.toolbar.sort(children);
+
+    for( var i=0; i<children.length; i++ ) {
+      insertNode( node, children[i], expanded );
+    }
+  }
+  
+  function insertNode( parent, def, expanded ) {
+    def.label = "<img src='resource-files/"+def.kind+"_"+def.access+".gif'> "+def.name;
+    def.target = "main";
+    def.href = mainLoc+'#'+def.line;
+
+    if(window.parent.toolbar.filter && window.parent.toolbar.filter(def)) // work defensively in case it's not fully loaded yet
+      return; // filtered out
+
+    var node = new YAHOO.widget.TextNode(def, parent, expanded);
+    node.onLabelClick = function(me) {
+      top.main.location.hash = '#'+me.data.line;
+      return false;
+    }
+    addChildren( def.children, node, false );
+  }
+</script>
+  </body>
+</html>
+ 

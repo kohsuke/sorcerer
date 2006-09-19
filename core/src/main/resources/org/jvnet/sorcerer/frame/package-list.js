@@ -1,0 +1,22 @@
+setPackageList(
+ {
+  "name":"",
+  "children":[
+   {
+    "name":"java",
+    "children":[
+     {
+      "name":"lang",
+      "hasClasses":true,
+      "children":[]
+     },
+     {
+      "name":"util",
+      "hasClasses":true,
+      "children":[]
+     }
+    ]
+   }
+  ]
+ }
+);
