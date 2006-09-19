@@ -1,20 +1,15 @@
-<project>
-  <modelVersion>4.0.0</modelVersion>
-
+<?xml version="1.0" encoding="UTF-8"?><project>
   <parent>
-    <groupId>org.jvnet.sorcerer</groupId>
     <artifactId>sorcerer</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <groupId>org.jvnet.sorcerer</groupId>
+    <version>0.1</version>
   </parent>
-
+  <modelVersion>4.0.0</modelVersion>
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>sorcerer-cli</artifactId>
   <name>Sorcerer CLI</name>
-
-  <packaging>jar</packaging>
-
+  <version>0.1</version>
   <build>
-    <!--finalName>sorcerer-${pom.version}</finalName-->
     <plugins>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
@@ -28,28 +23,28 @@
       </plugin>
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.1</version>
         <configuration>
-					<descriptor>src/assembly.xml</descriptor>
-					<archive>
-						<manifest>
-							<mainClass>org.jvnet.sorcerer.cli.Main</mainClass>
-						</manifest>
-					</archive>
+          <descriptor>src/assembly.xml</descriptor>
+          <archive>
+            <manifest>
+              <mainClass>org.jvnet.sorcerer.cli.Main</mainClass>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
     </plugins>
   </build>
-
   <dependencies>
+    <dependency>
+      <groupId>org.jvnet.sorcerer</groupId>
+      <artifactId>sorcerer-core</artifactId>
+      <version>0.1</version>
+    </dependency>
     <dependency>
       <groupId>args4j</groupId>
       <artifactId>args4j</artifactId>
       <version>2.0.7</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jvnet.sorcerer</groupId>
-      <artifactId>sorcerer-core</artifactId>
-      <version>${pom.version}</version>
     </dependency>
   </dependencies>
 </project>

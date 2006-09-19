@@ -1,43 +1,28 @@
-<project>
+<?xml version="1.0" encoding="UTF-8"?><project>
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>sorcerer</artifactId>
-  <version>0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>Sorcerer</name>
-
-  <url>http://sorcerer.dev.java.net/</url>
-
+  <version>0.1</version>
+  <url>http://sorcerer.dev.java.net</url>
   <developers>
     <developer>
       <id>kohsuke</id>
       <name>Kohsuke Kawaguchi</name>
     </developer>
   </developers>
-
-  <scm>
-    <connection>scm:svn:${project.url}svn/sorcerer/trunk/sorcerer</connection>
-    <developerConnection>scm:svn:${project.url}svn/sorcerer/trunk/sorcerer</developerConnection>
-    <url>${project.url}source/browse/sorcerer/</url>
-  </scm>
-
   <licenses>
     <license>
       <name>The MIT license</name>
       <url>LICENSE.txt</url>
     </license>
   </licenses>
-  
-  <distributionManagement>
-    <repository>
-      <id>local-repository</id>
-      <url>file:${path-to-m2-repo.java.net}</url>
-      <!-- use -SNAPSHOT instead of timestamp-->
-      <uniqueVersion>false</uniqueVersion>
-    </repository>
-  </distributionManagement>
-  
+  <scm>
+    <connection>scm:svn:${project.url}svn/sorcerer/tags/0.1/sorcerer</connection>
+    <developerConnection>scm:svn:${project.url}svn/sorcerer/tags/0.1/sorcerer</developerConnection>
+    <url>${project.url}source/browse/sorcerer</url>
+  </scm>
   <build>
     <plugins>
       <plugin>
@@ -61,37 +46,26 @@
         </configuration>
       </plugin>
     </plugins>
-    <!--extensions>
-      This doesn't work with 2.0.4. See http://jira.codehaus.org/browse/MNG-2228
-      <extension>
-        <groupId>org.apache.maven.wagon</groupId>
-        <artifactId>wagon-scm</artifactId>
-      </extension>
-    </extensions-->
   </build>
-
-  <repositories>
-    <!--repository>
-      <id>java.net</id>
-      <url>https://maven-repository.dev.java.net/nonav/repository</url>
-      <layout>legacy</layout>
-    </repository-->
-  </repositories>
-
   <modules>
     <module>core</module>
     <module>maven-plugin</module>
     <module>cli</module>
     <module>ant</module>
   </modules>
-
   <reporting>
     <plugins>
       <plugin>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-        <!-- See http://jira.codehaus.org/browse/MPIR-2 -->
         <version>2.0.1</version>
       </plugin>
     </plugins>
   </reporting>
+  <distributionManagement>
+    <repository>
+      <uniqueVersion>false</uniqueVersion>
+      <id>local-repository</id>
+      <url>file:${path-to-m2-repo.java.net}</url>
+    </repository>
+  </distributionManagement>
 </project>
