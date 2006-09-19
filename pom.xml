@@ -39,6 +39,12 @@
           <descriptor>src/assembly.xml</descriptor>
         </configuration>
       </plugin>
+      <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <tagBase>${project.url}svn/sorcerer/tags</tagBase>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <modules>
