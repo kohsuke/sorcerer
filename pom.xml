@@ -17,8 +17,8 @@
   </developers>
 
   <scm>
-    <connection>scm:svn:${project.url}svn/sorcerer</connection>
-    <developerConnection>scm:svn:${project.url}svn/sorcerer</developerConnection>
+    <connection>scm:svn:${project.url}svn/sorcerer/trunk/sorcerer</connection>
+    <developerConnection>scm:svn:${project.url}svn/sorcerer/trunk/sorcerer</developerConnection>
     <url>${project.url}source/browse/sorcerer/</url>
   </scm>
 
