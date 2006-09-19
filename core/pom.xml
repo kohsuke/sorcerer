@@ -1,14 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?><project>
-  <parent>
-    <artifactId>sorcerer</artifactId>
-    <groupId>org.jvnet.sorcerer</groupId>
-    <version>0.1</version>
-  </parent>
+<project>
   <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jvnet.sorcerer</groupId>
+    <artifactId>sorcerer</artifactId>
+    <version>0.1-SNAPSHOT</version>
+  </parent>
+
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>sorcerer-core</artifactId>
   <name>Sorcerer Core</name>
-  <version>0.1</version>
+
+  <packaging>jar</packaging>
+
   <build>
     <resources>
       <resource>
@@ -22,6 +26,10 @@
     <plugins>
       <plugin>
         <artifactId>maven-antlr-plugin</artifactId>
+        <configuration>
+          <sourceDirectory>${basedir}</sourceDirectory>
+          <grammars>java.g</grammars>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -29,14 +37,16 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <sourceDirectory>${basedir}</sourceDirectory>
-          <grammars>java.g</grammars>
-        </configuration>
       </plugin>
     </plugins>
   </build>
+
   <dependencies>
+    <dependency>
+      <groupId>antlr</groupId>
+      <artifactId>antlr</artifactId>
+      <version>2.7.6</version>
+    </dependency>
     <dependency>
       <groupId>sun.jdk</groupId>
       <artifactId>tools</artifactId>
@@ -44,10 +54,17 @@
       <scope>system</scope>
       <systemPath>${java.home}/../lib/tools.jar</systemPath>
     </dependency>
+    <!-- mustang version doesn't work
     <dependency>
-      <groupId>antlr</groupId>
-      <artifactId>antlr</artifactId>
-      <version>2.7.6</version>
+      <groupId>sun.jdk</groupId>
+      <artifactId>javac-api</artifactId>
+      <version>1.6.0-beta</version>
     </dependency>
+    <dependency>
+      <groupId>sun.jdk</groupId>
+      <artifactId>javac-impl</artifactId>
+      <version>1.6.0-beta</version>
+    </dependency>
+    -->
   </dependencies>
 </project>
