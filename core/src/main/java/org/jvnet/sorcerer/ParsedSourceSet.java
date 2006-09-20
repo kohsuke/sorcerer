@@ -100,9 +100,9 @@ public class ParsedSourceSet {
     /*package*/ final Map<TypeElement,ParsedType> parsedTypes = new HashMap<TypeElement,ParsedType>();
 
     /**
-     * @see #getClassElements()
+     * {@link ClassTree}s in the compilation unit to their {@link TreePath}.
      */
-    private final List<TypeElement> classElements = new ArrayList<TypeElement>();
+    /*package*/ final Map<ClassTree,TreePath> treePathByClass = new HashMap<ClassTree,TreePath>();
 
     /**
      * Runs <tt>javac</tt> and analyzes the result.
@@ -124,10 +124,10 @@ public class ParsedSourceSet {
         TreePathScanner<?,?> classScanner = new TreePathScanner<Void,Void>() {
             public Void visitClass(ClassTree ct, Void _) {
                 TreePath path = getCurrentPath();
+                treePathByClass.put(ct,path);
                 TypeElement e = (TypeElement) trees.getElement(path);
                 if(e!=null) {
                     classes.put(e.getQualifiedName().toString(), path);
-                    classElements.add(e);
 
                     // make sure we have descendants tree built for all compilation units
                     getParsedType(e);
@@ -142,7 +142,7 @@ public class ParsedSourceSet {
             classScanner.scan(u,null);
         }
 
-        for (TypeElement e : classElements) {
+        for (TypeElement e : parsedTypes.keySet()) {
             Element p = e.getEnclosingElement();
             if(p.getKind()==ElementKind.PACKAGE) {
                 PackageElement pe = (PackageElement) p;
@@ -177,6 +177,13 @@ public class ParsedSourceSet {
     }
 
     /**
+     * All the {@link ClassTree}s to their {@link TreePath}s.
+     */
+    public Map<ClassTree,TreePath> getTreePathByClass() {
+        return treePathByClass;
+    }
+
+    /**
      * Gets all the classes included in the analyzed source files.
      *
      * <p>
@@ -186,7 +193,7 @@ public class ParsedSourceSet {
      *      can be empty but never null.
      */
     public Collection<TypeElement> getClassElements() {
-        return Collections.unmodifiableCollection(classElements);
+        return Collections.unmodifiableCollection(parsedTypes.keySet());
     }
 
     /**
@@ -194,7 +201,7 @@ public class ParsedSourceSet {
      */
     public Collection<TypeElement> getClassElements(PackageElement pkg) {
         Set<TypeElement> r = new TreeSet<TypeElement>(TYPE_COMPARATOR);
-        for (TypeElement e : classElements) {
+        for (TypeElement e : parsedTypes.keySet()) {
             Element p = e.getEnclosingElement();
             if(p.equals(pkg))
                 r.add(e);

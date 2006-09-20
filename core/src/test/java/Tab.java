@@ -7,3 +7,5 @@ import java.util.Random;
 public class Tab {
 	int x = new Random().nextInt();
 }
+
+class AnotherLocal {}

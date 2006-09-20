@@ -2,14 +2,11 @@ package org.jvnet.sorcerer;
 
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.Tree;
-import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -17,8 +14,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.AbstractElementVisitor6;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Generates links within the generated documents.
@@ -40,20 +35,6 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
     }
 
     static final class InternalLinkResolver extends AbstractElementVisitor6<StringBuilder,Void> implements LinkResolver {
-
-        /**
-         * The 'primary public type in the current compilation unit.
-         * This is the class that has the same name as the file name.
-         * It can be null.
-         */
-        private final TypeElement primary;
-
-        /**
-         * Other types defined in the current compilation unit
-         * as a package-member class. These are all package private.
-         */
-        private final Set<TypeElement> privateTypes = new HashSet<TypeElement>();
-
         /**
          * The package in which the current compilation unit is in. Tokenized.
          * e.g., {"org","acme","foo"}. Never null.
@@ -65,44 +46,27 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
         private final Types types;
         private final Elements elements;
 
+        /**
+         * If we are generating links into an HTML file that corresponds to a compilation unit,
+         * this field is non-null.
+         */
+        private final CompilationUnitTree compUnit;
+
         public InternalLinkResolver(CompilationUnitTree compUnit, ParsedSourceSet pss) {
             this.pss = pss;
             this.trees = pss.getTrees();
             this.elements = pss.getElements();
             this.types = pss.getTypes();
-
-            TypeElement primary = null;
-
-            TreePath cutp = new TreePath(compUnit);
-
-            for (Tree t : compUnit.getTypeDecls()) {
-                if (t instanceof ClassTree) {
-                    ClassTree ct = (ClassTree) t;
-                    TypeElement e = (TypeElement) trees.getElement(new TreePath(cutp, ct));
-
-                    if(ct.getModifiers().getFlags().contains(Modifier.PUBLIC))
-                        primary = e;
-                    else
-                        privateTypes.add(e);
-                }
-            }
-
-            if(primary==null && privateTypes.size()==1) {
-                // promote this private type as the primary, since there's no ambiguity
-                primary = privateTypes.iterator().next();
-                privateTypes.clear();
-            }
-
-            this.primary = primary;
+            this.compUnit = compUnit;
             this.pkg = TreeUtil.getPackageName(compUnit).split("\\.");
         }
 
         public InternalLinkResolver(PackageElement pkg, ParsedSourceSet pss) {
             this.pss = pss;
+            this.compUnit = null;
             this.trees = pss.getTrees();
             this.elements = pss.getElements();
             this.types = pss.getTypes();
-            this.primary = null;
             this.pkg = pkg.getQualifiedName().toString().split("\\.");
         }
 
@@ -129,23 +93,32 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
         //}
 
         public StringBuilder visitType(TypeElement t, Void _) {
-            if(t==primary)
-                return new StringBuilder(); // empty name.
-
-            if(trees.getTree(t)==null)
+            ClassTree ct = trees.getTree(t);
+            if(ct ==null)
                 return null;    // not a part of compiled source files
 
             switch(t.getNestingKind()) {
             case ANONYMOUS:
                 String binaryName = elements.getBinaryName(t).toString();
                 int idx = binaryName.lastIndexOf('$');
-                String name = '~'+binaryName.substring(idx); // #$1 is ambiguous between field and anonyous type, so use '~' as the prefix for type
+                String name = "~"+binaryName.substring(idx); // #$1 is ambiguous between field and anonyous type, so use '~' as the prefix for type
                 return combine(getEnclosingTypeOrPackage(t).accept(this,null)).append(name);
             case TOP_LEVEL:
-                // TODO: does this handle package-local class defined in a file name different from the class name?
-                // probably not.
-                return recurse(t).append(t.getSimpleName()).append(".html");
+                // check if this class is the 'primary type' of the compilation unit
+                CompilationUnitTree owner = pss.getTreePathByClass().get(ct).getCompilationUnit();
+                String primaryTypeName = TreeUtil.getPrimaryTypeName(owner);
+                String simpleName = ct.getSimpleName().toString();
 
+                StringBuilder buf;
+                if(!owner.equals(compUnit)) {
+                    buf = combine(recurse(t)).append(t.getSimpleName()).append(".html");
+                } else {
+                    buf = new StringBuilder();
+                }
+                if(!primaryTypeName.equals(simpleName)) {
+                    return buf.append("#~").append(simpleName);
+                }
+                return buf;
             case MEMBER:
             case LOCAL:
                 return recurse(t).append('~').append(t.getSimpleName());
@@ -240,6 +213,4 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
         }
 
     }
-
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 }

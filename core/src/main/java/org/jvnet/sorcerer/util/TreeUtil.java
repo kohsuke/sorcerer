@@ -146,4 +146,19 @@ public class TreeUtil {
         }
         return false;
     }
+
+    /**
+     * Gets the "Foo" portion of "Foo.java" that represents this compilation unit.
+     */
+    public static String getPrimaryTypeName(CompilationUnitTree cu) {
+        String name = cu.getSourceFile().getName();
+        int idx = name.lastIndexOf('/');
+        if(idx>=0)  name=name.substring(idx+1);
+        idx = name.lastIndexOf('\\');
+        if(idx>=0)  name=name.substring(idx+1);
+
+        if(name.endsWith(".java"))  name=name.substring(0,name.length()-5);
+        return name;
+    }
+
 }

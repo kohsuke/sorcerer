@@ -123,13 +123,7 @@ public class FrameSetGenerator {
             ExpressionTree packageName = cu.getPackageName();
             String pkg = packageName==null?"":packageName.toString().replace('.','/')+'/';
 
-            String name = cu.getSourceFile().getName();
-            int idx = name.lastIndexOf('/');
-            if(idx>=0)  name=name.substring(idx+1);
-            idx = name.lastIndexOf('\\');
-            if(idx>=0)  name=name.substring(idx+1);
-
-            if(name.endsWith(".java"))  name=name.substring(0,name.length()-5);
+            String name = TreeUtil.getPrimaryTypeName(cu);
 
             System.out.println(pkg+name);
             File out = new File(outDir, pkg + name+".html");

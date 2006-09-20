@@ -10,6 +10,9 @@ import java.util.Date;
 public class TestCode {
 
     PrivateClass p = new PrivateClass();
+    AnotherLocal al = new AnotherLocal();
+
+    TestCode tc = null; // self reference
 
     public class Base {
         public void run() {}
