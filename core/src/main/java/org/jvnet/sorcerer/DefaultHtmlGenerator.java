@@ -1,6 +1,7 @@
 package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ExpressionTree;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,11 +56,17 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
             b.append(' ');
         tab = b.toString();
 
-        String pkgName = cu.getPackageName().toString();
+        String pkgName = getPackageName(cu);
         StringBuilder buf = new StringBuilder();
         for( int i=new StringTokenizer(pkgName,".").countTokens(); i>0; i-- )
             buf.append("../");
         relativeLinkToTop = buf.toString();
+    }
+
+    private String getPackageName(CompilationUnitTree cu) {
+        ExpressionTree packageName = cu.getPackageName();
+        if(packageName==null)   return "";
+        return packageName.toString();
     }
 
     /**
