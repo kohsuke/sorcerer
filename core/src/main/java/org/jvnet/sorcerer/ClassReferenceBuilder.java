@@ -1,9 +1,7 @@
 package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.IdentifierTree;
-import com.sun.source.tree.MemberSelectTree;
-import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.Tree;
 import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
@@ -23,7 +21,7 @@ import java.util.Set;
  *
  * @author Kohsuke Kawaguchi
  */
-public final class ClassReferenceBuilder extends TreeScanner2<Void,Void> {
+public final class ClassReferenceBuilder extends AbstractReferenceFinder {
     /**
      * Builds the index. Sole entry point to this class.
      */
@@ -67,7 +65,8 @@ public final class ClassReferenceBuilder extends TreeScanner2<Void,Void> {
         }
     }
 
-    private void candidate(Element e) {
+    @Override
+    protected void candidate(Tree t, Element e) {
         if(e==null) return;
 
         switch(e.getKind()) {
@@ -87,20 +86,5 @@ public final class ClassReferenceBuilder extends TreeScanner2<Void,Void> {
                 record((TypeElement)p);
             break;
         }
-    }
-
-    public Void visitIdentifier(IdentifierTree id, Void _) {
-        candidate(getElement(id));
-        return super.visitIdentifier(id,_);
-    }
-
-    public Void visitMemberSelect(MemberSelectTree mst, Void _) {
-        candidate(getElement(mst));
-        return super.visitMemberSelect(mst,_);
-    }
-
-    public Void visitMethodInvocation(MethodInvocationTree mi, Void _) {
-        candidate(getElement(mi));
-        return super.visitMethodInvocation(mi, _);
     }
 }

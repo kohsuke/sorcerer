@@ -1,7 +1,9 @@
 package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.Tree;
 
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -254,6 +257,19 @@ public final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement>
      */
     public CompilationUnitTree[] getReferers() {
         return referers;
+    }
+
+    /**
+     * Gets the actual {@link Tree} nodes that refer to {@link Element}s
+     * (methods, fields, constructors, constants, and the type itself,
+     * but excluding nested types) inside this type.
+     *
+     * <p>
+     * This involves a non-trivial computation, but it does use
+     * index so it's faster than scanning the whole source tree.
+     */
+    public Map<Element,Set<Tree>> findReferers() {
+        return RefererFinder.find(this);
     }
 
 
