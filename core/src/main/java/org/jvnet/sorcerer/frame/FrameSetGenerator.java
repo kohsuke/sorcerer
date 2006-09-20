@@ -38,10 +38,12 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
@@ -151,6 +153,9 @@ public class FrameSetGenerator {
 
             generateClassListJs(p,new PrintWriter(openDefault(dir,"class-list.js")));
         }
+
+        // "find usage" index
+        generateProjectUsageJs(new PrintWriter(openDefault(outDir,"project-usage.js")));
 
         // other resources from core
         IOUtil.copy("behavior.js",new File(outDir,"behavior.js"));
@@ -382,10 +387,55 @@ public class FrameSetGenerator {
     }
 
 
+    public void generateProjectUsageJs(PrintWriter w) throws IOException {
+        Map<PackageElement,Set<ParsedType>> pkgs =
+            new TreeMap<PackageElement,Set<ParsedType>>(ParsedSourceSet.PACKAGENAME_COMPARATOR);
+
+
+
+        for( ParsedType pt : pss.getParsedTypes() ) {
+            if(pt.getReferers().length==0)
+                continue;
+
+            PackageElement pkg = pss.getElements().getPackageOf(pt.element);
+            Set<ParsedType> types = pkgs.get(pkg);
+            if(types==null)
+                pkgs.put(pkg,types=new HashSet<ParsedType>());
+
+            if(!pt.isLocal())
+                types.add(pt);
+        }
+
+        w.println("setProjectUsage(");
+        JsonWriter js = new JsonWriter(w);
+        js.startArray();
+        for (Entry<PackageElement,Set<ParsedType>> pkg : pkgs.entrySet()) {
+            js.startObject();
+            js.property("package",pkg.getKey().getQualifiedName());
+            js.key("classes");
+            js.startArray();
+            String[] names = new String[pkg.getValue().size()];
+            int idx=0;
+            for (ParsedType pt : pkg.getValue()) {
+                names[idx++] = pt.getPackageLocalName();
+            }
+            Arrays.sort(names);
+            for (String n : names) {
+                js.string(n);
+            }
+            js.endArray();
+            js.endObject();
+        }
+        js.endArray();
+        w.println(")");
+        w.close();
+    }
+
     /**
-     * Writes out an object.
+     * Writes out the "find usage" information of programming elements
+     * defined on the given type.
      */
-    public void generateUsageJs(ParsedType type,JsonWriter w) {
+    public void generateClassUsageJs(ParsedType type,JsonWriter w) {
         w.startObject();
         for (Entry<Element,Set<TreePath>> e : type.findReferers().entrySet()) {
             w.key(getKeyName(type,e.getKey()));
@@ -421,6 +471,8 @@ public class FrameSetGenerator {
     /**
      * Represents a set of {@link TreePath}s as a tree of key program
      * elements.
+     *
+     * Used in {@link FrameSetGenerator#generateClassUsageJs(ParsedType, JsonWriter)}.
      */
     protected class Node {
         /**

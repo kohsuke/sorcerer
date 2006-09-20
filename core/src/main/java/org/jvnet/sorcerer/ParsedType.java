@@ -3,8 +3,10 @@ package org.jvnet.sorcerer;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
+import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
@@ -50,7 +52,7 @@ public final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement>
      * <p>
      * Set by the {@link ParsedSourceSet}.
      */
-    CompilationUnitTree[] referers;
+    CompilationUnitTree[] referers = EMPTY_CUT_ARRAY;
 
     public ParsedType(ParsedSourceSet pss, TypeElement element) {
         pss.parsedTypes.put(element,this);
@@ -84,6 +86,34 @@ public final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement>
         }
 
         putAll(ElementFilter.methodsIn(pss.getElements().getAllMembers(element)));
+    }
+
+    /**
+     * Gets the package local name of this type.
+     *
+     * <p>
+     * It's a simple name if the type is a package-member type,
+     * but for inner types, this name includes simple names of the
+     * outer types.
+     */
+    public String getPackageLocalName() {
+        if(element.getEnclosingElement().getKind()==ElementKind.PACKAGE)
+            return element.getSimpleName().toString();  // common case
+
+        return buildPackageLocalName(element,new StringBuilder()).toString();
+    }
+
+    private static StringBuilder buildPackageLocalName(Element e,StringBuilder buf) {
+        Element p = e.getEnclosingElement();
+        if(p.getKind()!=ElementKind.PACKAGE)
+             buildPackageLocalName(p,buf);
+        if(buf.length()>0)  buf.append('.');
+        buf.append(e.getSimpleName());
+        return buf;
+    }
+
+    public boolean isLocal() {
+        return TreeUtil.isLocal(element);
     }
 
     /**
@@ -281,4 +311,5 @@ public final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement>
     }
 
     private static final ParsedType[] EMPTY_ARRAY = new ParsedType[0];
+    private static final CompilationUnitTree[] EMPTY_CUT_ARRAY = new CompilationUnitTree[0];
 }

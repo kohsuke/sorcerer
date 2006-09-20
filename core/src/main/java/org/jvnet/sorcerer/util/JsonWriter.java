@@ -78,4 +78,11 @@ public class JsonWriter {
         return this;
     }
 
+    /**
+     * Writes out a string value.
+     */
+    public void string(String str) {
+        sep();
+        quote(str);
+    }
 }

@@ -130,14 +130,19 @@ public class TreeUtil {
      * Returns true if the given program element is a local type.
      */
     public static boolean isLocal(Element e) {
-        switch(e.getEnclosingElement().getKind()) {
-        case CONSTRUCTOR:
-        case METHOD:
-        case ENUM_CONSTANT:
-        case FIELD:
-        case INSTANCE_INIT: // following Eclipse. doesn't make much sense to me...
-        case STATIC_INIT:   // ditto
-            return true;
+        while(e!=null) {
+            switch(e.getEnclosingElement().getKind()) {
+            case CONSTRUCTOR:
+            case METHOD:
+            case ENUM_CONSTANT:
+            case FIELD:
+            case INSTANCE_INIT: // following Eclipse. doesn't make much sense to me...
+            case STATIC_INIT:   // ditto
+                return true;
+            case PACKAGE:
+                return false;
+            }
+            e = e.getEnclosingElement();
         }
         return false;
     }

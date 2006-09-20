@@ -12,6 +12,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.util.AbstractElementVisitor6;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.io.BufferedReader;
 import java.io.File;
@@ -77,18 +78,21 @@ public class JavadocLinkResolverFactory implements LinkResolverFactory {
     }
 
     public LinkResolver create(CompilationUnitTree currentCompilationUnit, ParsedSourceSet sources) {
-        return new JavadocLinkResolver(sources.getTypes());
+        return new JavadocLinkResolver(sources.getTypes(),sources.getElements());
     }
 
     public LinkResolver create(PackageElement pkg, ParsedSourceSet sources) {
-        return new JavadocLinkResolver(sources.getTypes());
+        return new JavadocLinkResolver(sources.getTypes(),sources.getElements());
     }
 
     class JavadocLinkResolver extends AbstractElementVisitor6<String,Void> implements LinkResolver {
         private final TypeVisitor<TypeMirror,Void> javadocErasure;
 
-        public JavadocLinkResolver(Types types) {
+        private final Elements elements;
+
+        public JavadocLinkResolver(Types types,Elements elements) {
             javadocErasure = new JavadocErasureVisitor(types);
+            this.elements = elements;
         }
 
         public void setCurrent(CompilationUnitTree compUnit) {
@@ -152,14 +156,9 @@ public class JavadocLinkResolverFactory implements LinkResolverFactory {
          * belongs to one of the packages in this javadoc.
          */
         private boolean isInPackageList(Element e) {
-            // not available
-            // PackageElement pe = elements.getPackageOf(e);
-
-            while(e!=null && !(e instanceof PackageElement))
-                e = e.getEnclosingElement();
-
-            if(e==null)        return false;
-            return packageNames.contains(((PackageElement)e).getQualifiedName().toString());
+            PackageElement pe = elements.getPackageOf(e);
+            if(pe==null)        return false;
+            return packageNames.contains(pe.getQualifiedName().toString());
         }
 
         public String visitVariable(VariableElement e, Void _) {

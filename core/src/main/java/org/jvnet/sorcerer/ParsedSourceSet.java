@@ -98,6 +98,10 @@ public class ParsedSourceSet {
      * {@link ParsedType}s keyed by its {@link ParsedType#element}.
      */
     /*package*/ final Map<TypeElement,ParsedType> parsedTypes = new HashMap<TypeElement,ParsedType>();
+
+    /**
+     * @see #getClassElements()
+     */
     private final List<TypeElement> classElements = new ArrayList<TypeElement>();
 
     /**
@@ -309,12 +313,19 @@ public class ParsedSourceSet {
     /**
      * Gets or creates a {@link ParsedType} for the given {@link TypeElement}.
      */
-    /*package*/ ParsedType getParsedType(TypeElement e) {
+    public ParsedType getParsedType(TypeElement e) {
         ParsedType v = parsedTypes.get(e);
         if(v==null)
             return new ParsedType(this,e);   // the constructor will register itself to the map
         else
             return v;
+    }
+
+    /**
+     * Gets all the {@link ParsedType}s.
+     */
+    public Collection<ParsedType> getParsedTypes() {
+        return parsedTypes.values();
     }
 
     /**
@@ -613,9 +624,15 @@ public class ParsedSourceSet {
         return buf.toString();
     }
 
-    private static final Comparator<PackageElement> PACKAGENAME_COMPARATOR = new Comparator<PackageElement>() {
+    public static final Comparator<PackageElement> PACKAGENAME_COMPARATOR = new Comparator<PackageElement>() {
         public int compare(PackageElement lhs, PackageElement rhs) {
             return lhs.getQualifiedName().toString().compareTo(rhs.getQualifiedName().toString());
+        }
+    };
+
+    public static final Comparator<Element> SIMPLENAME_COMPARATOR = new Comparator<Element>() {
+        public int compare(Element lhs, Element rhs) {
+            return lhs.getSimpleName().toString().compareTo(rhs.getSimpleName().toString());
         }
     };
 

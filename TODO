@@ -1,5 +1,9 @@
 other issues
 ------------
+- hook up usage generation to the rest of the code
+- think about what to generate for each leaf
+
+
 - labels and break/continue
 - balanced parenthesis
 - block folding
