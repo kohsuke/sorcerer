@@ -1,5 +1,7 @@
 package org.jvnet.sorcerer;
 
+import com.sun.source.tree.CompilationUnitTree;
+
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
@@ -35,6 +37,16 @@ final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement> {
      * All direct descendants of this type.
      */
     final List<ParsedType> descendants = new ArrayList<ParsedType>();
+
+    /**
+     * {@link CompilationUnitTree}s that are using fields/methods/classes etc
+     * in this type. This is useful index for narrowing down search space
+     * for "find usage".
+     *
+     * <p>
+     * Set by the {@link ParsedSourceSet}.
+     */
+    CompilationUnitTree[] referers;
 
     public ParsedType(ParsedSourceSet pss, TypeElement element) {
         pss.parsedTypes.put(element,this);

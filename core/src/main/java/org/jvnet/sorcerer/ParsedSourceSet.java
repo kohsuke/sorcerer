@@ -20,15 +20,6 @@ import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
-import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.JCTree.JCClassDecl;
-import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
-import com.sun.tools.javac.tree.JCTree.JCIdent;
-import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
-import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
-import com.sun.tools.javac.tree.JCTree.JCNewClass;
-import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
-import com.sun.tools.javac.tree.TreeInfo;
 import org.jvnet.sorcerer.ParsedType.Match;
 import org.jvnet.sorcerer.impl.JavaLexer;
 import org.jvnet.sorcerer.impl.JavaTokenTypes;
@@ -60,6 +51,17 @@ import java.util.TreeSet;
 
 /**
  * Represents set of analyzed source code.
+ *
+ * <p>
+ * This object retains the entire parse trees of the source files
+ * and type information, as well as enough indexes among them
+ * to make page generation fast enough. There's always a tricky trade-off
+ * between how much index you retain in memory vs how much you compute
+ * dynamically.
+ *
+ * <p>
+ * Instances of this class can be safely accessed from multiple threads
+ * concurrently.
  *
  * <p>
  * Normally, {@link Analyzer} is used to create this object, but
@@ -141,6 +143,10 @@ public class ParsedSourceSet {
                 packages.add(pe);
             }
         }
+
+        // build up index for find usage.
+        for( Map.Entry<TypeElement,Set<CompilationUnitTree>> e : ClassReferenceBuilder.build(compilationUnits).entrySet() )
+            getParsedType(e.getKey()).referers = e.getValue().toArray(new CompilationUnitTree[e.getValue().size()]);
     }
 
     /**
@@ -340,7 +346,7 @@ public class ParsedSourceSet {
         }
 
         // then semantic ones
-        new TreePathScanner<Void,Void>() {
+        new TreeScanner2<Void,Void>() {
             private String buildId(Element e) {
                 String buf = linkResolver.href(e);
                 if(buf.length()==0)
@@ -370,7 +376,7 @@ public class ParsedSourceSet {
              * Definition of a variable, such as parameter, field, and local variables.
              */
             public Void visitVariable(VariableTree vt, Void _) {
-                Element e = getCurrentElement();
+                Element e = getElement(vt);
                 if(e!=null) {
                     if(e.getKind()!= ElementKind.ENUM_CONSTANT) {
                         // put the marker just on the variable name.
@@ -396,7 +402,7 @@ public class ParsedSourceSet {
              * Method declaration.
              */
             public Void visitMethod(MethodTree mt, Void _) {
-                ExecutableElement e = (ExecutableElement) getCurrentElement();
+                ExecutableElement e = (ExecutableElement) getElement(mt);
                 if(e!=null) {
                     gen.add(new SpanMarker(cu,srcPos,mt,getCssClass(e,"d"),buildId(e)));
 
@@ -420,7 +426,7 @@ public class ParsedSourceSet {
              * Class declaration.
              */
             public Void visitClass(ClassTree ct, Void _) {
-                TypeElement e = (TypeElement) getCurrentElement();
+                TypeElement e = (TypeElement) getElement(ct);
                 if(e!=null) {
                     gen.add(new SpanMarker(cu,srcPos,ct,getCssClass(e,"d"),buildId(e)));
 
@@ -445,7 +451,7 @@ public class ParsedSourceSet {
              */
             public Void visitIdentifier(IdentifierTree id, Void _) {
                 if(!ReservedWords.LIST.contains(id.getName().toString())) {
-                    Element e = getCurrentElement();
+                    Element e = getElement(id);
                     if(e!=null) {
                         // add a marker for syntax coloring and jump to definition
                         gen.add(new LinkMarker(cu,srcPos,id, linkResolver.href(e),
@@ -464,7 +470,7 @@ public class ParsedSourceSet {
                 long sp = ep-mst.getIdentifier().length();
 
                 // marker for the selected identifier
-                Element e = getCurrentElement();
+                Element e = getElement(mst);
                 if(e!=null) {
                     gen.add(new LinkMarker(sp,ep, linkResolver.href(e),
                         getCssClass(e,"r")));
@@ -479,7 +485,7 @@ public class ParsedSourceSet {
                 long sp = srcPos.getStartPosition(cu, nt.getIdentifier());
 
                 // marker for jumping to the definition
-                Element e = getCurrentElement();
+                Element e = getElement(nt);
                 if(e!=null) {// be defensive
                     gen.add(new LinkMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r")));
                 }
@@ -499,7 +505,7 @@ public class ParsedSourceSet {
              */
             public Void visitMethodInvocation(MethodInvocationTree mi, Void _) {
                 ExpressionTree ms = mi.getMethodSelect(); // PRIMARY.methodName portion
-                Element e = getCurrentElement();
+                Element e = getElement(mi);
                 if(e!=null) {
                     Name methodName = e.getSimpleName();
                     long ep = srcPos.getEndPosition(cu, ms);
@@ -510,11 +516,6 @@ public class ParsedSourceSet {
                 }
 
                 return super.visitMethodInvocation(mi,_);
-            }
-
-            private Element getCurrentElement() {
-                // return trees.getElement(getCurrentPath());
-                return getElement((JCTree)getCurrentPath().getLeaf());
             }
 
             // recursively scan trees
@@ -561,32 +562,6 @@ public class ParsedSourceSet {
                     return name;
                 }
             }.scan(new TreePath(new TreePath(cu),packageName),null);
-        }
-    }
-
-    /**
-     * javac stopped giving us {@link Element}s from some tree nodes such as
-     * method invocations, so this is the code to work around the issue.
-     */
-    private Element getElement(JCTree t) {
-        t = TreeInfo.skipParens(t);
-        switch (t.tag) {
-        case JCTree.CLASSDEF:
-            return ((JCClassDecl)t).sym;
-        case JCTree.METHODDEF:
-            return ((JCMethodDecl)t).sym;
-        case JCTree.VARDEF:
-            return ((JCVariableDecl)t).sym;
-        case JCTree.SELECT:
-            return ((JCFieldAccess)t).sym;
-        case JCTree.APPLY:
-            return getElement(((JCMethodInvocation)t).meth);
-        case JCTree.IDENT:
-            return ((JCIdent)t).sym;
-        case JCTree.NEWCLASS:
-            return ((JCNewClass)t).constructor;
-        default:
-            return null;
         }
     }
 
