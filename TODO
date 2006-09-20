@@ -1,6 +1,5 @@
 other issues
 ------------
-- enum const declaration doesn't have <a name="">
 - labels and break/continue
 - balanced parenthesis
 - block folding
@@ -11,8 +10,6 @@ other issues
 - search for usage
 - current line number layout method doesn't work in Opera.
   define another class that does dumb-but-easy approach
-- b86 didn't work as some classes were renaemd
-- b99-test didn't work for some reasons.
 
 - using frame for toolbar didn't work very well.
   when I move border in IE, it just expands toolbar.
