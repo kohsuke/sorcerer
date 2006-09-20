@@ -1,7 +1,10 @@
 package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.Tree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.util.TreeScanner;
 import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
@@ -13,7 +16,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Builds a map of which class references what.
+ * Builds a map of which class references what over the entire parse tree
+ * of all the source files.
  *
  * <p>
  * The resulting "visibility" information is used as index for
@@ -21,7 +25,7 @@ import java.util.Set;
  *
  * @author Kohsuke Kawaguchi
  */
-public final class ClassReferenceBuilder extends AbstractReferenceFinder {
+final class ClassReferenceBuilder extends TreeScanner<Void,Void> {
     /**
      * Builds the index. Sole entry point to this class.
      */
@@ -65,8 +69,7 @@ public final class ClassReferenceBuilder extends AbstractReferenceFinder {
         }
     }
 
-    @Override
-    protected void candidate(Tree t, Element e) {
+    protected void candidate(Element e) {
         if(e==null) return;
 
         switch(e.getKind()) {
@@ -86,5 +89,20 @@ public final class ClassReferenceBuilder extends AbstractReferenceFinder {
                 record((TypeElement)p);
             break;
         }
+    }
+
+    public Void visitIdentifier(IdentifierTree id, Void _) {
+        candidate(TreeUtil.getElement(id));
+        return super.visitIdentifier(id,_);
+    }
+
+    public Void visitMemberSelect(MemberSelectTree mst, Void _) {
+        candidate(TreeUtil.getElement(mst));
+        return super.visitMemberSelect(mst,_);
+    }
+
+    public Void visitMethodInvocation(MethodInvocationTree mi, Void _) {
+        candidate(TreeUtil.getElement(mi));
+        return super.visitMethodInvocation(mi, _);
     }
 }

@@ -19,10 +19,12 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
+import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
 import org.jvnet.sorcerer.ParsedType.Match;
 import org.jvnet.sorcerer.impl.JavaLexer;
 import org.jvnet.sorcerer.impl.JavaTokenTypes;
+import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -346,7 +348,7 @@ public class ParsedSourceSet {
         }
 
         // then semantic ones
-        new TreeScanner2<Void,Void>() {
+        new TreeScanner<Void,Void>() {
             private String buildId(Element e) {
                 String buf = linkResolver.href(e);
                 if(buf.length()==0)
@@ -376,7 +378,7 @@ public class ParsedSourceSet {
              * Definition of a variable, such as parameter, field, and local variables.
              */
             public Void visitVariable(VariableTree vt, Void _) {
-                Element e = getElement(vt);
+                Element e = TreeUtil.getElement(vt);
                 if(e!=null) {
                     if(e.getKind()!= ElementKind.ENUM_CONSTANT) {
                         // put the marker just on the variable name.
@@ -402,7 +404,7 @@ public class ParsedSourceSet {
              * Method declaration.
              */
             public Void visitMethod(MethodTree mt, Void _) {
-                ExecutableElement e = (ExecutableElement) getElement(mt);
+                ExecutableElement e = (ExecutableElement) TreeUtil.getElement(mt);
                 if(e!=null) {
                     gen.add(new SpanMarker(cu,srcPos,mt,getCssClass(e,"d"),buildId(e)));
 
@@ -426,7 +428,7 @@ public class ParsedSourceSet {
              * Class declaration.
              */
             public Void visitClass(ClassTree ct, Void _) {
-                TypeElement e = (TypeElement) getElement(ct);
+                TypeElement e = (TypeElement) TreeUtil.getElement(ct);
                 if(e!=null) {
                     gen.add(new SpanMarker(cu,srcPos,ct,getCssClass(e,"d"),buildId(e)));
 
@@ -451,7 +453,7 @@ public class ParsedSourceSet {
              */
             public Void visitIdentifier(IdentifierTree id, Void _) {
                 if(!ReservedWords.LIST.contains(id.getName().toString())) {
-                    Element e = getElement(id);
+                    Element e = TreeUtil.getElement(id);
                     if(e!=null) {
                         // add a marker for syntax coloring and jump to definition
                         gen.add(new LinkMarker(cu,srcPos,id, linkResolver.href(e),
@@ -470,7 +472,7 @@ public class ParsedSourceSet {
                 long sp = ep-mst.getIdentifier().length();
 
                 // marker for the selected identifier
-                Element e = getElement(mst);
+                Element e = TreeUtil.getElement(mst);
                 if(e!=null) {
                     gen.add(new LinkMarker(sp,ep, linkResolver.href(e),
                         getCssClass(e,"r")));
@@ -485,7 +487,7 @@ public class ParsedSourceSet {
                 long sp = srcPos.getStartPosition(cu, nt.getIdentifier());
 
                 // marker for jumping to the definition
-                Element e = getElement(nt);
+                Element e = TreeUtil.getElement(nt);
                 if(e!=null) {// be defensive
                     gen.add(new LinkMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r")));
                 }
@@ -505,7 +507,7 @@ public class ParsedSourceSet {
              */
             public Void visitMethodInvocation(MethodInvocationTree mi, Void _) {
                 ExpressionTree ms = mi.getMethodSelect(); // PRIMARY.methodName portion
-                Element e = getElement(mi);
+                Element e = TreeUtil.getElement(mi);
                 if(e!=null) {
                     Name methodName = e.getSimpleName();
                     long ep = srcPos.getEndPosition(cu, ms);

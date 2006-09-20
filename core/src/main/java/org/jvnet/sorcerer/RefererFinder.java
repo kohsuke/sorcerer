@@ -1,7 +1,12 @@
 package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.Tree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.util.TreePath;
+import com.sun.source.util.TreePathScanner;
+import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -14,13 +19,13 @@ import java.util.Set;
  * Finds all the actual usage of the field/methods of the given type.
  * @author Kohsuke Kawaguchi
  */
-final class RefererFinder extends AbstractReferenceFinder {
+final class RefererFinder extends TreePathScanner<Void,Void> {
     /**
      * @return
      *      keys are the fields and methods defined on the given type.
      *      values are all the tree nodes where it's actually referenced.
      */
-    static Map<Element,Set<Tree>> find(ParsedType t) {
+    static Map<Element,Set<TreePath>> find(ParsedType t) {
         RefererFinder finder = new RefererFinder(t.element);
         for (CompilationUnitTree cu : t.getReferers())
             cu.accept(finder, null);
@@ -28,14 +33,13 @@ final class RefererFinder extends AbstractReferenceFinder {
     }
 
     private final TypeElement type;
-    private final Map<Element,Set<Tree>> result = new HashMap<Element,Set<Tree>>();
+    private final Map<Element,Set<TreePath>> result = new HashMap<Element,Set<TreePath>>();
 
     private RefererFinder(TypeElement type) {
         this.type = type;
     }
 
-    @Override
-    protected void candidate(Tree t, Element e) {
+    protected void candidate(Element e) {
         if(e==null) return;
 
         switch(e.getKind()) {
@@ -44,7 +48,7 @@ final class RefererFinder extends AbstractReferenceFinder {
         case ENUM:
         case INTERFACE:
             if(type.equals(e)) {
-                add(type,t);
+                add(type);
             }
             break;
         case ENUM_CONSTANT:
@@ -54,15 +58,31 @@ final class RefererFinder extends AbstractReferenceFinder {
             // if this is field and method, the parent should be a type
             Element p = e.getEnclosingElement();
             if(p!=null && type.equals(p))
-                add(e,t);
+                add(e);
             break;
         }
     }
 
-    private void add(Element e, Tree t) {
-        Set<Tree> trees = result.get(e);
+    private void add(Element e) {
+        Set<TreePath> trees = result.get(e);
         if(trees==null)
-            result.put(e,trees=new HashSet<Tree>());
-        trees.add(t);
+            result.put(e,trees=new HashSet<TreePath>());
+        trees.add(getCurrentPath());
+    }
+
+
+    public Void visitIdentifier(IdentifierTree id, Void _) {
+        candidate(TreeUtil.getElement(id));
+        return super.visitIdentifier(id,_);
+    }
+
+    public Void visitMemberSelect(MemberSelectTree mst, Void _) {
+        candidate(TreeUtil.getElement(mst));
+        return super.visitMemberSelect(mst,_);
+    }
+
+    public Void visitMethodInvocation(MethodInvocationTree mi, Void _) {
+        candidate(TreeUtil.getElement(mi));
+        return super.visitMethodInvocation(mi, _);
     }
 }

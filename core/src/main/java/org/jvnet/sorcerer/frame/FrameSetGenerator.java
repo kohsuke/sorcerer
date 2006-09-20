@@ -3,18 +3,18 @@ package org.jvnet.sorcerer.frame;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.LineMap;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.SourcePositions;
+import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
-import org.jvnet.sorcerer.JavadocErasureVisitor;
 import org.jvnet.sorcerer.LinkResolver;
 import org.jvnet.sorcerer.LinkResolverFactory;
+import org.jvnet.sorcerer.OutlineNameVisitor;
 import org.jvnet.sorcerer.ParsedSourceSet;
+import org.jvnet.sorcerer.ParsedType;
 import org.jvnet.sorcerer.ResourceResolver;
-import org.jvnet.sorcerer.ShortNameVisitor;
 import org.jvnet.sorcerer.util.AbstractResourceResolver;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;
@@ -22,15 +22,10 @@ import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVisitor;
-import javax.lang.model.util.SimpleElementVisitor6;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,7 +37,10 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -70,14 +68,16 @@ public class FrameSetGenerator {
      * Reference to the unnamed package.
      */
     private final PackageElement unnamed;
-
-    private final TypeVisitor<TypeMirror,Void> javadocErasure;
+    /**
+     * Computes the display name of the element.
+     */
+    private final OutlineNameVisitor nameVisitor;
 
     public FrameSetGenerator(ParsedSourceSet pss) {
         this.pss = pss;
+        this.nameVisitor = new OutlineNameVisitor(pss);
         this.linkResolverFactory = pss.getLinkResolverFactory();
         this.unnamed = pss.getElements().getPackageElement("");
-        this.javadocErasure = new JavadocErasureVisitor(pss.getTypes());
     }
 
     /**
@@ -313,8 +313,6 @@ public class FrameSetGenerator {
 
             new TreePathScanner<Void,Void>() {
                 private final SourcePositions sourcePositions = pss.getSourcePositions();
-                private final LineMap lineMap = cu.getLineMap();
-
                 public Void visitClass(ClassTree ct, Void _) {
                     boolean r = pre(ct);
                     super.visitClass(ct,_);
@@ -343,46 +341,13 @@ public class FrameSetGenerator {
                     long endPos = sourcePositions.getEndPosition(cu,t);
                     if(endPos<0)    return false; // synthetic
 
-                    switch (e.getKind()) {
-                    case ANNOTATION_TYPE:
-                    case CLASS:
-                    case CONSTRUCTOR:
-                    case ENUM:
-                    case ENUM_CONSTANT:
-                    case FIELD:
-                    case INSTANCE_INIT:
-                    case INTERFACE:
-                    case METHOD:
-                    case STATIC_INIT:
+                    if(TreeUtil.OUTLINE_WORTHY.contains(e.getKind())) {
                         jw.startObject();
-                        jw.property("name",e.accept(nameVisitor,null));
-                        jw.property("kind",getKindString(e.getKind()));
-                        jw.property("access",getAccessLevel(e).toString());
-                        if(e.getModifiers().contains(Modifier.STATIC))
-                            jw.property("static",true);
-                        if(isLocal(e))
-                            jw.property("local",true);
-
-                        long startPos = sourcePositions.getStartPosition(cu, t);
-                        jw.property("line",lineMap.getLineNumber(startPos));
-
+                        writeOutlineNodeProperties(jw,e,cu,t);
                         jw.key("children").startArray();
                         return true;
                     }
 
-                    return false;
-                }
-
-                private boolean isLocal(Element e) {
-                    switch(e.getEnclosingElement().getKind()) {
-                    case CONSTRUCTOR:
-                    case METHOD:
-                    case INSTANCE_INIT:
-                    case STATIC_INIT:
-                    case ENUM_CONSTANT:
-                    case FIELD:
-                        return true;
-                    }
                     return false;
                 }
 
@@ -399,6 +364,142 @@ public class FrameSetGenerator {
             w.close();
         }
     }
+
+    /**
+     * Writes various properties for the outline node.
+     */
+    private void writeOutlineNodeProperties(JsonWriter jw, Element e, CompilationUnitTree cu, Tree t) {
+        jw.property("name",e.accept(nameVisitor,null));
+        jw.property("kind",getKindString(e.getKind()));
+        jw.property("access",getAccessLevel(e).toString());
+        if(e.getModifiers().contains(Modifier.STATIC))
+            jw.property("static",true);
+        if(TreeUtil.isLocal(e))
+            jw.property("local",true);
+
+        long startPos = pss.getSourcePositions().getStartPosition(cu, t);
+        jw.property("line",cu.getLineMap().getLineNumber(startPos));
+    }
+
+
+    /**
+     * Writes out an object.
+     */
+    public void generateUsageJs(ParsedType type,JsonWriter w) {
+        w.startObject();
+        for (Entry<Element,Set<TreePath>> e : type.findReferers().entrySet()) {
+            w.key(getKeyName(type,e.getKey()));
+            Node root = createNode(null,null);
+
+            // builds a top-down tree.
+            for (TreePath t : e.getValue())
+                root.add(t).leaves.add(t);
+
+            // then write it out!
+            root.write(w);
+        }
+        w.endObject();
+    }
+
+    protected String getKeyName(ParsedType referencedType, Element e) {
+        if(e.equals(referencedType.element)) {
+            return "this"; // special key that represents the type itself.
+        } else {
+            switch(e.getKind()) {
+            case FIELD:
+            case ENUM_CONSTANT:
+                return e.getSimpleName().toString();
+            case METHOD:
+            case CONSTRUCTOR:
+                return TreeUtil.getFullMethodName(pss.getTypes(),(ExecutableElement)e);
+            default:
+                throw new IllegalStateException(e.toString());
+            }
+        }
+    }
+
+    /**
+     * Represents a set of {@link TreePath}s as a tree of key program
+     * elements.
+     */
+    protected class Node {
+        /**
+         * The program element that represents this node.
+         * Null only if this is the root node.
+         */
+        final Element element;
+        /**
+         * {@link TreePath} of the element, if available.
+         */
+        final TreePath path;
+        /**
+         * Child {@link Node}s keyed by their {@link Node#element}.
+         */
+        final Map<Element,Node> children = new HashMap<Element,Node>();
+        final List<TreePath> leaves = new ArrayList<TreePath>();
+
+        protected Node(Element element, TreePath path) {
+            this.element = element;
+            this.path = path;
+        }
+
+        /**
+         * Adds the given {@link TreePath} to the {@link Node} tree
+         * rooted at "this" node, then return the {@link Node} where
+         * the {@link TreePath} is ultimately stored.
+         */
+        protected Node add(TreePath t) {
+            Node p;
+            if(t.getParentPath()!=null)
+                p = add(t.getParentPath());
+            else
+                p = this;
+
+            Element e = TreeUtil.getElement(t.getLeaf());
+            if(e!=null) {
+                if(TreeUtil.OUTLINE_WORTHY.contains(e.getKind())) {
+                    Node n = children.get(e);
+                    if(n==null)
+                        children.put(e,n=createNode(e,t));
+                    return n;
+                }
+            }
+            return p;
+        }
+
+        /**
+         * Writes a JSON object that represents this node.
+         */
+        protected void write(JsonWriter w) {
+            w.startObject();
+            writeOutlineNodeProperties(w,element,path.getCompilationUnit(),path.getLeaf());
+            w.key("children");
+            w.startArray();
+            for (Node child : children.values()) {
+                child.write(w);
+            }
+            w.endArray();
+            w.key("leaves");
+            w.startArray();
+            for (TreePath p : leaves) {
+                // TODO: what shall we write here?
+                w.startObject();
+                w.property("code",p.getLeaf().toString());
+                w.endObject();
+            }
+            w.endArray();
+            w.endObject();
+        }
+    }
+
+    /**
+     * Hook for using a custom {@link Node} class.
+     */
+    protected Node createNode(Element e, TreePath path) {
+        return new Node(e,path);
+    }
+
+
 
 
     private static final Modifier[] MODS = new Modifier[] {Modifier.PUBLIC, Modifier.PROTECTED, Modifier.PRIVATE};
@@ -432,45 +533,6 @@ public class FrameSetGenerator {
         }
         return null;
     }
-
-    /**
-     * Computes the display name of the element.
-     */
-    private final ElementVisitor<String,Void> nameVisitor = new SimpleElementVisitor6<String, Void>() {
-        public String visitType(TypeElement t, Void _) {
-            return t.getSimpleName().toString();
-        }
-
-        public String visitVariable(VariableElement v, Void _) {
-            return v.getSimpleName().toString();
-        }
-
-        public String visitExecutable(ExecutableElement e, Void _) {
-            StringBuilder buf = new StringBuilder();
-            if(e.getKind()== ElementKind.CONSTRUCTOR)
-                // javadoc uses the class name as the constructor name, not <init>
-                buf.append(e.getEnclosingElement().getSimpleName());
-            else
-                buf.append(e.getSimpleName());
-
-            buf.append('(');
-
-            boolean first=true;
-
-            for (VariableElement p : e.getParameters()) {
-                if(first)       first = false;
-                else            buf.append(',');
-
-                buf.append(p.asType().accept(ShortNameVisitor.INSTANCE,null));
-            }
-            buf.append(')');
-            if(e.getKind()!=ElementKind.CONSTRUCTOR) {
-                buf.append(':');
-                buf.append(e.getReturnType().accept(javadocErasure,null));
-            }
-            return buf.toString();
-        }
-    };
 
     private static final List<String> RESOURCES = new ArrayList<String>();
 
@@ -514,4 +576,5 @@ public class FrameSetGenerator {
             for( String mod : modifiers)
                 RESOURCES.add("resource-files/"+kind+'_'+mod+".gif");
     }
+
 }

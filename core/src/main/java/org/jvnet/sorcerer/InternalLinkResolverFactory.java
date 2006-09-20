@@ -17,9 +17,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.AbstractElementVisitor6;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -179,33 +177,12 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
             switch(e.getKind()) {
             case METHOD:
             case CONSTRUCTOR:
-                // use the full parameter list as a part of ID to handle overloading
-                buf.append(e.getSimpleName()).append('(');
-                boolean first=true;
-                List<? extends VariableElement> parameters = safeGetParameters(e);
-                for (VariableElement v : parameters) {
-                    buf.append(types.erasure(v.asType()));
-                    if(first)   first=false;
-                    else        buf.append(',');
-                }
-                return buf.append(')');
+                return TreeUtil.buildMethodName(buf,types,e);
             default:
                 // static/instance initializers.
                 return buf.append(getSiblingIndex(e));
             }
         }
-
-        /**
-         * To work around a bug in the javac error recovery.
-         */
-        private List<? extends VariableElement> safeGetParameters(ExecutableElement e) {
-            try {
-                return e.getParameters();
-            } catch (Exception _) {
-                return Collections.emptyList();
-            }
-        }
-
 
         public StringBuilder visitTypeParameter(TypeParameterElement v, Void _) {
             return recurse(v).append(v.getSimpleName());
