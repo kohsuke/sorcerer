@@ -24,19 +24,19 @@ import java.util.Set;
  *
  * @author Kohsuke Kawaguchi
  */
-final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement> {
+public final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement> {
     /**
      * This {@link ParsedType} represents the parsed information of this {@link TypeElement}.
      */
-    final TypeElement element;
+    public final TypeElement element;
 
-    final ParsedType superClass;
-    final ParsedType[] interfaces;
+    public final ParsedType superClass;
+    public final ParsedType[] interfaces;
 
     /**
      * All direct descendants of this type.
      */
-    final List<ParsedType> descendants = new ArrayList<ParsedType>();
+    public final List<ParsedType> descendants = new ArrayList<ParsedType>();
 
     /**
      * {@link CompilationUnitTree}s that are using fields/methods/classes etc
@@ -85,7 +85,7 @@ final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement> {
     /**
      * All the matches discovered.
      */
-    public static final class QueryResult {
+    private static final class QueryResult {
         /**
          * {@link ParsedType}s that are visited already.
          */
@@ -244,6 +244,18 @@ final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement> {
         r.scanDescendants(this);
         return r.result;
     }
+
+    /**
+     * Gets the list of {@link CompilationUnitTree}s that reference something
+     * in this type (field, method, constructor, constant.)
+     *
+     * @return
+     *      always non-null. read-only.
+     */
+    public CompilationUnitTree[] getReferers() {
+        return referers;
+    }
+
 
     // methods are keyed by their names.
     @Override
