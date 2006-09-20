@@ -1,13 +1,15 @@
-import a.b.X;
 import a.b.En;
+import a.b.X;
 
-import java.util.Date;
 import java.lang.annotation.Documented;
+import java.util.Date;
 
 /**
  * @author Kohsuke Kawaguchi
  */
 public class TestCode {
+
+    PrivateClass p = new PrivateClass();
 
     public class Base {
         public void run() {}
@@ -72,6 +74,8 @@ public class TestCode {
     @Documented
     @interface Foo {}
 }
+
+class PrivateClass {}
 
 /*
 long tail
