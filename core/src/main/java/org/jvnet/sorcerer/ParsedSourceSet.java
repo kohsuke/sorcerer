@@ -131,6 +131,11 @@ public class ParsedSourceSet {
 
                     // make sure we have descendants tree built for all compilation units
                     getParsedType(e);
+
+                    // remember packages that have compilation units in it
+                    Element p = e.getEnclosingElement();
+                    if(p.getKind()==ElementKind.PACKAGE)
+                        packages.add((PackageElement) p);
                 }
 
                 return super.visitClass(ct, _);
@@ -140,14 +145,6 @@ public class ParsedSourceSet {
         for( CompilationUnitTree u : parsed ) {
             compilationUnits.add(u);
             classScanner.scan(u,null);
-        }
-
-        for (TypeElement e : parsedTypes.keySet()) {
-            Element p = e.getEnclosingElement();
-            if(p.getKind()==ElementKind.PACKAGE) {
-                PackageElement pe = (PackageElement) p;
-                packages.add(pe);
-            }
         }
 
         // build up index for find usage.
@@ -211,6 +208,9 @@ public class ParsedSourceSet {
 
     /**
      * Gets all the packages of the analyzed source files.
+     *
+     * <p>
+     * This does not include those packages that are just referenced. 
      *
      * @return
      *      can be empty but never null.

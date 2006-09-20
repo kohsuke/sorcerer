@@ -111,7 +111,7 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
 
                 StringBuilder buf;
                 if(!owner.equals(compUnit)) {
-                    buf = combine(recurse(t)).append(t.getSimpleName()).append(".html");
+                    buf = combine(recurse(t)).append(primaryTypeName).append(".html");
                 } else {
                     buf = new StringBuilder();
                 }
