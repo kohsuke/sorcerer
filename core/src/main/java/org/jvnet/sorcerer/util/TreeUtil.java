@@ -1,5 +1,8 @@
 package org.jvnet.sorcerer.util;
 
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ExpressionTree;
+
 import javax.lang.model.element.Element;
 
 /**
@@ -18,5 +21,11 @@ public class TreeUtil {
             return true;
         }
         return false;
+    }
+
+    public static String getPackageName(CompilationUnitTree cu) {
+        ExpressionTree packageName = cu.getPackageName();
+        if(packageName==null)   return "";
+        return packageName.toString();
     }
 }

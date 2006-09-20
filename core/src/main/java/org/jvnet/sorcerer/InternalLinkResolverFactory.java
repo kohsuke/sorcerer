@@ -2,10 +2,10 @@ package org.jvnet.sorcerer;
 
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
+import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -17,10 +17,10 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.AbstractElementVisitor6;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Generates links within the generated documents.
@@ -96,13 +96,7 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
             }
 
             this.primary = primary;
-
-            ExpressionTree pn = compUnit.getPackageName();
-            if(pn==null) {
-                this.pkg = EMPTY_STRING_ARRAY;
-            } else {
-                this.pkg = pn.toString().split("\\.");
-            }
+            this.pkg = TreeUtil.getPackageName(compUnit).split("\\.");
         }
 
         public InternalLinkResolver(PackageElement pkg, ParsedSourceSet pss) {

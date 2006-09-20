@@ -18,6 +18,7 @@ import org.jvnet.sorcerer.ShortNameVisitor;
 import org.jvnet.sorcerer.util.AbstractResourceResolver;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;
+import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -91,12 +92,6 @@ public class FrameSetGenerator {
             return ".";
         else
             return pe.getQualifiedName().toString().replace('.','/');
-    }
-
-    private String getPackageName(CompilationUnitTree cu) {
-        ExpressionTree packageName = cu.getPackageName();
-        if(packageName==null)   return "";
-        return packageName.toString();
     }
 
     /**
@@ -313,7 +308,7 @@ public class FrameSetGenerator {
             w.printf("loadOutline(");
             final JsonWriter jw = new JsonWriter(w);
             jw.startObject();
-            jw.property("packageName",getPackageName(cu));
+            jw.property("packageName", TreeUtil.getPackageName(cu));
             jw.key("children").startArray();
 
             new TreePathScanner<Void,Void>() {
