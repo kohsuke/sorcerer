@@ -107,7 +107,7 @@ public class ParsedSourceSet {
         trees = Trees.instance(javac);
         elements = javac.getElements();
         types = javac.getTypes();
-        srcPos = trees.getSourcePositions();
+        srcPos = new SourcePositionsWrapper(trees.getSourcePositions());
 
         Iterable<? extends CompilationUnitTree> parsed = javac.parse();
         javac.analyze();
@@ -372,11 +372,17 @@ public class ParsedSourceSet {
             public Void visitVariable(VariableTree vt, Void _) {
                 Element e = getCurrentElement();
                 if(e!=null) {
-                    // put the marker just on the variable name
-                    Token t = gen.findTokenAfter(vt.getType()); // token for the variable name
-                    if(t!=null) {
-                        gen.add(new SpanMarker(lineMap,t,
-                            getCssClass(e,"d"),buildId(e)));
+                    if(e.getKind()!= ElementKind.ENUM_CONSTANT) {
+                        // put the marker just on the variable name.
+                        // the token for the variable name is after its type
+                        Token t = gen.findTokenAfter(vt.getType());
+                        if(t!=null) {
+                            gen.add(new SpanMarker(lineMap,t,
+                                getCssClass(e,"d"),buildId(e)));
+                        }
+                    } else {
+                        // for the enum constant put the anchor around vt
+                        gen.add(new SpanMarker(cu,srcPos,vt,getCssClass(e,"d"),buildId(e)));
                     }
                 }
                 return super.visitVariable(vt,_);
