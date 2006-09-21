@@ -1,11 +1,13 @@
 package org.jvnet.sorcerer;
 
+import antlr.Token;
+import antlr.TokenStreamException;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.Tree;
 import com.sun.source.tree.LineMap;
-import org.jvnet.sorcerer.util.IOUtil;
+import com.sun.source.tree.Tree;
 import org.jvnet.sorcerer.impl.JavaLexer;
 import org.jvnet.sorcerer.impl.JavaTokenTypes;
+import org.jvnet.sorcerer.util.IOUtil;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -13,9 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import antlr.Token;
-import antlr.TokenStreamException;
 
 /**
  * Generates an HTML file from a source file (but for a single class.)
@@ -98,10 +97,14 @@ public class HtmlGenerator {
      * This is used to identify the position of few nodes that are not available
      * from javac.
      *
+     * @param t
+     *      The first token after the end position of this tree node will be returned.
+     * @param id
+     *      If non-null, find the first token that has this identifier.
      * @return null
      *      if no such node is found or a syntax error is detected.
      */
-    protected final Token findTokenAfter(Tree t) {
+    protected final Token findTokenAfter(Tree t, String id) {
         long pos = pss.getSourcePositions().getEndPosition(compUnit, t);
         if(pos<0)   return null;
         JavaLexer lexer = new JavaLexer(new StringReader(sourceFile.substring((int) pos)));
@@ -113,6 +116,8 @@ public class HtmlGenerator {
                 if(type == JavaTokenTypes.EOF)
                     break;
                 if(type == JavaTokenTypes.IDENT) {
+                    if(id!=null && !token.getText().equals(id))
+                        continue;
                     LineMap lm = compUnit.getLineMap();
                     token.setLine(token.getLine()+(int)lm.getLineNumber(pos)-1);
                     token.setColumn(token.getColumn()+(int)lm.getColumnNumber(pos)-1);

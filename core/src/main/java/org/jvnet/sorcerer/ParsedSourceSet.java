@@ -400,8 +400,9 @@ public class ParsedSourceSet {
                 if(e!=null) {
                     if(e.getKind()!= ElementKind.ENUM_CONSTANT) {
                         // put the marker just on the variable name.
-                        // the token for the variable name is after its type
-                        Token t = gen.findTokenAfter(vt.getType());
+                        // the token for the variable name is after its type.
+                        // note that we need to handle declarations like "int a,b".
+                        Token t = gen.findTokenAfter(vt.getType(),vt.getName().toString());
                         if(t!=null) {
                             gen.add(new SpanMarker(lineMap,t,
                                 getCssClass(e,"d"),buildId(e)));
