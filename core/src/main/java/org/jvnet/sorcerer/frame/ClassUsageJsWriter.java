@@ -39,7 +39,7 @@ public class ClassUsageJsWriter extends AbstractWriter {
                 root.add(t).leaves.add(t);
 
             // then write it out!
-            root.write(w);
+            w.object(root);
         }
         w.endObject();
         pw.println(");");

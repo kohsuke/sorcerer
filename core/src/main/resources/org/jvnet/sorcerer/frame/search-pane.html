@@ -1,0 +1,131 @@
+<!DOCTYPE html public "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="left-pane.css">
+  <link rel="stylesheet" type="text/css" href="resource-files/tree/noicon.css">
+  <script type="text/javascript" src="resource-files/yahoo.js" ></script>
+  <script type="text/javascript" src="resource-files/tree/treeview.js" ></script>
+  <script type="text/javascript" src="left-pane.js" ></script>
+</head>
+<body>
+<p>
+  <a href="javascript:displayController.reduce()">minimize</a>
+  <a href="javascript:loadUsage('java.lang.String','length()')">load</a>
+</p>
+<div id="treeDiv" style="white-space:nowrap;"></div>
+<script type="text/javascript">
+  var displayController = {
+    rowSpec : "90%,10%", // remember the row set specification when the page was open
+    frame   : window.parent.document.getElementById("contentframeset"),
+    spane   : window.parent.document.getElementById("searchpane"),
+
+    reduce : function() {
+      if(this.isShown()) {
+        this.rowSpec = this.frame.rows;
+        this.frame.rows="100%,*";
+      }
+    },
+    show : function() {
+      if(!this.isShown())
+        this.frame.rows=this.rowSpec;
+    },
+    isShown : function() {
+      return this.frame.rows!="100%,*";
+    }
+  };
+
+  // tree for displaying "find usage" search result
+  var treeDiv = document.getElementById("treeDiv");
+  var tree = new YAHOO.widget.TreeView(treeDiv);
+
+  var loader = {
+    completedLoads : {},
+    pendingLoads : {},
+
+    /*
+      load the usage for the given class name and anchor,
+      and when ready invoke the callback with the loaded model
+    */
+    load : function(className,callback) {
+      var model = this.completedLoads[className];
+      if(model!=null) {
+        callback(model);
+      } else {
+        var inject=false;
+        var p = this.pendingLoads[className];
+        if(p==null) {
+          p = [];
+          inject = true;
+          this.pendingLoads[className] = p;
+        }
+        p.push(callback);
+        if(inject) {
+          loadScript(className.replace(/\./g,"/")+"-usage.js");
+        }
+      }
+    },
+
+    loadComplete : function(className,model) {
+      this.completedLoads[className] = model;
+
+      var p = this.pendingLoads[className];
+      this.pendingLoads[className]=null;
+
+      if(p!=null) {// this should be always true, but just to be defensive
+        for( var i=0; i<p.length; i++ )
+          p[i](model);
+      }
+    }
+  }
+
+  // called when *-usage.js is loaded
+  function setClassUsage(className,model) {
+    loader.loadComplete(className,model);
+  }
+
+  function loadUsage(className,anchor) {
+    loader.load(className,function(model) {
+      model = model[anchor];
+
+      resetTree();
+      if(model==null) {// not found
+        var node = new YAHOO.widget.TextNode({label:"No usage found"}, tree.getRoot(), true);
+        return;
+      } else {
+        addChildren(model.children, tree.getRoot(), true);
+      }
+      tree.draw();
+    });
+  }
+
+  function resetTree() {
+    treeDiv.innerHTML=""; // reset
+    tree = new YAHOO.widget.TreeView(treeDiv);
+  }
+
+
+  function addChildren( children, node, expanded ) {
+    if(children==null)  return;
+    for( var i=0; i<children.length; i++ ) {
+      insertNode( node, children[i], expanded );
+    }
+  }
+
+  function insertNode( parent, def, expanded ) {
+    def.label = "<img src='resource-files/"+def.kind+"_"+def.access+".gif'> "+def.name;
+    def.target = "main";
+    def.href = '#'+def.line; // TODO
+
+    var node = new YAHOO.widget.TextNode(def, parent, expanded);
+    node.onLabelClick = function(me) {
+      top.main.location.hash = '#'+me.data.line;
+      return false;
+    }
+    addChildren( def.children, node, false );
+    addChildren( def.classes, node, false );
+  }
+
+</script>
+</body>
+</html>
+

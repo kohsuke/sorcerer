@@ -380,6 +380,7 @@ public class FrameSetGenerator extends AbstractWriter {
             "package-toolbar.html",
             "package-container.html",
             "outline-view.html",
+            "search-pane.html",
             "outline-toolbar.html",
             "outline-container.html",
             "left-pane.js",
