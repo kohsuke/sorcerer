@@ -5,16 +5,27 @@ import java.io.PrintWriter;
 /**
  * Writes text in the JSON format.
  *
- * TODO: indentation
- *
  * @author Kohsuke Kawaguchi
  */
 public class JsonWriter {
     private final PrintWriter w;
     private boolean first=true;
 
+    private int indentLevel=0;
+
     public JsonWriter(PrintWriter w) {
         this.w = w;
+    }
+
+    /**
+     * Adjusts the indent by the given offset and prints a new line.
+     */
+    private void nl(int diff) {
+        if(!INDENT)     return; // that is, if we are indenting.
+        w.println();
+        indentLevel+=diff;
+        for( int i=0; i<indentLevel; i++ )
+            w.print("  ");
     }
 
     private void sep() {
@@ -22,7 +33,9 @@ public class JsonWriter {
             first = false;
         else
             w.print(',');
+        nl(0);
     }
+
 
     private void quote(Object value) {
         w.print('"');
@@ -33,11 +46,13 @@ public class JsonWriter {
     public JsonWriter startArray() {
         sep();
         w.print('[');
+        nl(1);
         first = true;
         return this;
     }
 
     public JsonWriter endArray() {
+        nl(-1);
         w.print(']');
         first = false;
         return this;
@@ -46,11 +61,13 @@ public class JsonWriter {
     public JsonWriter startObject() {
         sep();
         w.print('{');
+        nl(1);
         first = true;
         return this;
     }
 
     public JsonWriter endObject() {
+        nl(-1);
         w.print('}');
         first = false;
         return this;
@@ -98,5 +115,15 @@ public class JsonWriter {
     public void string(String str) {
         sep();
         quote(str);
+    }
+
+    private static final boolean INDENT = initIndent();
+
+    static boolean initIndent() {
+        try {
+            return Boolean.getBoolean("sorcerer.debug");
+        } catch (SecurityException e) {
+            return false;
+        }
     }
 }
