@@ -2,18 +2,18 @@
   <parent>
     <artifactId>sorcerer</artifactId>
     <groupId>org.jvnet.sorcerer</groupId>
-    <version>0.2</version>
+    <version>0.2-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>sorcerer-ant</artifactId>
   <name>Sorcerer Ant task</name>
-  <version>0.2</version>
+  <version>0.2-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>org.jvnet.sorcerer</groupId>
       <artifactId>sorcerer-core</artifactId>
-      <version>0.2</version>
+      <version>0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>ant</groupId>
