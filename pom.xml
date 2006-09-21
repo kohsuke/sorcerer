@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><project>
+<?xml version="1.0" encoding="UTF-8"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>sorcerer</artifactId>
   <packaging>pom</packaging>
   <name>Sorcerer</name>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.2</version>
   <url>https://sorcerer.dev.java.net/</url>
   <developers>
     <developer>
@@ -19,9 +19,9 @@
     </license>
   </licenses>
   <scm>
-    <connection>scm:svn:${project.url}svn/sorcerer/trunk/sorcerer</connection>
-    <developerConnection>scm:svn:${project.url}svn/sorcerer/trunk/sorcerer</developerConnection>
-    <url>${project.url}source/browse/sorcerer</url>
+    <connection>scm:svn:https://sorcerer.dev.java.net/svn/sorcerer/tags/sorcerer-0.2</connection>
+    <developerConnection>scm:svn:https://sorcerer.dev.java.net/svn/sorcerer/tags/sorcerer-0.2</developerConnection>
+    <url>https://sorcerer.dev.java.net/svn/sorcerer/tags/sorcerer-0.2</url>
   </scm>
   <build>
     <plugins>
