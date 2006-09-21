@@ -2,6 +2,7 @@ package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
@@ -78,6 +79,14 @@ final class RefererFinder extends TreePathScanner<Void,Void> {
     public Void visitMemberSelect(MemberSelectTree mst, Void _) {
         candidate(TreeUtil.getElement(mst));
         return super.visitMemberSelect(mst,_);
+    }
+
+    /**
+     * Let's not count import statements as references.
+     * They are rarely useful.
+     */
+    public Void visitImport(ImportTree node, Void _) {
+        return _;
     }
 
     // MethodInvocationTree.getMethodSelect() always find the method that it's referencing,

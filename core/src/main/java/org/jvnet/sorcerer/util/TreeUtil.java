@@ -137,8 +137,9 @@ public class TreeUtil {
      * Returns true if the given program element is a local type.
      */
     public static boolean isLocal(Element e) {
+        e = e.getEnclosingElement();
         while(e!=null) {
-            switch(e.getEnclosingElement().getKind()) {
+            switch(e.getKind()) {
             case CONSTRUCTOR:
             case METHOD:
             case ENUM_CONSTANT:

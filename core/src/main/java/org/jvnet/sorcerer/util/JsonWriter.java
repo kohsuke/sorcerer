@@ -1,6 +1,7 @@
 package org.jvnet.sorcerer.util;
 
 import java.io.PrintWriter;
+import java.util.Collection;
 
 /**
  * Writes text in the JSON format.
@@ -15,6 +16,17 @@ public class JsonWriter {
 
     public JsonWriter(PrintWriter w) {
         this.w = w;
+    }
+
+    /**
+     * Interface that represents objects that can be written as JSON.
+     */
+    public static interface Writable {
+        /**
+         * The caller invokes start/endObject, so this method
+         * should just write properties.
+         */
+        void write(JsonWriter w);
     }
 
     /**
@@ -74,30 +86,40 @@ public class JsonWriter {
         return this;
     }
 
-    public JsonWriter property(String key, Object value) {
+    /**
+     * Writes the collection as an array.
+     */
+    public JsonWriter property(String key, Collection<? extends Writable> values) {
         key(key);
-        first=false;    // cancel first=true in key()
+        startArray();
+        for (Writable v : values) {
+            startObject();
+            v.write(this);
+            endObject();
+        }
+        return endArray();
+    }
+
+    public JsonWriter property(String key, Object value) {
+        key_(key);
         quote(value);
         return this;
     }
 
     public JsonWriter property(String key, boolean value) {
-        key(key);
-        first=false;    // cancel first=true in key()
+        key_(key);
         w.print(value);
         return this;
     }
 
     public JsonWriter property(String key, int value) {
-        key(key);
-        first=false;    // cancel first=true in key()
+        key_(key);
         w.print(value);
         return this;
     }
 
     public JsonWriter property(String key, long value) {
-        key(key);
-        first=false;    // cancel first=true in key()
+        key_(key);
         w.print(value);
         return this;
     }
@@ -108,6 +130,14 @@ public class JsonWriter {
         w.print(':');
         first=true; // when the next item is array or object, don't put ','
         return this;
+    }
+
+    /**
+     * Writes a key to be immediately followed by a single value.
+     */
+    private void key_(String key) {
+        key(key);
+        first=false;
     }
 
     /**

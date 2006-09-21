@@ -15,6 +15,7 @@ import org.jvnet.sorcerer.OutlineNameVisitor;
 import org.jvnet.sorcerer.ParsedSourceSet;
 import org.jvnet.sorcerer.ParsedType;
 import org.jvnet.sorcerer.ResourceResolver;
+import org.jvnet.sorcerer.frame.PkgInfo.Factory;
 import org.jvnet.sorcerer.util.AbstractResourceResolver;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;
@@ -45,7 +46,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /**
  * HTML generator that produces sorcerer report in
@@ -204,65 +204,16 @@ public class FrameSetGenerator {
     }
 
     public void generatePackageListJs(PrintWriter w) throws IOException {
-        class PkgInfo implements Comparable<PkgInfo> {
-            final String name;
-            final Set<PkgInfo> children = new TreeSet<PkgInfo>();
-            /**
-             * False if this class doesn't have any classes in it (excluding descendants.)
-             */
-            boolean hasClasses;
-
-            public PkgInfo(String name) {
-                this.name = name;
-            }
-
-            public int compareTo(PkgInfo that) {
-                return this.name.compareTo(that.name);
-            }
-
-            public PkgInfo add(String name) {
-                if(name.length()==0) {
-                    hasClasses =true;
-                    return this;
-                }
-
-                String head,rest;
-                int idx = name.indexOf('.');
-                if(idx>=0) {
-                    head = name.substring(0,idx);
-                    rest = name.substring(idx+1);
-                } else {
-                    head = name;
-                    rest = "";
-                }
-
-                for (PkgInfo c : children)
-                    if(c.name.equals(head))
-                        return c.add(rest);
-
-                PkgInfo c = new PkgInfo(head);
-                children.add(c);
-                return c.add(rest);
-            }
-
-            public void write(JsonWriter js) {
-                js.startObject();
-                js.property("name",name);
-                if(hasClasses)
-                    js.property("hasClasses",true);
-                js.key("children");
-                js.startArray();
-                for (PkgInfo c : children)
-                    c.write(js);
-                js.endArray();
-                js.endObject();
-            }
-        }
 
         // build package tree info
         PkgInfo root = new PkgInfo("");
+        Factory factory = new Factory() {
+            public PkgInfo create(String name) {
+                return new PkgInfo(name);
+            }
+        };
         for (PackageElement pe : pss.getPackageElement()) {
-            root.add(pe.getQualifiedName().toString());
+            root.add(pe.getQualifiedName().toString(),factory);
         }
 
         try {
@@ -446,7 +397,7 @@ public class FrameSetGenerator {
         w.startObject();
         for (Entry<Element,Set<TreePath>> e : type.findReferers().entrySet()) {
             w.key(getKeyName(type,e.getKey()));
-            Node root = createNode(null,null);
+            NodePkgInfo root = new NodePkgInfo("");
 
             // builds a top-down tree.
             for (TreePath t : e.getValue())
@@ -477,13 +428,84 @@ public class FrameSetGenerator {
         }
     }
 
+    private final class NodeMap extends HashMap<Element,Node> {
+        Node getOrCreate(Element e,TreePath t) {
+            Node n = get(e);
+            if(n==null)
+                put(e,n=createNode(e,t));
+            return n;
+        }
+    }
+
+    private interface NodeMapOwner {
+        NodeMap getChildren();
+    }
+
+
+    class NodePkgInfo extends PkgInfo<NodePkgInfo> implements PkgInfo.Factory<NodePkgInfo>, NodeMapOwner {
+        /**
+         * Child {@link Node}s keyed by their {@link Node#element}.
+         */
+        final NodeMap children = new NodeMap();
+
+        public NodePkgInfo(String name) {
+            super(name);
+        }
+
+        /**
+         * Adds the given {@link TreePath} to the {@link NodePkgInfo} tree rooted at this object.
+         */
+        protected Node add(TreePath t) {
+            // enter the package portion
+            NodePkgInfo leafPkg = super.add(TreeUtil.getPackageName(t.getCompilationUnit()),this);
+            // then the rest
+            NodeMapOwner leaf = addNode(leafPkg, t);
+            return (Node)leaf;
+        }
+
+        public NodeMap getChildren() {
+            return children;
+        }
+
+        public NodePkgInfo create(String name) {
+            return new NodePkgInfo(name);
+        }
+
+        public void write(JsonWriter js) {
+            super.write(js);
+            if(!children.isEmpty())
+                js.property("classes",children.values());
+        }
+    }
+
+    /**
+     * Adds the given {@link TreePath} to the {@link Node} tree
+     * rooted at "root" node, then return the {@link Node} where
+     * the {@link TreePath} is ultimately stored.
+     */
+    NodeMapOwner addNode(NodeMapOwner root, TreePath t) {
+        NodeMapOwner p;
+        if(t.getParentPath()!=null)
+            p = addNode(root, t.getParentPath());
+        else
+            p = root;
+
+        if(TreeUtil.OUTLINE_WORTHY_TREE.contains(t.getLeaf().getKind())) {
+            Element e = TreeUtil.getElement(t.getLeaf());
+            if(e!=null)
+                return p.getChildren().getOrCreate(e,t);
+        }
+        return p;
+    }
+
+
     /**
      * Represents a set of {@link TreePath}s as a tree of key program
      * elements.
      *
      * Used in {@link FrameSetGenerator#generateClassUsageJs(ParsedType,PrintWriter)}.
      */
-    protected class Node {
+    protected class Node implements JsonWriter.Writable, NodeMapOwner {
         /**
          * The program element that represents this node.
          * Null only if this is the root node.
@@ -496,7 +518,7 @@ public class FrameSetGenerator {
         /**
          * Child {@link Node}s keyed by their {@link Node#element}.
          */
-        final Map<Element,Node> children = new HashMap<Element,Node>();
+        final NodeMap children = new NodeMap();
         final List<TreePath> leaves = new ArrayList<TreePath>();
 
         protected Node(Element element, TreePath path) {
@@ -504,35 +526,14 @@ public class FrameSetGenerator {
             this.path = path;
         }
 
-        /**
-         * Adds the given {@link TreePath} to the {@link Node} tree
-         * rooted at "this" node, then return the {@link Node} where
-         * the {@link TreePath} is ultimately stored.
-         */
-        protected Node add(TreePath t) {
-            Node p;
-            if(t.getParentPath()!=null)
-                p = add(t.getParentPath());
-            else
-                p = this;
-
-            if(TreeUtil.OUTLINE_WORTHY_TREE.contains(t.getLeaf().getKind())) {
-                Element e = TreeUtil.getElement(t.getLeaf());
-                if(e!=null) {
-                    Node n = p.children.get(e);
-                    if(n==null)
-                        p.children.put(e,n=createNode(e,t));
-                    return n;
-                }
-            }
-            return p;
+        public NodeMap getChildren() {
+            return children;
         }
 
         /**
          * Writes a JSON object that represents this node.
          */
-        protected void write(JsonWriter w) {
-            w.startObject();
+        public void write(JsonWriter w) {
             if(element!=null) {
                 if(path==null)
                     writeOutlineNodeProperties(w,element);
@@ -540,12 +541,7 @@ public class FrameSetGenerator {
                     writeOutlineNodeProperties(w,element,path.getCompilationUnit(),path.getLeaf());
             }
             if(!children.isEmpty()) {
-                w.key("children");
-                w.startArray();
-                for (Node child : children.values()) {
-                    child.write(w);
-                }
-                w.endArray();
+                w.property("children",children.values());
             }
             if(!leaves.isEmpty()) {
                 w.key("leaves");
@@ -558,7 +554,6 @@ public class FrameSetGenerator {
                 }
                 w.endArray();
             }
-            w.endObject();
         }
     }
 
