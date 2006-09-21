@@ -3,7 +3,6 @@ package org.jvnet.sorcerer;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
-import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import org.jvnet.sorcerer.util.TreeUtil;
@@ -81,8 +80,10 @@ final class RefererFinder extends TreePathScanner<Void,Void> {
         return super.visitMemberSelect(mst,_);
     }
 
-    public Void visitMethodInvocation(MethodInvocationTree mi, Void _) {
-        candidate(TreeUtil.getElement(mi));
-        return super.visitMethodInvocation(mi, _);
-    }
+    // MethodInvocationTree.getMethodSelect() always find the method that it's referencing,
+    // so if we have the following code, we'll be finding a redundant reference.
+    //public Void visitMethodInvocation(MethodInvocationTree mi, Void _) {
+    //    candidate(TreeUtil.getElement(mi));
+    //    return super.visitMethodInvocation(mi, _);
+    //}
 }
