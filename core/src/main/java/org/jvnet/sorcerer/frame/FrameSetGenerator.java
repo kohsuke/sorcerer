@@ -132,6 +132,7 @@ public class FrameSetGenerator extends AbstractWriter {
             generateClassListJs(p,new PrintWriter(openDefault(dir,"class-list.js")));
         }
 
+        System.out.println("Generating usage index");
         {// "find usage" index
             generateProjectUsageJs(new PrintWriter(openDefault(outDir,"project-usage.js")));
 
@@ -152,6 +153,7 @@ public class FrameSetGenerator extends AbstractWriter {
         }
 
         // other resources from core
+        System.out.println("Generating static resource files");
         IOUtil.copy("behavior.js",new File(outDir,"behavior.js"));
         IOUtil.copy("sorcerer.js",new File(outDir,"sorcerer.js"));
         IOUtil.copy("style.css",new File(outDir,"style.css"));
