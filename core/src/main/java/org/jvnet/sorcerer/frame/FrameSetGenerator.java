@@ -544,19 +544,23 @@ public class FrameSetGenerator {
                 else
                     writeOutlineNodeProperties(w,element,path.getCompilationUnit(),path.getLeaf());
             }
-            w.key("children");
-            w.startArray();
-            for (Node child : children.values()) {
-                child.write(w);
+            if(!children.isEmpty()) {
+                w.key("children");
+                w.startArray();
+                for (Node child : children.values()) {
+                    child.write(w);
+                }
+                w.endArray();
             }
-            w.endArray();
-            w.key("leaves");
-            w.startArray();
-            for (TreePath p : leaves) {
-                // TODO: what shall we write here?
-                w.startObject();
-                w.property("code",p.getLeaf().toString());
-                w.endObject();
+            if(!leaves.isEmpty()) {
+                w.key("leaves");
+                w.startArray();
+                for (TreePath p : leaves) {
+                    // TODO: what shall we write here?
+                    w.startObject();
+                    w.property("code",p.getLeaf().toString());
+                    w.endObject();
+                }
             }
             w.endArray();
             w.endObject();

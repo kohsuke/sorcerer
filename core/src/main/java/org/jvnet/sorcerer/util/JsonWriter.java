@@ -70,6 +70,20 @@ public class JsonWriter {
         return this;
     }
 
+    public JsonWriter property(String key, int value) {
+        key(key);
+        first=false;    // cancel first=true in key()
+        w.print(value);
+        return this;
+    }
+
+    public JsonWriter property(String key, long value) {
+        key(key);
+        first=false;    // cancel first=true in key()
+        w.print(value);
+        return this;
+    }
+
     public JsonWriter key(String key) {
         sep();
         quote(key);
