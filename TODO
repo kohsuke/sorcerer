@@ -1,9 +1,9 @@
 other issues
 ------------
-- hook up usage generation to the rest of the code
 - think about what to generate for each leaf
 
-
+- consider eliminating usage table for Object, String, and a few other very common types.
+  index often just gets too large.
 - labels and break/continue
 - balanced parenthesis
 - block folding
