@@ -27,6 +27,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -148,8 +149,19 @@ public class FrameSetGenerator {
             generateClassListJs(p,new PrintWriter(openDefault(dir,"class-list.js")));
         }
 
-        // "find usage" index
-        generateProjectUsageJs(new PrintWriter(openDefault(outDir,"project-usage.js")));
+        {// "find usage" index
+            generateProjectUsageJs(new PrintWriter(openDefault(outDir,"project-usage.js")));
+
+            for( ParsedType pt : pss.getParsedTypes() ) {
+                if(pt.getReferers().length==0)
+                    continue;
+
+                File out = new File(outDir, pt.element.getQualifiedName().toString().replace('.','/')+"-usage.js");
+                out.getParentFile().mkdirs();
+
+                generateClassUsageJs(pt,new PrintWriter(out));
+            }
+        }
 
         // other resources from core
         IOUtil.copy("behavior.js",new File(outDir,"behavior.js"));
@@ -178,8 +190,8 @@ public class FrameSetGenerator {
      * so the best bet is to use the system default encoding.
      */
     private Writer openDefault(File dir, String fileName) throws IOException {
-        return new OutputStreamWriter(
-            new FileOutputStream(new File(dir,fileName)));
+        return new BufferedWriter(new OutputStreamWriter(
+            new FileOutputStream(new File(dir,fileName))));
     }
 
 
@@ -364,10 +376,7 @@ public class FrameSetGenerator {
         }
     }
 
-    /**
-     * Writes various properties for the outline node.
-     */
-    private void writeOutlineNodeProperties(JsonWriter jw, Element e, CompilationUnitTree cu, Tree t) {
+    private void writeOutlineNodeProperties(JsonWriter jw, Element e) {
         jw.property("name",e.accept(nameVisitor,null));
         jw.property("kind",getKindString(e.getKind()));
         jw.property("access",getAccessLevel(e).toString());
@@ -375,17 +384,24 @@ public class FrameSetGenerator {
             jw.property("static",true);
         if(TreeUtil.isLocal(e))
             jw.property("local",true);
+    }
 
+    /**
+     * Writes various properties for the outline node.
+     */
+    private void writeOutlineNodeProperties(JsonWriter jw, Element e, CompilationUnitTree cu, Tree t) {
+        writeOutlineNodeProperties(jw,e);
         long startPos = pss.getSourcePositions().getStartPosition(cu, t);
         jw.property("line",cu.getLineMap().getLineNumber(startPos));
     }
 
-
+    /**
+     * Writes out <tt>project-usage.js</tt> that lists all classes for which
+     * we have usage index.
+     */
     public void generateProjectUsageJs(PrintWriter w) throws IOException {
         Map<PackageElement,Set<ParsedType>> pkgs =
             new TreeMap<PackageElement,Set<ParsedType>>(ParsedSourceSet.PACKAGENAME_COMPARATOR);
-
-
 
         for( ParsedType pt : pss.getParsedTypes() ) {
             if(pt.getReferers().length==0)
@@ -429,7 +445,9 @@ public class FrameSetGenerator {
      * Writes out the "find usage" information of programming elements
      * defined on the given type.
      */
-    public void generateClassUsageJs(ParsedType type,JsonWriter w) {
+    public void generateClassUsageJs(ParsedType type,PrintWriter pw) {
+        pw.println("setClassUsage('"+type.element.getQualifiedName()+"',");
+        JsonWriter w = new JsonWriter(pw);
         w.startObject();
         for (Entry<Element,Set<TreePath>> e : type.findReferers().entrySet()) {
             w.key(getKeyName(type,e.getKey()));
@@ -443,6 +461,8 @@ public class FrameSetGenerator {
             root.write(w);
         }
         w.endObject();
+        pw.println(");");
+        pw.close();
     }
 
     protected String getKeyName(ParsedType referencedType, Element e) {
@@ -466,7 +486,7 @@ public class FrameSetGenerator {
      * Represents a set of {@link TreePath}s as a tree of key program
      * elements.
      *
-     * Used in {@link FrameSetGenerator#generateClassUsageJs(ParsedType, JsonWriter)}.
+     * Used in {@link FrameSetGenerator#generateClassUsageJs(ParsedType,PrintWriter)}.
      */
     protected class Node {
         /**
@@ -518,7 +538,12 @@ public class FrameSetGenerator {
          */
         protected void write(JsonWriter w) {
             w.startObject();
-            writeOutlineNodeProperties(w,element,path.getCompilationUnit(),path.getLeaf());
+            if(element!=null) {
+                if(path==null)
+                    writeOutlineNodeProperties(w,element);
+                else
+                    writeOutlineNodeProperties(w,element,path.getCompilationUnit(),path.getLeaf());
+            }
             w.key("children");
             w.startArray();
             for (Node child : children.values()) {

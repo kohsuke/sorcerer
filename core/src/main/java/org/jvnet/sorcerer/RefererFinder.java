@@ -28,7 +28,7 @@ final class RefererFinder extends TreePathScanner<Void,Void> {
     static Map<Element,Set<TreePath>> find(ParsedType t) {
         RefererFinder finder = new RefererFinder(t.element);
         for (CompilationUnitTree cu : t.getReferers())
-            cu.accept(finder, null);
+            finder.scan(cu,null);
         return finder.result;
     }
 
