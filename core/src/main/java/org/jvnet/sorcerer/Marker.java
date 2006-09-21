@@ -12,6 +12,9 @@ import java.io.PrintWriter;
  * @author Kohsuke Kawaguchi
  */
 abstract class Marker implements Comparable<Marker> {
+    /**
+     * Start position and end poisition as defined in {@link LineMap}.
+     */
     final long sp,ep;
 
     protected Marker(long sp, long ep) {

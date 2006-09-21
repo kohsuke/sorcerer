@@ -210,7 +210,7 @@ public class ParsedSourceSet {
      * Gets all the packages of the analyzed source files.
      *
      * <p>
-     * This does not include those packages that are just referenced. 
+     * This does not include those packages that are just referenced.
      *
      * @return
      *      can be empty but never null.
@@ -529,10 +529,11 @@ public class ParsedSourceSet {
                 if(e!=null) {
                     Name methodName = e.getSimpleName();
                     long ep = srcPos.getEndPosition(cu, ms);
-
-                    // marker for the method name (and jump to definition)
-                    gen.add(new LinkMarker(ep-methodName.length(),ep,linkResolver.href(e),
-                        getCssClass(e,"r")));
+                    if(ep>=0) {
+                        // marker for the method name (and jump to definition)
+                        gen.add(new LinkMarker(ep-methodName.length(),ep,linkResolver.href(e),
+                            getCssClass(e,"r")));
+                    }
                 }
 
                 return super.visitMethodInvocation(mi,_);
