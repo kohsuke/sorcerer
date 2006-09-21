@@ -15,7 +15,6 @@ import org.jvnet.sorcerer.OutlineNameVisitor;
 import org.jvnet.sorcerer.ParsedSourceSet;
 import org.jvnet.sorcerer.ParsedType;
 import org.jvnet.sorcerer.ResourceResolver;
-import org.jvnet.sorcerer.frame.PkgInfo.Factory;
 import org.jvnet.sorcerer.util.AbstractResourceResolver;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;
@@ -204,16 +203,32 @@ public class FrameSetGenerator {
     }
 
     public void generatePackageListJs(PrintWriter w) throws IOException {
+        class DefinedPkgInfo extends PkgInfo<DefinedPkgInfo> {
+            public DefinedPkgInfo(String name) {
+                super(name);
+            }
+
+            protected DefinedPkgInfo create(String name) {
+                return new DefinedPkgInfo(name);
+            }
+
+            /**
+             * False if this class doesn't have any classes in it (excluding descendants.)
+             */
+            boolean hasClasses;
+
+            public void write(JsonWriter js) {
+                super.write(js);
+                if(hasClasses)
+                    js.property("hasClasses",true);
+            }
+        }
 
         // build package tree info
-        PkgInfo root = new PkgInfo("");
-        Factory factory = new Factory() {
-            public PkgInfo create(String name) {
-                return new PkgInfo(name);
-            }
-        };
+        DefinedPkgInfo root = new DefinedPkgInfo("");
+
         for (PackageElement pe : pss.getPackageElement()) {
-            root.add(pe.getQualifiedName().toString(),factory);
+            root.add(pe.getQualifiedName().toString()).hasClasses=true;
         }
 
         try {
@@ -442,7 +457,7 @@ public class FrameSetGenerator {
     }
 
 
-    class NodePkgInfo extends PkgInfo<NodePkgInfo> implements PkgInfo.Factory<NodePkgInfo>, NodeMapOwner {
+    class NodePkgInfo extends PkgInfo<NodePkgInfo> implements NodeMapOwner {
         /**
          * Child {@link Node}s keyed by their {@link Node#element}.
          */
@@ -457,7 +472,7 @@ public class FrameSetGenerator {
          */
         protected Node add(TreePath t) {
             // enter the package portion
-            NodePkgInfo leafPkg = super.add(TreeUtil.getPackageName(t.getCompilationUnit()),this);
+            NodePkgInfo leafPkg = super.add(TreeUtil.getPackageName(t.getCompilationUnit()));
             // then the rest
             NodeMapOwner leaf = addNode(leafPkg, t);
             return (Node)leaf;

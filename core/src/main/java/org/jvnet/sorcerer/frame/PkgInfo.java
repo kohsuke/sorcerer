@@ -13,14 +13,9 @@ import java.util.TreeSet;
  *
  * @author Kohsuke Kawaguchi
  */
-class PkgInfo<T extends PkgInfo<T>> implements Comparable<T>, JsonWriter.Writable {
+abstract class PkgInfo<T extends PkgInfo<T>> implements Comparable<T>, JsonWriter.Writable {
     final String name;
     final Set<T> children = new TreeSet<T>();
-    /**
-     * False if this class doesn't have any classes in it (excluding descendants.)
-     */
-    // TODO: move this to a subclass
-    boolean hasClasses;
 
 
     public PkgInfo(String name) {
@@ -34,9 +29,8 @@ class PkgInfo<T extends PkgInfo<T>> implements Comparable<T>, JsonWriter.Writabl
     /**
      * Adds a new package of the given name to this tree.
      */
-    public T add(String name,Factory<T> factory) {
+    public T add(String name) {
         if(name.length()==0) {
-            hasClasses =true;
             return (T)this;
         }
 
@@ -52,22 +46,18 @@ class PkgInfo<T extends PkgInfo<T>> implements Comparable<T>, JsonWriter.Writabl
 
         for (T c : children)
             if(c.name.equals(head))
-                return c.add(rest,factory);
+                return c.add(rest);
 
-        T c = factory.create(head);
+        T c = create(head);
         children.add(c);
-        return c.add(rest,factory);
+        return c.add(rest);
     }
 
     public void write(JsonWriter js) {
         js.property("name",name);
-        if(hasClasses)
-            js.property("hasClasses",true);
         if(!children.isEmpty())
             js.property("children",children);
     }
 
-    public interface Factory<T extends PkgInfo> {
-        T create(String name);
-    }
+    protected abstract T create(String name);
 }
