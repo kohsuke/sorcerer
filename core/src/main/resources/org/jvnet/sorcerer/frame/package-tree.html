@@ -30,8 +30,9 @@
       if(!model.hasClasses && model.children.length==1)
         model.intermediate = model.children[0]; // point to the sole child
 
-      for( var i=0; i<model.children.length; i++ )
-        build(model.children[i], prefix+model.name+".");
+      if(model.children!=null)
+        for( var i=0; i<model.children.length; i++ )
+          build(model.children[i], prefix+model.name+".");
     }
     build(packageList,"");
   }
@@ -49,22 +50,24 @@
       // and when ready, call back.
       function addChildPackagesTo(treeNode,model,callback) {
         // first add child packages
-        for( var i=0; i<model.children.length; i++ ) {
-          var cmodel = model.children[i];
+        if(model.children!=null) {
+          for( var i=0; i<model.children.length; i++ ) {
+            var cmodel = model.children[i];
 
-          // skip any intermediate nodes
-          var prefix="";
-          while(cmodel.intermediate!=null) {
-            prefix += cmodel.name+".";
-            cmodel = cmodel.intermediate;
+            // skip any intermediate nodes
+            var prefix="";
+            while(cmodel.intermediate!=null) {
+              prefix += cmodel.name+".";
+              cmodel = cmodel.intermediate;
+            }
+            var o = {};
+            o.label = prefix+cmodel.name;
+            o.model = cmodel;
+            var n = new YAHOO.widget.TextNode(o,treeNode,false);
+            n.setDynamicLoad(function(node,onCompleteCallback) {
+              addChildPackagesTo(node, node.data.model, onCompleteCallback);
+            });
           }
-          var o = {};
-          o.label = prefix+cmodel.name;
-          o.model = cmodel;
-          var n = new YAHOO.widget.TextNode(o,treeNode,false);
-          n.setDynamicLoad(function(node,onCompleteCallback) {
-            addChildPackagesTo(node, node.data.model, onCompleteCallback);
-          });
         }
 
         // then load class list, if any
@@ -112,8 +115,9 @@
           var n = new YAHOO.widget.TextNode(o,root,false);
           n.setDynamicLoad(loadClassList);
         }
-        for( var i=0; i<model.children.length; i++ )
-          buildTree(model.children[i]);
+        if(model.children!=null)
+          for( var i=0; i<model.children.length; i++ )
+            buildTree(model.children[i]);
       }
 
       buildTree(packageList);

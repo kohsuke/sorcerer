@@ -210,7 +210,7 @@ public class FrameSetGenerator extends AbstractWriter {
 
         try {
             w.println("setPackageList(");
-            root.write(new JsonWriter(w));
+            new JsonWriter(w).object(root);
             w.println(");");
         } finally {
             w.close();
@@ -351,7 +351,7 @@ public class FrameSetGenerator extends AbstractWriter {
             }
             Arrays.sort(names);
             for (String n : names) {
-                js.string(n);
+                js.object(n);
             }
             js.endArray();
             js.endObject();

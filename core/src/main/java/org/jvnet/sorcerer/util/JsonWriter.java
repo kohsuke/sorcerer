@@ -143,9 +143,16 @@ public class JsonWriter {
     /**
      * Writes out a string value.
      */
-    public void string(String str) {
+    public JsonWriter object(String str) {
         sep();
         quote(str);
+        return this;
+    }
+
+    public JsonWriter object(Writable root) {
+        startObject();
+        root.write(this);
+        return endObject();
     }
 
     private static final boolean INDENT = initIndent();

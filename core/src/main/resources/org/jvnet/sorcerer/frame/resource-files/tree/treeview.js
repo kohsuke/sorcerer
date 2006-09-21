@@ -431,7 +431,7 @@ YAHOO.widget.TreeView.prototype = {
 
     /**
      * toString
-     * @return {string} string representation of the tree
+     * @return {object} string representation of the tree
      */
     toString: function() {
         return "TreeView " + this.id;
@@ -1430,7 +1430,7 @@ YAHOO.widget.Node.prototype = {
 
     /**
      * toString
-     * @return {string} string representation of the node
+     * @return {object} string representation of the node
      */
     toString: function() {
         return "Node (" + this.index + ")";
