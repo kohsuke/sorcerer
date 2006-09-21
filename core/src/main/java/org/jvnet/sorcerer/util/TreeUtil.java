@@ -113,7 +113,7 @@ public class TreeUtil {
     /**
      * Returns true if the given program element should be mentioned in the outline view.
      */
-    public static final EnumSet<ElementKind> OUTLINE_WORTHY = EnumSet.of(
+    public static final EnumSet<ElementKind> OUTLINE_WORTHY_ELEMENT = EnumSet.of(
         ElementKind.ANNOTATION_TYPE,
         ElementKind.CLASS,
         ElementKind.CONSTRUCTOR,
@@ -125,7 +125,12 @@ public class TreeUtil {
         ElementKind.METHOD,
         ElementKind.STATIC_INIT,
         ElementKind.PACKAGE
+    );
 
+    public static final EnumSet<Tree.Kind> OUTLINE_WORTHY_TREE = EnumSet.of(
+        Tree.Kind.CLASS,
+        Tree.Kind.METHOD,
+        Tree.Kind.VARIABLE
     );
 
     /**

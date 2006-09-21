@@ -4,20 +4,21 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.util.SimpleElementVisitor6;
 
 /**
  * Computes the name of a program element suitable to be used in the outline view.
+ *
+ * <p>
+ * The name should be short and human readable. Avoid using fully qualified name.
+ *
  * @author Kohsuke Kawaguchi
  */
 public final class OutlineNameVisitor extends SimpleElementVisitor6<String,Void> {
 
-    private final TypeVisitor<TypeMirror,Void> javadocErasure;
+    public static final OutlineNameVisitor INSTANCE = new OutlineNameVisitor();
 
-    public OutlineNameVisitor(ParsedSourceSet pss) {
-        this.javadocErasure = new JavadocErasureVisitor(pss.getTypes());
+    private OutlineNameVisitor() {
     }
 
     public String visitType(TypeElement t, Void _) {
@@ -49,7 +50,7 @@ public final class OutlineNameVisitor extends SimpleElementVisitor6<String,Void>
         buf.append(')');
         if(e.getKind()!=ElementKind.CONSTRUCTOR) {
             buf.append(':');
-            buf.append(e.getReturnType().accept(javadocErasure,null));
+            buf.append(e.getReturnType().accept(ShortNameVisitor.INSTANCE,null));
         }
         return buf.toString();
     }

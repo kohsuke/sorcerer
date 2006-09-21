@@ -71,14 +71,9 @@ public class FrameSetGenerator {
      * Reference to the unnamed package.
      */
     private final PackageElement unnamed;
-    /**
-     * Computes the display name of the element.
-     */
-    private final OutlineNameVisitor nameVisitor;
 
     public FrameSetGenerator(ParsedSourceSet pss) {
         this.pss = pss;
-        this.nameVisitor = new OutlineNameVisitor(pss);
         this.linkResolverFactory = pss.getLinkResolverFactory();
         this.unnamed = pss.getElements().getPackageElement("");
     }
@@ -352,7 +347,7 @@ public class FrameSetGenerator {
                     long endPos = sourcePositions.getEndPosition(cu,t);
                     if(endPos<0)    return false; // synthetic
 
-                    if(TreeUtil.OUTLINE_WORTHY.contains(e.getKind())) {
+                    if(TreeUtil.OUTLINE_WORTHY_ELEMENT.contains(e.getKind())) {
                         jw.startObject();
                         writeOutlineNodeProperties(jw,e,cu,t);
                         jw.key("children").startArray();
@@ -377,7 +372,7 @@ public class FrameSetGenerator {
     }
 
     private void writeOutlineNodeProperties(JsonWriter jw, Element e) {
-        jw.property("name",e.accept(nameVisitor,null));
+        jw.property("name",e.accept(OutlineNameVisitor.INSTANCE,null));
         jw.property("kind",getKindString(e.getKind()));
         jw.property("access",getAccessLevel(e).toString());
         if(e.getModifiers().contains(Modifier.STATIC))
@@ -521,9 +516,9 @@ public class FrameSetGenerator {
             else
                 p = this;
 
-            Element e = TreeUtil.getElement(t.getLeaf());
-            if(e!=null) {
-                if(TreeUtil.OUTLINE_WORTHY.contains(e.getKind())) {
+            if(TreeUtil.OUTLINE_WORTHY_TREE.contains(t.getLeaf().getKind())) {
+                Element e = TreeUtil.getElement(t.getLeaf());
+                if(e!=null) {
                     Node n = p.children.get(e);
                     if(n==null)
                         p.children.put(e,n=createNode(e,t));
