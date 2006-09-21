@@ -36,7 +36,7 @@ abstract class ClosedHashMultiMap<K,V> {
 
     /** The load factor for the hashtable. */
     private static final float loadFactor = 0.3f;
-    private static final int initialCapacity = 191;
+    private static final int initialCapacity = 31;
 
     public ClosedHashMultiMap() {
         table = new Object[initialCapacity];
