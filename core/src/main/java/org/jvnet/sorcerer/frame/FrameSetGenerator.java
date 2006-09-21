@@ -524,9 +524,9 @@ public class FrameSetGenerator {
             Element e = TreeUtil.getElement(t.getLeaf());
             if(e!=null) {
                 if(TreeUtil.OUTLINE_WORTHY.contains(e.getKind())) {
-                    Node n = children.get(e);
+                    Node n = p.children.get(e);
                     if(n==null)
-                        children.put(e,n=createNode(e,t));
+                        p.children.put(e,n=createNode(e,t));
                     return n;
                 }
             }
@@ -561,8 +561,8 @@ public class FrameSetGenerator {
                     w.property("code",p.getLeaf().toString());
                     w.endObject();
                 }
+                w.endArray();
             }
-            w.endArray();
             w.endObject();
         }
     }

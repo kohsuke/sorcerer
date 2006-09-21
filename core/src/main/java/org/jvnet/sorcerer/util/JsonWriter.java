@@ -31,9 +31,10 @@ public class JsonWriter {
     private void sep() {
         if(first)
             first = false;
-        else
+        else {
             w.print(',');
-        nl(0);
+            nl(0);
+        }
     }
 
 

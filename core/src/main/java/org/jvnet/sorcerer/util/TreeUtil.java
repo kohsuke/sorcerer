@@ -123,7 +123,9 @@ public class TreeUtil {
         ElementKind.INSTANCE_INIT,
         ElementKind.INTERFACE,
         ElementKind.METHOD,
-        ElementKind.STATIC_INIT
+        ElementKind.STATIC_INIT,
+        ElementKind.PACKAGE
+
     );
 
     /**
