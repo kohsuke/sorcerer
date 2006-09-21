@@ -37,8 +37,20 @@
     build(packageList,"");
   }
 
-  // stores on-going class-list loading activities
-  var pendingLoads = {};
+  var pendingLoads = {};    // stores on-going class-list loading activities
+  var completedLoads = {};  // stores completed load activities to avoid reload
+
+  // load class-list.js when a package name is clicked
+  function loadClassList(model,treeNode,callback) {
+    var l = completedLoads[model.fullName];
+    if(l!=null) {
+      // already loaded. resuse.
+      addClassList(l,treeNode,callback);
+    } else {
+      pendingLoads[model.fullName] = { node:treeNode, onComplete:callback };
+      loadScript(model.classList);
+    }
+  }
 
   // display packages in a nested tree view
   var hierarchicalView = {
@@ -72,8 +84,7 @@
 
         // then load class list, if any
         if(model.hasClasses) {
-          pendingLoads[model.fullName] = { node:treeNode, onComplete:callback };
-          loadScript(model.classList);
+          loadClassList(model,treeNode,callback);
         } else {
           // if no class is in there, we are done
           callback();
@@ -95,13 +106,6 @@
     loadPackage : function() {
       var root = tree.getRoot();
 
-      // load class-list.js when a package name is clicked
-      function loadClassList(node,onCompleteCallback) {
-        var p = node.data.model;
-        pendingLoads[p.fullName] = { node:node, onComplete:onCompleteCallback };
-        loadScript(p.classList);
-      }
-
       // recursively add model nodes as flat pacakge list
       function buildTree(model) {
         if(model.hasClasses) {
@@ -113,7 +117,9 @@
             o.label=model.fullName;
 
           var n = new YAHOO.widget.TextNode(o,root,false);
-          n.setDynamicLoad(loadClassList);
+          n.setDynamicLoad(function(node,callback) {
+            loadClassList(node.data.model, node, callback);
+          });
         }
         if(model.children!=null)
           for( var i=0; i<model.children.length; i++ )
@@ -143,15 +149,23 @@
       c.label = "<img src='resource-files/"+c.kind+"_"+c.access+".gif'> "+c.name;
       c.target = "main";
       c.href = base+c.href;
+    }
 
-      var cnode = new YAHOO.widget.TextNode(c, o.node, false);
+    completedLoads[packageName] = classList;
+    addClassList(classList, o.node, o.onComplete);
+  }
+
+  function addClassList(classList, node, onComplete) {
+    for( var j=0; j<classList.length; j++ ) {
+      var c = classList[j];
+      var cnode = new YAHOO.widget.TextNode(c, node, false);
       cnode.onLabelClick = function(me) {
         top.main.location = me.data.href;
         return false;
       }
       // href is the only way to get link. you have to put javascript fragment in there
     }
-    o.onComplete();
+    onComplete();
   }
 
   function errorCheck() {
@@ -192,4 +206,4 @@
 <script type="text/javascript" src="package-list.js" ></script>
   </body>
 </html>
- 
+
