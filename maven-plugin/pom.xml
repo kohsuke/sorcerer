@@ -2,19 +2,19 @@
   <parent>
     <artifactId>sorcerer</artifactId>
     <groupId>org.jvnet.sorcerer</groupId>
-    <version>0.2</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>maven-sorcerer-plugin</artifactId>
   <packaging>maven-plugin</packaging>
   <name>Maven Sorcerer Plugin</name>
-  <version>0.2</version>
+  <version>0.3-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>org.jvnet.sorcerer</groupId>
       <artifactId>sorcerer-core</artifactId>
-      <version>0.2</version>
+      <version>0.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.reporting</groupId>
@@ -32,7 +32,7 @@
       <plugin>
         <groupId>org.jvnet.sorcerer</groupId>
         <artifactId>maven-sorcerer-plugin</artifactId>
-        <version>0.2</version>
+        <version>0.3-SNAPSHOT</version>
         <configuration>
           <javadocs>
             <javadoc>
