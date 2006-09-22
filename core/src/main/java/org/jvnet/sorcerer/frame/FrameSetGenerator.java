@@ -111,7 +111,9 @@ public class FrameSetGenerator extends AbstractWriter {
 
             System.out.println(pkg+name);
             File out = new File(outDir, pkg + name+".html");
-            out.getParentFile().mkdirs();
+            File parent = out.getParentFile();
+            if(parent!=null)    // null if outDir was "."
+                parent.mkdirs();
 
             FrameHtmlGenerator gen = new FrameHtmlGenerator(pss,cu);
             gen.setCss(css.href(cu));
