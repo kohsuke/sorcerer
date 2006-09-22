@@ -59,9 +59,9 @@ public class TreeUtil {
         boolean first=true;
         List<? extends VariableElement> parameters = safeGetParameters(e);
         for (VariableElement v : parameters) {
-            buf.append(types.erasure(v.asType()));
             if(first)   first=false;
             else        buf.append(',');
+            buf.append(types.erasure(v.asType()));
         }
         return buf.append(')');
     }
