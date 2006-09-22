@@ -57,6 +57,10 @@ function ToggleButton(e,callback) {
   }
 }
 
+// radio button where multiple buttons form a single logical group
+// and only one in a group can be selected.
+//
+//  group : an array that will store all the members
 function RadioButton(e,group,callback) {
   group.push(e);
 
