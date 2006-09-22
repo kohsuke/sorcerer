@@ -117,7 +117,8 @@
 
       var node = new YAHOO.widget.TextNode(m, parent, expanded);
       node.onLabelClick = function(me) {
-        top.main.location.hash = '#'+me.data.line;
+        // top.main.location.hash = '#'+me.data.line;
+        me.toggle();
         return false;
       }
       parent = node;
