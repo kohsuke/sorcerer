@@ -13,9 +13,10 @@
           this.frame.rows="100%,*";
         }
       },
-      show : function() {
+      show : function(link) {
         if(!this.isShown())
           this.frame.rows=this.rowSpec;
+        main.loadUsage(link.getAttribute('className'),link.getAttribute('anchor'));
       },
       isShown : function() {
         return this.frame.rows!="100%,*";

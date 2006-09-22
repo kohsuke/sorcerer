@@ -7,13 +7,30 @@
     var tip; // tooltip <span> object
     var radioGroup = []; // radio group buttons
 
+    // strategy pattern that determines how to draw a tree.
+    // each function filters out nodes by returning false
+    var strategies = {
+      byPackage : function(model) {
+        if(model.kind=="package" && model.classes==null)
+          return false;
+        return true;
+      },
+
+      byType : function(model) {
+        return model.kind!="package";
+      }
+    };
+
+    var strategy = strategies.byPackage; // currently enabled view strategy
+
     function start() {
       tip = document.getElementById("tip");
       var dd = document.body.firstChild;
       for( n=dd; n!=null; n=n.nextSibling ) {
         if(n.nodeType==1 && n.tagName=="IMG") {
           new RadioButton(n,radioGroup,function(x) {
-            window.alert(x.getAttribute("tip"));
+            strategy = strategies[x.getAttribute("strategy")];
+            parent.main.redraw();
           });
         }
       }
@@ -23,8 +40,10 @@
 <body class=toolbar onload="start()">
 <img  class="button pressed" src="resource-files/search/package_mode.gif"
       tip="Group by packages"
+      strategy="byPackage"
 ><img class=button src="resource-files/search/type_mode.gif"
       tip="Group by types"
+      strategy="byType"
 >
 <span id=tip></span>
 <div style="position:absolute; top:2px; right:2px">

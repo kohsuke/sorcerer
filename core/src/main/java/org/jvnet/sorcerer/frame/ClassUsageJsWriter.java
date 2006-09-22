@@ -107,6 +107,7 @@ public class ClassUsageJsWriter extends AbstractWriter {
         }
 
         public void write(JsonWriter js) {
+            js.property("kind","package");
             super.write(js);
             if(!children.isEmpty())
                 js.property("classes",children.values());
