@@ -1,8 +1,8 @@
 package org.jvnet.sorcerer.frame;
 
+import com.sun.source.tree.CompilationUnitTree;
 import org.jvnet.sorcerer.DefaultHtmlGenerator;
 import org.jvnet.sorcerer.ParsedSourceSet;
-import com.sun.source.tree.CompilationUnitTree;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -18,7 +18,9 @@ public class FrameHtmlGenerator extends DefaultHtmlGenerator {
         super(pss, cu);
     }
 
+
     public void writeBody(PrintWriter out) throws IOException {
+        out.println("<div id=\"menuSelector\"></div>");
         super.writeBody(out);
         // script fragment to sync up the outline view.
         out.println("<script type='text/javascript'>");

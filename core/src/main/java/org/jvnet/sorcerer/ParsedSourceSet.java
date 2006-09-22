@@ -364,7 +364,7 @@ public class ParsedSourceSet {
         }
 
         // then semantic ones
-        new MarkerBuilder<Void,Void>(cu,gen,linkResolver,srcPos,elements) {
+        new MarkerBuilder<Void,Void>(cu,gen,linkResolver,srcPos,elements,types) {
             /**
              * primitive types like int, long, void, etc.
              */
@@ -536,7 +536,7 @@ public class ParsedSourceSet {
         // but it fails to create an element, so do this manually
         ExpressionTree packageName = cu.getPackageName();
         if(packageName!=null) {
-            new MarkerBuilder<String,Void>(cu,gen,linkResolver,srcPos,elements) {
+            new MarkerBuilder<String,Void>(cu,gen,linkResolver,srcPos,elements,types) {
                 /**
                  * For "a" of "a.b.c"
                  */

@@ -232,10 +232,16 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
         out.println("<html><head>");
         if(css==null)
             css = relativeLinkToTop+"style.css";
-        out.println("<link type='text/css' rel='stylesheet' href='"+css+"' />");
+        writeCssTag(out, css);
+        writeCssTag(out,relativeLinkToTop+"menu/menu.css");
 
-        out.println("<script type='text/javascript' src='"+relativeLinkToTop+"behavior.js'></script>");
-        out.println("<script type='text/javascript' src='"+relativeLinkToTop+"sorcerer.js'></script>");
+        writeScriptTag(out,"resource-files/yahoo.js");
+        writeScriptTag(out,"resource-files/dom.js");
+        writeScriptTag(out,"resource-files/event.js");
+        writeScriptTag(out,"resource-files/container_core.js");
+        writeScriptTag(out,"menu/menu.js");
+        writeScriptTag(out,"behavior.js");
+        writeScriptTag(out,"sorcerer.js");
         out.println("</head>");
 
         writeBodyTag(out);
@@ -245,6 +251,14 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
         // the proper palce
         out.print("<div style='height:0px; overflow:hidden'></div>");
         out.print("<pre id=main style='padding-left:3em'>");
+    }
+
+    private void writeCssTag(PrintWriter out, String name) {
+        out.println("<link type='text/css' rel='stylesheet' href='"+name +"' />");
+    }
+
+    private void writeScriptTag(PrintWriter out, String name) {
+        out.println("<script type='text/javascript' src='"+relativeLinkToTop+name+"'></script>");
     }
 
     /**

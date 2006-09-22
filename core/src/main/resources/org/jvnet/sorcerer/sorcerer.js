@@ -4,25 +4,25 @@ function Fader(e,r,g,b) {
   self = this;
   this.grad = 0;
   this.steps = 20;
-  
+
   this.trigger = function() {
     window.setTimeout(this.away,25);
   }
-  
+
   this.set = function() {
     function ratio(i) {
       return (255*self.grad+i*(self.steps-self.grad))/self.steps;
     }
     e.style.backgroundColor = "rgb("+ratio(r)+","+ratio(g)+","+ratio(b)+")";
   }
-  
+
   this.away = function() {
     self.set();
     if(++self.grad <= self.steps) {
       self.trigger();
     }
   }
-  
+
   this.set();
   window.setTimeout(this.away,1000);
 }
@@ -49,7 +49,7 @@ function Future(action,timeout) {
 var menu;
 var menuSelector;
 
-function buildMenu() {
+window.onload = function() {
   // Create the menu
   menu = new YAHOO.widget.Menu("contextmenu");
   menuSelector = document.getElementById('menuSelector');
@@ -116,9 +116,11 @@ function buildMenu() {
     menuSelector.style.visibility="hidden";
   };
 
-  var links = YAHOO.util.Dom.getElementsByClassName("link","a",document.body);
+  // var links = YAHOO.util.Dom.getElementsByClassName("link",null,document.body);
+  var links = document.getElementsByTagName("span");
   for( var i=links.length-1; i>=0; i-- ) {
     var e = links[i];
+    if(e.getAttribute("u")==null) continue;
     e.onmouseover=function() {
       var xy = YAHOO.util.Dom.getXY(this);
       xy[0] += this.offsetWidth;

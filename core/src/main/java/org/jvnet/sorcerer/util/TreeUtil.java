@@ -51,7 +51,11 @@ public class TreeUtil {
     }
 
     /**
-     * Computes the full method name with the FQCN as parameter names.
+     * Computes the full method signature with the FQCN as parameter names.
+     * For example, "foo(int,java.lang.String)".
+     *
+     * @param buf
+     *      This method name will be appepended to this buffer.
      */
     public static StringBuilder buildMethodName(StringBuilder buf, Types types, ExecutableElement e) {
         // use the full parameter list as a part of ID to handle overloading

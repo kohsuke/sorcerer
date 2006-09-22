@@ -154,9 +154,15 @@ public class FrameSetGenerator extends AbstractWriter {
 
         // other resources from core
         System.out.println("Generating static resource files");
-        IOUtil.copy("behavior.js",new File(outDir,"behavior.js"));
-        IOUtil.copy("sorcerer.js",new File(outDir,"sorcerer.js"));
-        IOUtil.copy("style.css",new File(outDir,"style.css"));
+        copyResource(outDir, "behavior.js");
+        copyResource(outDir, "sorcerer.js");
+        copyResource(outDir, "style.css");
+
+        new File(outDir,"menu").mkdir();
+        copyResource(outDir, "menu/menu.css");
+        copyResource(outDir, "menu/rightarrow.gif");
+        copyResource(outDir, "menu/menu.js");
+
 
         // frameset specific resources
         for (String res : RESOURCES) {
@@ -169,6 +175,9 @@ public class FrameSetGenerator extends AbstractWriter {
         }
     }
 
+    private void copyResource(File outDir, String resourceName) throws IOException {
+        IOUtil.copy(resourceName,new File(outDir,resourceName));
+    }
 
 
     public void generateIndex(PrintWriter w) throws IOException {
@@ -389,6 +398,9 @@ public class FrameSetGenerator extends AbstractWriter {
             "left-pane.js",
             "left-pane.css",
             "resource-files/yahoo.js",
+            "resource-files/dom.js",
+            "resource-files/event.js",
+            "resource-files/container_core.js",
             "resource-files/close.gif",
             "resource-files/layout-flat.gif",
             "resource-files/layout-hierarchical.gif",
