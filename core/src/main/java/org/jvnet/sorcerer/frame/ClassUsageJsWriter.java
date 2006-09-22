@@ -76,7 +76,11 @@ public class ClassUsageJsWriter extends AbstractWriter {
         NodeMap getChildren();
     }
 
-
+    /**
+     * Package tree that has {@link Node}. This tree is like a snowy mountain.
+     * There's the top portion of the tree that consists of {@link NodePkgInfo},
+     * then there's the lower portion of the tree that consists of {@link Node}.
+     */
     class NodePkgInfo extends PkgInfo<NodePkgInfo> implements NodeMapOwner {
         /**
          * Child {@link Node}s keyed by their {@link Node#element}.
@@ -109,6 +113,9 @@ public class ClassUsageJsWriter extends AbstractWriter {
         public void write(JsonWriter js) {
             js.property("kind","package");
             super.write(js);
+            for (Node n : children.values()) {
+                n.parentIsPackage = true;
+            }
             if(!children.isEmpty())
                 js.property("classes",children.values());
         }
@@ -116,7 +123,9 @@ public class ClassUsageJsWriter extends AbstractWriter {
 
     /**
      * Adds the given {@link TreePath} to the {@link Node} tree
-     * rooted at "root" node, then return the {@link Node} where
+     * rooted at "root" node, by using the part of the path that
+     * falls within the same compilation unit.
+     * then return the {@link Node} where
      * the {@link TreePath} is ultimately stored.
      */
     NodeMapOwner addNode(NodeMapOwner root, TreePath t) {
@@ -148,7 +157,7 @@ public class ClassUsageJsWriter extends AbstractWriter {
          */
         final Element element;
         /**
-         * {@link TreePath} of the element, if available.
+         * {@link TreePath} of the element.
          */
         final TreePath path;
         /**
@@ -156,6 +165,12 @@ public class ClassUsageJsWriter extends AbstractWriter {
          */
         final NodeMap children = new NodeMap();
         final List<TreePath> leaves = new ArrayList<TreePath>();
+
+        /**
+         * Set to true before {@link #write(JsonWriter)} if the parent node
+         * is {@link NodePkgInfo}.
+         */
+        boolean parentIsPackage;
 
         protected Node(Element element, TreePath path) {
             this.element = element;
@@ -171,11 +186,17 @@ public class ClassUsageJsWriter extends AbstractWriter {
          */
         public void write(JsonWriter w) {
             if(element!=null) {
-                if(path==null)
-                    writeOutlineNodeProperties(w,element);
-                else
-                    writeOutlineNodeProperties(w,element,path.getCompilationUnit(),path.getLeaf());
+                writeOutlineNodeProperties(w,element,path.getCompilationUnit(),path.getLeaf());
             }
+
+            if(parentIsPackage) {
+                // if this class is in a compilation unit that's different from the class name,
+                // we need to write it out so that we can jump to the right source file at runtime.
+                String name = element.getSimpleName().toString();
+                if(!TreeUtil.getPrimaryTypeName(path.getCompilationUnit()).equals(name))
+                    w.property("source",name);
+            }
+
             if(!children.isEmpty()) {
                 w.property("children",children.values());
             }

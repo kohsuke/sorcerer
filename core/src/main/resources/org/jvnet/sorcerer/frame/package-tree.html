@@ -147,7 +147,6 @@
     for( var j=0; j<classList.length; j++ ) {
       var c = classList[j];
       c.label = "<img src='resource-files/"+c.kind+"_"+c.access+".gif'> "+c.name;
-      c.target = "main";
       c.href = base+c.href;
     }
 
@@ -160,7 +159,9 @@
       var c = classList[j];
       var cnode = new YAHOO.widget.TextNode(c, node, false);
       cnode.onLabelClick = function(me) {
-        top.main.location = me.data.href;
+        try {
+          top.main.location = me.data.href;
+        } catch(e) {/*don't let the navigation failure leak (which causes the page to be loaded on this frame.*/}
         return false;
       }
       // href is the only way to get link. you have to put javascript fragment in there

@@ -43,6 +43,7 @@
 
     loadComplete : function(className,model) {
       // post process model
+      // step.1 : compute full package name
       function buildChildren(model,pkgPrefix) {
         for( var i=0; i<model.children.length; i++ )
           postProcess( model.children[i], pkgPrefix );
@@ -54,6 +55,36 @@
       }
       for( var x in model )
         buildChildren(model[x],"");
+
+      // step.2 : compute the link target
+      function setLinkTarget(m) {
+        if(m.children!=null) {
+          for( var i=0; i<m.children.length; i++ )
+            setLinkTarget( m.children[i] );
+        }
+        if(m.classes!=null) {
+          for( var i=0; i<m.classes.length; i++ ) {
+            var c = m.classes[i];
+            c.href = m.name.replace(/\./g,"/")+"/";
+            if(c.source==null)
+              c.href += c.name;
+            else
+              c.href += c.source;
+            c.href += ".html";
+
+            function copyHref(m,href) {
+              m.href = href+"#"+m.line;
+              if(m.children==null)  return;
+              for( var i=0; i<m.children.length; i++ ) {
+                copyHref( m.children[i], href );
+              }
+            }
+            copyHref(c,c.href);
+          }
+        }
+      }
+      for( var x in model )
+        setLinkTarget(model[x]);
 
 
       this.completedLoads[className] = model;
@@ -112,12 +143,15 @@
   function insertNode( parent, m, expanded ) {
     if(window.parent.toolbar.strategy(m)) {
       m.label = "<img src='resource-files/"+m.kind+(m.access!=null?"_"+m.access:"")+".gif'> "+m.name;
-      m.target = "main";
-      // model.href = '#'+model.line; // TODO
 
       var node = new YAHOO.widget.TextNode(m, parent, expanded);
       node.onLabelClick = function(me) {
-        // top.main.location.hash = '#'+me.data.line;
+        if(me.data.href!=null)
+          try {
+            window.top.main.location = me.data.href;
+          } catch(e) {/*don't let the navigation failure leak (which causes the page to be loaded on this frame.*/}
+
+        // jump and toggle at the same time
         me.toggle();
         return false;
       }
