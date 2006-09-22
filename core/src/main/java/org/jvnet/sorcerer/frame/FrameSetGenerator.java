@@ -380,12 +380,16 @@ public class FrameSetGenerator extends AbstractWriter {
             "package-toolbar.html",
             "package-container.html",
             "outline-view.html",
-            "search-pane.html",
             "outline-toolbar.html",
             "outline-container.html",
+            "search-pane.html",
+            "search-toolbar.html",
+            "search-container.html",
+            "eclipse-public-license.url",
             "left-pane.js",
             "left-pane.css",
             "resource-files/yahoo.js",
+            "resource-files/close.gif",
             "resource-files/layout-flat.gif",
             "resource-files/layout-hierarchical.gif",
             "resource-files/tree/folder.css",
@@ -403,6 +407,10 @@ public class FrameSetGenerator extends AbstractWriter {
                 RESOURCES.add("resource-files/tree/"+folder+"/"+name+".gif");
                 RESOURCES.add("resource-files/tree/"+folder+"/"+name+"h.gif");
             }
+        }
+
+        for(String name : new String[]{"file","package","prj","type"}) {
+            RESOURCES.add("resource-files/search/"+name+"_mode.gif");
         }
 
         for(String name : new String[]{"alphab_sort_co.gif","fields_co.gif","localtypes_co.gif","public_co.gif","static_co.gif"}) {

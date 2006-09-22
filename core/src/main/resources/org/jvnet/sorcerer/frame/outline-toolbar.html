@@ -1,70 +1,22 @@
 <!DOCTYPE html public "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
-  <style type="text/css">
-    .button {
-      cursor:pointer;
-      padding: 2px;
-      position: relative;
-    }
-    .button.pressed {
-      left: 1px;
-      /*
-      padding: 1px;
-      border: 1px solid black;
-      border-top-color: ThreeDShadow;
-      border-left-color: ThreeDShadow;
-      border-right-color: ThreeDLightShadow;
-      border-bottom-color: ThreeDLightShadow;
-      */
-      background-color: ButtonShadow;
-    }
-    #tip {
-      font-family: verdana, sans-serif;
-      font-size: 10px;
-      position: relative;
-      top: -7px;
-    }
-  </style>
+  <link rel="stylesheet" type="text/css" href="left-pane.css">
+  <script type="text/javascript" src="left-pane.js"></script>
   <script type="text/javascript">
     var tip; // tooltip <span> object
     var buttons = []; // all buttons
-
-    // toggle button class for filter
-    function ToggleButton(e) {
-      e.isPressed = function() {
-        return this.onclick==this.release;
-      }
-      e.postClick = function() {
-        this.onmouseover(); // update the tooltip
-        parent.main.refresh();
-      }
-      e.press = function() {
-        this.className="button pressed";
-        this.onclick=this.release;
-        this.postClick();
-      }
-      e.release = function() {
-        this.className="button";
-        this.onclick=this.press;
-        this.postClick();
-      }
-      e.onclick = e.press;
-      e.onmouseover = function() {
-        tip.innerHTML = this.getAttribute(this.isPressed()?"tip2":"tip1");
-      }
-      e.onmouseout = function() {
-        tip.innerHTML = "";
-      }
-      e.filter = eval(e.getAttribute("filter")); // filter function
-    }
 
     function start() {
       tip = document.getElementById("tip");
       var dd = document.body.firstChild;
       for( n=dd; n!=null; n=n.nextSibling ) {
         if(n.nodeType==1 && n.tagName=="IMG") {
-          new ToggleButton(n);
+          new ToggleButton(n,function(x) {
+            if(parent.main.refresh!=null) // in case the outline is not loaded
+              parent.main.refresh();
+          });
+          n.filter = eval(n.getAttribute("filter")); // filter function
           buttons.push(n);
         }
       }
@@ -111,9 +63,7 @@
     }
   </script>
 </head>
-<body style="margin:0; padding:0; overflow:hidden; background-color:ThreeDFace; height: 20px;
-  border-bottom: 1px solid ThreeDShadow;
-  border-top: 1px solid ThreeDLightShadow"
+<body class='toolbar'
   onload="start()">
 <img  class=button src="resource-files/outline-filter/alphab_sort_co.gif"
       tip1="Sort alphabetically"

@@ -9,31 +9,10 @@
 </head>
 <body>
 <p>
-  <a href="javascript:displayController.reduce()">minimize</a>
   <a href="javascript:loadUsage('java.lang.String','length()')">load</a>
 </p>
 <div id="treeDiv" style="white-space:nowrap;"></div>
 <script type="text/javascript">
-  var displayController = {
-    rowSpec : "90%,10%", // remember the row set specification when the page was open
-    frame   : window.parent.document.getElementById("contentframeset"),
-    spane   : window.parent.document.getElementById("searchpane"),
-
-    reduce : function() {
-      if(this.isShown()) {
-        this.rowSpec = this.frame.rows;
-        this.frame.rows="100%,*";
-      }
-    },
-    show : function() {
-      if(!this.isShown())
-        this.frame.rows=this.rowSpec;
-    },
-    isShown : function() {
-      return this.frame.rows!="100%,*";
-    }
-  };
-
   // tree for displaying "find usage" search result
   var treeDiv = document.getElementById("treeDiv");
   var tree = new YAHOO.widget.TreeView(treeDiv);
