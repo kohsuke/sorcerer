@@ -63,6 +63,19 @@ PRE {
   margin-bottom:0px;
 }
 
+#menuSelector {/* used for showing '>' on the right of the anchor */
+  background-color:#f6f7ee;
+  border:solid 1px #c4c4be;
+  background-image: url(menu/rightarrow.gif);
+  background-position: center center;
+  background-repeat: no-repeat;
+  width: 14px;
+  height:14px;
+  position: absolute;
+  visibility: hidden;
+  cursor: pointer;
+}
+
 
 
 /*

@@ -5,88 +5,25 @@
   <script type="text/javascript" src="../../resource-files/dom.js"></script>
   <script type="text/javascript" src="../../resource-files/event.js"></script>
   <script type="text/javascript" src="../../resource-files/container_core.js"></script>
-  <script type="text/javascript" src="../../resource-files/menu/menu.js"></script>
-  <link rel="stylesheet" type="text/css" href="../../resource-files/menu/menu.css">
+  <script type="text/javascript" src="../../../menu/menu.js"></script>
+  <script type="text/javascript" src="../../../behavior.js"></script>
+  <script type="text/javascript" src="../../../sorcerer.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../../style.css">
+  <link rel="stylesheet" type="text/css" href="../../../menu/menu.css">
   <script type="text/javascript">
     var adrs = new String(window.location);
     adrs = adrs.substring(0,adrs.length-5)+"-outline.js";
     adrs = window.location+"/../../../outline-view.html?"+adrs;
     top.outline.main.location = adrs;
   </script>
-  <!-- menu test -->
-  <script type="text/javascript">
-    function start() {
-      // Create the menu
-      var menu = new YAHOO.widget.Menu("contextmenu");
-
-      var menuItems = [
-          {
-            text: "Go to declaration",
-            action: function() {
-              window.location=menu.target.href;
-            }
-          },
-          {
-            text: "Find usages",
-            action: function() {
-              window.alert("TODO:"+menu.target.innerHTML);
-            }
-          }
-        ];
-
-      // Add items to the main menu
-      for(var i=0; i<menuItems.length; i++) {
-          menuItem =
-              new YAHOO.widget.MenuItem(menuItems[i].text);
-          menuItem.clickEvent.subscribe(menuItems[i].action);
-          menu.addItem(menuItem);
-      }
-
-
-      menu.render(document.body);
-
-    function Future(action,timeout) {
-      this.schedule=function() {
-        this.token=window.setTimeout(action,timeout);
-      }
-      this.cancel=function() {
-        window.clearTimeout(this.token);
-      }
-    }
-
-      // for hiding menu after a timeout
-      var canceller = new Future(function() {
-        menu.hide();
-      },750);
-
-      menu.mouseOverEvent.subscribe(function(){canceller.cancel();});
-      menu.mouseOutEvent.subscribe(function(){canceller.schedule();});
-
-      function showMenu() {
-        menu.cfg.setProperty("context", [this, "tl", "bl"]);
-        menu.show();
-        menu.target=this;
-        return false;
-      }
-
-      // emulation of behaviour.js
-      document.getElementById('p').onclick=showMenu;
-      document.getElementById('q').onclick=showMenu;
-
-      document.onclick=function() {
-        menu.hide();
-      }
-    }
-  </script>
 </head>
-<body onload="start()">
+<body onload="buildMenu()">
+<div id="menuSelector"></div>
   String source code.
-  <!-- TODO: think about a better way to link -->
-  <a href="#" onclick="javascript:parent.searchpane.displayController.show(this)"
-     u='java.lang.String#length()'>show()</a>
 <a name="1"></a>
 <p>
-  Lorem <a href="http://www.sun.com/" id='p'>ipsum</a> dolor sit amet, consectetuer adipiscing elit. Morbi interdum neque varius odio. Quisque vulputate pretium leo. Vivamus consequat sapien quis magna. Nulla feugiat, elit non congue dignissim, urna massa commodo massa, vel imperdiet elit ligula sed diam. Duis id lorem nec tortor rutrum vulputate. In quis lorem. Vivamus sagittis nibh vitae diam. Mauris vel nunc non nisl posuere vestibulum. Nunc ut ligula non nisl viverra bibendum. Nullam vitae pede tempor quam condimentum tempor. Curabitur nonummy ipsum quis nisl. In ultricies dolor eu sapien interdum dictum. Maecenas tempor mi at arcu. Aenean id nisl. Morbi posuere dictum erat. Donec at arcu malesuada eros ultricies commodo. Proin molestie, arcu quis tempor tristique, lorem ligula feugiat urna, et imperdiet ipsum eros ac lectus. Morbi tincidunt magna id massa. Nam malesuada lorem eu orci. Nam id neque.
+  Lorem <a href="http://www.sun.com/" class=link u='java.lang.String#length()'>ipsum</a>
+  <a href="http://www.sun.com/" class=link u='java.lang.String#indexOf(int)'>dolor</a> sit amet, consectetuer adipiscing elit. Morbi interdum neque varius odio. Quisque vulputate pretium leo. Vivamus consequat sapien quis magna. Nulla feugiat, elit non congue dignissim, urna massa commodo massa, vel imperdiet elit ligula sed diam. Duis id lorem nec tortor rutrum vulputate. In quis lorem. Vivamus sagittis nibh vitae diam. Mauris vel nunc non nisl posuere vestibulum. Nunc ut ligula non nisl viverra bibendum. Nullam vitae pede tempor quam condimentum tempor. Curabitur nonummy ipsum quis nisl. In ultricies dolor eu sapien interdum dictum. Maecenas tempor mi at arcu. Aenean id nisl. Morbi posuere dictum erat. Donec at arcu malesuada eros ultricies commodo. Proin molestie, arcu quis tempor tristique, lorem ligula feugiat urna, et imperdiet ipsum eros ac lectus. Morbi tincidunt magna id massa. Nam malesuada lorem eu orci. Nam id neque.
 </p>
 <a name="2"></a>
 <p>
@@ -94,7 +31,7 @@
 </p>
 <a name="3"></a>
 <p>
-  Nulla <a href="#" id='q'>consectetuer</a> mi nec odio. Curabitur a magna sit amet odio pretium porttitor. Duis interdum, mauris quis tincidunt sodales, justo libero molestie urna, auctor scelerisque odio nisi tincidunt enim. Sed in velit eget velit placerat porta. Donec vestibulum. Vestibulum turpis nulla, egestas et, pretium non, molestie eget, velit. Proin consequat condimentum risus. Maecenas erat erat, bibendum ac, pretium ac, aliquam nec, tortor. Ut dictum, nulla non consectetuer consequat, felis dui egestas lacus, eget aliquet dolor leo vel quam. Sed ullamcorper iaculis neque.
+  Nulla <a href="#" class=link>consectetuer</a> mi nec odio. Curabitur a magna sit amet odio pretium porttitor. Duis interdum, mauris quis tincidunt sodales, justo libero molestie urna, auctor scelerisque odio nisi tincidunt enim. Sed in velit eget velit placerat porta. Donec vestibulum. Vestibulum turpis nulla, egestas et, pretium non, molestie eget, velit. Proin consequat condimentum risus. Maecenas erat erat, bibendum ac, pretium ac, aliquam nec, tortor. Ut dictum, nulla non consectetuer consequat, felis dui egestas lacus, eget aliquet dolor leo vel quam. Sed ullamcorper iaculis neque.
 </p><p>
   Vivamus semper, orci quis venenatis vestibulum, ante velit pulvinar augue, eget convallis lorem turpis vitae mi. In enim massa, aliquet id, iaculis vel, imperdiet vel, diam. Sed enim eros, pellentesque eu, nonummy a, faucibus vel, risus. Quisque molestie neque volutpat leo. Nulla sit amet dui. Sed sed sapien id arcu volutpat congue. Phasellus ultricies dolor et lorem. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Vestibulum ut quam at sapien semper cursus. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Donec est lectus, scelerisque vel, pulvinar ac, fermentum tempus, est.
 </p><p>
