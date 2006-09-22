@@ -7,6 +7,24 @@ function loadScript(href) {
     head.appendChild(script);
 }
 
+// turn a span into a caption bar (that can also display a tip from buttons)
+function Caption(e) {
+  e.caption = e.innerHTML; // the initial caption is the current HTML.
+
+  e.setCaption = function(caption) {
+    this.caption = caption;
+    if(!this.tipMode)
+      this.innerHTML = caption;
+  }
+  e.showTip = function(tip) {
+    this.innerHTML=tip;
+    this.tipMode=true;
+  }
+  e.cancelTip = function() {
+    this.tipMode=false;
+    this.innerHTML=this.caption;
+  }
+}
 
 // toggle button class for filter
 //   e : the <img> element to be used as a button
@@ -32,10 +50,10 @@ function ToggleButton(e,callback) {
   }
   e.onclick = e.press;
   e.onmouseover = function() {
-    tip.innerHTML = this.getAttribute(this.isPressed()?"tip2":"tip1");
+    caption.showTip(this.getAttribute(this.isPressed()?"tip2":"tip1"));
   }
   e.onmouseout = function() {
-    tip.innerHTML = "";
+    caption.cancelTip();
   }
 }
 
@@ -55,9 +73,9 @@ function RadioButton(e,group,callback) {
       callback(this);
   }
   e.onmouseover = function() {
-    tip.innerHTML = this.getAttribute("tip");
+    caption.showTip(this.getAttribute("tip"));
   }
   e.onmouseout = function() {
-    tip.innerHTML = "";
+    caption.cancelTip();
   }
 }

@@ -2,21 +2,28 @@
 <html>
 <head>
   <link rel="stylesheet" type="text/css" href="left-pane.css">
-  <script type="text/javascript">
-    function show(t) {
-      var tip = document.getElementById("tip");
-      tip.innerHTML = parent.main.currentView.nextView.tooltip;
-      tip.style.display = t?"inline":"none";
-    }
-  </script>
+  <script type="text/javascript" src="left-pane.js"></script>
 </head>
-<body style="margin:0; padding:2px; overflow:hidden; background-color:ThreeDFace; height: 16px;
-  border-bottom: 1px solid ThreeDShadow;
-  border-top: 1px solid ThreeDLightShadow">
-<img src="resource-files/layout-hierarchical.gif"
-     onclick="parent.main.toggleView(this)"
-     onmouseover="show(true)"
-     onmouseout="show(false)"/>
-<span id="tip"></span>
+<body class=toolbar onload="start()">
+<div style="float:right;">
+  <img src="resource-files/layout-hierarchical.gif"
+       onclick="parent.main.toggleView(this)"
+       onmouseover="show(true)"
+       onmouseout="show(false)"/>
+</div>
+<span id="caption">Packages</span>
+<script type="text/javascript">
+  var caption = document.getElementById("caption");
+  function start() {
+    new Caption(caption);
+  }
+  function show(t) {
+    if(t) {
+      caption.showTip(parent.main.currentView.nextView.tooltip);
+    } else {
+      caption.cancelTip();
+    }
+  }
+</script>
 </body>
 </html>

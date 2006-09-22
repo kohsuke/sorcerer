@@ -50,7 +50,7 @@ DIV.error {
   */
   background-color: ButtonShadow;
 }
-#tip {
+BODY.toolbar #caption {
   font-family: verdana, sans-serif;
   font-size: 10px;
 }

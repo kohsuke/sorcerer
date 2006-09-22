@@ -4,7 +4,7 @@
   <link rel="stylesheet" type="text/css" href="left-pane.css">
   <script type="text/javascript" src="left-pane.js"></script>
   <script type="text/javascript">
-    var tip; // tooltip <span> object
+    var caption; // caption bar that also shows tooltip
     var radioGroup = []; // radio group buttons
 
     // strategy pattern that determines how to draw a tree.
@@ -24,7 +24,8 @@
     var strategy = strategies.byPackage; // currently enabled view strategy
 
     function start() {
-      tip = document.getElementById("tip");
+      caption = document.getElementById("caption");
+      new Caption(caption);
       var dd = document.getElementById('radio').firstChild;
       for( n=dd; n!=null; n=n.nextSibling ) {
         if(n.nodeType==1 && n.tagName=="IMG") {
@@ -38,20 +39,20 @@
   </script>
 </head>
 <body class=toolbar onload="start()">
-<div style="position:absolute; top:2px; right:2px">
-  <span id=tip style="width:100px; text-align:right"></span>
+<div style="float:right;">
   <span id='radio'>
-  <img  class="button pressed" src="resource-files/search/package_mode.gif"
-        tip="Group by packages"
-        strategy="byPackage"
-  ><img class=button src="resource-files/search/type_mode.gif"
-        tip="Group by types"
-        strategy="byType"
-  >
+    <img  class="button pressed" src="resource-files/search/package_mode.gif"
+          tip="Group by packages"
+          strategy="byPackage"
+    ><img class=button src="resource-files/search/type_mode.gif"
+          tip="Group by types"
+          strategy="byType"
+    >
   </span>
+  &nbsp;&nbsp;&nbsp;
   <img class=button src="resource-files/close.gif" alt="[x]"
-       style="margin-left:40px"
        onclick="javascript:parent.displayController.hide()">
 </div>
+<span id=caption>Usage</span>
 </body>
 </html>

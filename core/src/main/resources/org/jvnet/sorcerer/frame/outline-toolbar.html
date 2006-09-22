@@ -4,12 +4,13 @@
   <link rel="stylesheet" type="text/css" href="left-pane.css">
   <script type="text/javascript" src="left-pane.js"></script>
   <script type="text/javascript">
-    var tip; // tooltip <span> object
+    var caption; // caption bar
     var buttons = []; // all buttons
 
     function start() {
-      tip = document.getElementById("tip");
-      var dd = document.body.firstChild;
+      caption = document.getElementById("caption");
+      new Caption(caption);
+      var dd = document.getElementById("buttons").firstChild;
       for( n=dd; n!=null; n=n.nextSibling ) {
         if(n.nodeType==1 && n.tagName=="IMG") {
           new ToggleButton(n,function(x) {
@@ -65,6 +66,7 @@
 </head>
 <body class='toolbar'
   onload="start()">
+<div style="float:right" id='buttons'>
 <img  class=button src="resource-files/outline-filter/alphab_sort_co.gif"
       tip1="Sort alphabetically"
       tip2="Don't sort"
@@ -84,6 +86,7 @@
       tip1="Hide local types"
       tip2="Show local types"
       filter="filterLocalTypes">
-<span id=tip></span>
+</div>
+<span id=caption>Outline</span>
 </body>
 </html>
