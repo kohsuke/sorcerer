@@ -16,7 +16,9 @@
       show : function(link) {
         if(!this.isShown())
           this.frame.rows=this.rowSpec;
-        main.loadUsage(link.getAttribute('className'),link.getAttribute('anchor'));
+        var usage = link.getAttribute('u');
+        idx = usage.indexOf('#');
+        main.loadUsage(usage.substring(0,idx),usage.substring(idx+1));
       },
       isShown : function() {
         return this.frame.rows!="100%,*";
@@ -26,7 +28,7 @@
   </script>
 </head>
 <frameset rows="22px,*" frameborder="0">
-  <frame src="search-toolbar.html" name="toolbar" noresize="true" />
+  <frame src="search-toolbar.html" name="toolbar" noresize="true" scrolling="no" />
   <frame src="search-pane.html" name="main" />
 </frameset>
 </html>

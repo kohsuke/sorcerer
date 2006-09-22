@@ -25,7 +25,7 @@
 
     function start() {
       tip = document.getElementById("tip");
-      var dd = document.body.firstChild;
+      var dd = document.getElementById('radio').firstChild;
       for( n=dd; n!=null; n=n.nextSibling ) {
         if(n.nodeType==1 && n.tagName=="IMG") {
           new RadioButton(n,radioGroup,function(x) {
@@ -38,16 +38,19 @@
   </script>
 </head>
 <body class=toolbar onload="start()">
-<img  class="button pressed" src="resource-files/search/package_mode.gif"
-      tip="Group by packages"
-      strategy="byPackage"
-><img class=button src="resource-files/search/type_mode.gif"
-      tip="Group by types"
-      strategy="byType"
->
-<span id=tip></span>
 <div style="position:absolute; top:2px; right:2px">
+  <span id=tip style="width:100px; text-align:right"></span>
+  <span id='radio'>
+  <img  class="button pressed" src="resource-files/search/package_mode.gif"
+        tip="Group by packages"
+        strategy="byPackage"
+  ><img class=button src="resource-files/search/type_mode.gif"
+        tip="Group by types"
+        strategy="byType"
+  >
+  </span>
   <img class=button src="resource-files/close.gif" alt="[x]"
+       style="margin-left:40px"
        onclick="javascript:parent.displayController.hide()">
 </div>
 </body>
