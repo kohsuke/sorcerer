@@ -7,6 +7,8 @@ import org.jvnet.sorcerer.impl.JavaTokenTypes;
 import java.io.PrintWriter;
 
 /**
+ * Mark up a comment.
+ * 
  * @author Kohsuke Kawaguchi
  */
 class CommentMarker extends Marker {

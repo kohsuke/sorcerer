@@ -336,6 +336,58 @@ public class ParsedSourceSet {
     }
 
     /**
+     * Base class for adding markers to the {@link HtmlGenerator}.
+     */
+    private abstract class MarkerBuilder<R,P> extends TreeScanner<R,P> {
+        final CompilationUnitTree cu;
+        final LineMap lineMap;
+        final HtmlGenerator gen;
+        final LinkResolver linkResolver;
+
+        public MarkerBuilder(CompilationUnitTree cu, HtmlGenerator gen, LinkResolver linkResolver) {
+            this.cu = cu;
+            this.gen = gen;
+            this.lineMap = cu.getLineMap();
+            this.linkResolver = linkResolver;
+        }
+
+        private String buildId(Element e) {
+            String buf = linkResolver.href(e);
+            if(buf.length()==0)
+                return null; // no ID
+            if(buf.charAt(0)!='#')
+                throw new IllegalStateException("Computed ID for "+e+" is "+buf);
+            return buf.substring(1);
+        }
+
+        /**
+         * Adds a declaration marker.
+         */
+        protected final void addDecl(Tree t,Element e) {
+            String id = buildId(e);
+            gen.add(new TagMarker(cu,srcPos,t,'#'+id,getCssClass(e,"d"),id,null));
+        }
+
+        protected final void addDecl(Token t,Element e) {
+            long sp = lineMap.getPosition(t.getLine(),t.getColumn());
+            long ep = sp+t.getText().length();
+            String id = buildId(e);
+            gen.add(new TagMarker(sp,ep, '#'+id,getCssClass(e,"d"),id,null));
+        }
+
+        /**
+         * Adds a reference marker.
+         */
+        protected final void addRef(Tree t,Element e) {
+            gen.add(new TagMarker(cu,srcPos,t,linkResolver.href(e),getCssClass(e,"r"),null,null));
+        }
+
+        protected final void addRef(long sp, long ep,Element e) {
+            gen.add(new TagMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r"),null,null));
+        }
+    }
+
+    /**
      * Invoked by {@link HtmlGenerator}'s constructor to complete the initialization.
      * <p>
      * This is where the actual annotation of the source code happens.
@@ -355,7 +407,7 @@ public class ParsedSourceSet {
                 if(type == JavaTokenTypes.EOF)
                     break;
                 if(type == JavaTokenTypes.IDENT && ReservedWords.LIST.contains(token.getText()))
-                    gen.add(new SpanMarker(lineMap,token,"rw"));
+                    gen.add(new LexicalMarker(lineMap,token,"rw"));
                 if(type == JavaTokenTypes.ML_COMMENT
                 || type == JavaTokenTypes.SL_COMMENT)
                     gen.add(new CommentMarker(lineMap,token));
@@ -366,21 +418,12 @@ public class ParsedSourceSet {
         }
 
         // then semantic ones
-        new TreeScanner<Void,Void>() {
-            private String buildId(Element e) {
-                String buf = linkResolver.href(e);
-                if(buf.length()==0)
-                    return null; // no ID
-                if(buf.charAt(0)!='#')
-                    throw new IllegalStateException("Computed ID for "+e+" is "+buf);
-                return buf.substring(1);
-            }
-
+        new MarkerBuilder<Void,Void>(cu,gen,linkResolver) {
             /**
              * primitive types like int, long, void, etc.
              */
             public Void visitPrimitiveType(PrimitiveTypeTree pt, Void _) {
-                gen.add(new SpanMarker(cu,srcPos,pt,"pr"));
+                gen.add(new LexicalMarker(cu,srcPos,pt,"pr"));
                 return super.visitPrimitiveType(pt,_);
             }
 
@@ -388,7 +431,7 @@ public class ParsedSourceSet {
              * literal string, int, etc. Null.
              */
             public Void visitLiteral(LiteralTree lit, Void _) {
-                gen.add(new SpanMarker(cu,srcPos,lit,"lt"));
+                gen.add(new LexicalMarker(cu,srcPos,lit,"lt"));
                 return super.visitLiteral(lit, _);
             }
 
@@ -404,12 +447,11 @@ public class ParsedSourceSet {
                         // note that we need to handle declarations like "int a,b".
                         Token t = gen.findTokenAfter(vt.getType(),vt.getName().toString());
                         if(t!=null) {
-                            gen.add(new SpanMarker(lineMap,t,
-                                getCssClass(e,"d"),buildId(e)));
+                            addDecl(t,e);
                         }
                     } else {
                         // for the enum constant put the anchor around vt
-                        gen.add(new SpanMarker(cu,srcPos,vt,getCssClass(e,"d"),buildId(e)));
+                        addDecl(vt,e);
                     }
                 }
                 return super.visitVariable(vt,_);
@@ -425,7 +467,7 @@ public class ParsedSourceSet {
             public Void visitMethod(MethodTree mt, Void _) {
                 ExecutableElement e = (ExecutableElement) TreeUtil.getElement(mt);
                 if(e!=null) {
-                    gen.add(new SpanMarker(cu,srcPos,mt,getCssClass(e,"d"),buildId(e)));
+                    addDecl(mt,e);
 
                     ParsedType pt = getParsedType((TypeElement) e.getEnclosingElement());
                     // put overridden bookmark
@@ -449,7 +491,7 @@ public class ParsedSourceSet {
             public Void visitClass(ClassTree ct, Void _) {
                 TypeElement e = (TypeElement) TreeUtil.getElement(ct);
                 if(e!=null) {
-                    gen.add(new SpanMarker(cu,srcPos,ct,getCssClass(e,"d"),buildId(e)));
+                    addDecl(ct,e);
 
                     // put subclass bookmark
                     List<ParsedType> descendants = getParsedType(e).descendants;
@@ -475,8 +517,7 @@ public class ParsedSourceSet {
                     Element e = TreeUtil.getElement(id);
                     if(e!=null) {
                         // add a marker for syntax coloring and jump to definition
-                        gen.add(new LinkMarker(cu,srcPos,id, linkResolver.href(e),
-                            getCssClass(e,"r")));
+                        addRef(id,e);
                     }
                 }
 
@@ -492,10 +533,8 @@ public class ParsedSourceSet {
 
                 // marker for the selected identifier
                 Element e = TreeUtil.getElement(mst);
-                if(e!=null) {
-                    gen.add(new LinkMarker(sp,ep, linkResolver.href(e),
-                        getCssClass(e,"r")));
-                }
+                if(e!=null)
+                    addRef(sp,ep,e);
                 // TODO: not exactly sure when it can be null
 
                 return super.visitMemberSelect(mst, _);
@@ -507,9 +546,8 @@ public class ParsedSourceSet {
 
                 // marker for jumping to the definition
                 Element e = TreeUtil.getElement(nt);
-                if(e!=null) {// be defensive
-                    gen.add(new LinkMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r")));
-                }
+                if(e!=null) // be defensive
+                    addRef(sp,ep,e);
 
                 scan(nt.getEnclosingExpression());
                 scan(nt.getArguments());
@@ -530,11 +568,9 @@ public class ParsedSourceSet {
                 if(e!=null) {
                     Name methodName = e.getSimpleName();
                     long ep = srcPos.getEndPosition(cu, ms);
-                    if(ep>=0) {
+                    if(ep>=0)
                         // marker for the method name (and jump to definition)
-                        gen.add(new LinkMarker(ep-methodName.length(),ep,linkResolver.href(e),
-                            getCssClass(e,"r")));
-                    }
+                        addRef(ep-methodName.length(),ep,e);
                 }
 
                 return super.visitMethodInvocation(mi,_);
@@ -554,17 +590,14 @@ public class ParsedSourceSet {
         // but it fails to create an element, so do this manually
         ExpressionTree packageName = cu.getPackageName();
         if(packageName!=null) {
-            new TreePathScanner<String,Void>() {
+            new MarkerBuilder<String,Void>(cu,gen,linkResolver) {
                 /**
                  * For "a" of "a.b.c"
                  */
                 public String visitIdentifier(IdentifierTree id, Void _) {
                     String name = id.getName().toString();
                     PackageElement pe = elements.getPackageElement(name);
-
-                    gen.add(new LinkMarker(cu,srcPos,id,linkResolver.href(pe),
-                        getCssClass(pe,"r")));
-
+                    addRef(id,pe);
                     return name;
                 }
 
@@ -578,12 +611,10 @@ public class ParsedSourceSet {
                     long ep = srcPos.getEndPosition(cu,mst);
                     long sp = ep-mst.getIdentifier().length();
 
-                    gen.add(new LinkMarker(sp,ep, linkResolver.href(pe),
-                        getCssClass(pe,"r")));
-
+                    addRef(sp,ep,pe);
                     return name;
                 }
-            }.scan(new TreePath(new TreePath(cu),packageName),null);
+            }.scan(packageName,null);
         }
     }
 
