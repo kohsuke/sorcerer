@@ -100,7 +100,7 @@ div.yuimenu ul {
     border:solid 1px #c4c4be;
     border-width:1px 0 0 0;
     margin:0;
-    padding:10px 0;
+    padding:8px 0;
 
 }
 
@@ -129,7 +129,7 @@ div.yuimenubar li {
 
 div.yuimenu li.yuimenuitem {
 
-    padding:2px 24px;
+    padding:2px 8px;
     
 }
 
