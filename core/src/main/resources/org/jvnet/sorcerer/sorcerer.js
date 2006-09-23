@@ -144,31 +144,28 @@ window.onload = function() {
       menuSelectorCanceller.schedule();
     }
   }
-}
 
+  Behaviour.register({
+  /*  "#lineNumberTable a" : function(e) {
+      e.onclick = function() {
+        this.style.backgroundColor = "#0000ff";
+        new Fader(this,255,0,0);
+        return false; // cancel
+      }
+    },*/
 
+    ".popup" : function(e) {
+      e.parentNode.popup = e;
+    },
 
-
-Behaviour.register({
-/*  "#lineNumberTable a" : function(e) {
-    e.onclick = function() {
-      this.style.backgroundColor = "#0000ff";
-      new Fader(this,255,0,0);
-      return false; // cancel
+    ".bookmark" : function(e) {
+      e.onmouseover = function() {
+        this.popup.style.display="block";
+      };
+      e.onmouseout  = function() {
+        this.popup.style.display="none";
+      };
     }
-  },*/
-
-  ".popup" : function(e) {
-    e.parentNode.popup = e;
-  },
-
-  ".bookmark" : function(e) {
-    e.onmouseover = function() {
-      this.popup.style.display="block";
-    };
-    e.onmouseout  = function() {
-      this.popup.style.display="none";
-    };
-  }
-});
-
+  });
+  Behaviour.apply();
+}
