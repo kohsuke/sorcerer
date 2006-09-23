@@ -17,6 +17,7 @@ import org.kohsuke.args4j.Option;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -50,6 +51,9 @@ public class Main {
     @Option(name="-cp",usage="Classpath for analyzing source file")
     List<String> paths = new ArrayList<String>();
 
+    @Option(name="-jarpath",usage="Path for recursively scanning *.jar")
+    List<String> jarpaths = new ArrayList<String>();
+
     @Option(name="-auto",usage="Automatically scan jar files and source files.\n" +
                                "Specify the project root directory as the argument.")
     boolean auto = false;
@@ -78,7 +82,17 @@ public class Main {
         ClassLoader cl = new URLClassLoader(urls.toArray(new URL[urls.size()]),null);
         Thread.currentThread().setContextClassLoader(cl);
         Class<?> main = cl.loadClass(Main.class.getName());
-        System.exit((Integer)main.getMethod("doMain",String[].class).invoke(null,(Object)args));
+        try {
+            System.exit((Integer)main.getMethod("doMain",String[].class).invoke(null,(Object)args));
+        } catch (InvocationTargetException e) {
+            Throwable t = e.getCause();
+            if(t instanceof Error)
+                throw (Error)t;
+            if (t instanceof RuntimeException) {
+                throw (RuntimeException) t;
+
+            }
+        }
     }
 
     /**
@@ -143,6 +157,10 @@ public class Main {
                 a.addClasspath(new File(tokens.nextToken()));
         }
 
+        for (String lib : jarpaths) {
+            jarScan(new File(lib),a);
+        }
+
         ParsedSourceSet pss = a.analyze(new DiagnosticPrinter());
         pss.setLinkResolverFactory(createLinkResolverFactory());
 
@@ -175,7 +193,28 @@ public class Main {
         }
         if(name.endsWith(".java")) {
             a.addSourceFile(f);
-            return;
+        }
+    }
+
+    /**
+     * Automatically scan the directories and look for source files.
+     */
+    private void jarScan(File f,Analyzer a) {
+        String name = f.getName();
+
+        if(IGNORABLE.contains(name))
+            return; //
+
+        if(f.isDirectory()) {
+            File[] files = f.listFiles();
+            if(files!=null) {
+                for (File file : files)
+                    jarScan(file,a);
+            }
+        }
+
+        if(name.endsWith(".jar")) {
+            a.addClasspath(f);
         }
     }
 
