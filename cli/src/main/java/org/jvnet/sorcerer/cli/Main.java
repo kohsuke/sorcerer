@@ -48,7 +48,7 @@ public class Main {
     List<String> javadocs = new ArrayList<String>();
 
     @Option(name="-cp",usage="Classpath for analyzing source file")
-    String path = "";
+    List<String> paths = new ArrayList<String>();
 
     @Option(name="-auto",usage="Automatically scan jar files and source files.\n" +
                                "Specify the project root directory as the argument.")
@@ -137,9 +137,11 @@ public class Main {
                 a.addSourceFile(file);
         }
 
-        StringTokenizer tokens = new StringTokenizer(path,File.pathSeparator);
-        while(tokens.hasMoreTokens())
-            a.addClasspath(new File(tokens.nextToken()));
+        for (String path : paths) {
+            StringTokenizer tokens = new StringTokenizer(path,File.pathSeparator);
+            while(tokens.hasMoreTokens())
+                a.addClasspath(new File(tokens.nextToken()));
+        }
 
         ParsedSourceSet pss = a.analyze(new DiagnosticPrinter());
         pss.setLinkResolverFactory(createLinkResolverFactory());
