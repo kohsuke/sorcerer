@@ -276,6 +276,8 @@ public class FrameSetGenerator extends AbstractWriter {
             jw.property("packageName", TreeUtil.getPackageName(cu));
             jw.key("children").startArray();
 
+            final LinkResolver linkResolver = linkResolverFactory.create(cu, pss);
+
             new TreePathScanner<Void,Void>() {
                 private final SourcePositions sourcePositions = pss.getSourcePositions();
                 public Void visitClass(ClassTree ct, Void _) {
@@ -309,6 +311,7 @@ public class FrameSetGenerator extends AbstractWriter {
                     if(TreeUtil.OUTLINE_WORTHY_ELEMENT.contains(e.getKind())) {
                         jw.startObject();
                         writeOutlineNodeProperties(jw,e,cu,t);
+                        jw.property("href",linkResolver.href(e));
                         jw.key("children").startArray();
                         return true;
                     }

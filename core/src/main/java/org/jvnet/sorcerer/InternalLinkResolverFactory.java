@@ -117,8 +117,9 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
                 }
                 if(!primaryTypeName.equals(simpleName)) {
                     return buf.append("#~").append(simpleName);
+                } else {
+                    return buf.append("#this");
                 }
-                return buf;
             case MEMBER:
             case LOCAL:
                 return recurse(t).append('~').append(t.getSimpleName());
