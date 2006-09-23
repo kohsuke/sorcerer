@@ -20,7 +20,7 @@ public class FrameHtmlGenerator extends DefaultHtmlGenerator {
 
 
     public void writeBody(PrintWriter out) throws IOException {
-        out.println("<div id=\"menuSelector\"></div>");
+        out.print("<div id=\"menuSelector\"></div>");
         super.writeBody(out);
         // script fragment to sync up the outline view.
         out.println("<script type='text/javascript'>");
