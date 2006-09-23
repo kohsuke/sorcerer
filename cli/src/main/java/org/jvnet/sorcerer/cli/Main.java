@@ -119,8 +119,8 @@ public class Main {
 
     private void run() throws IOException {
         if(debug)
-            System.setProperty("sorcerer.debug",true);
-        
+            System.setProperty("sorcerer.debug","true");
+
         Analyzer a = new Analyzer();
 
         for (String f : files) {
