@@ -61,6 +61,8 @@ final class ClassReferenceBuilder extends TreeScanner<Void,Void> {
     }
 
     private void record(TypeElement t) {
+        if(t.asType().getKind().isPrimitive())
+            throw new IllegalStateException();
         if(discovered.add(t)) {
             Set<CompilationUnitTree> set = index.get(t);
             if(set==null)

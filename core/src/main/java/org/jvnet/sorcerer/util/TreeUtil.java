@@ -36,7 +36,7 @@ public class TreeUtil {
         case CLASS:
         case ENUM:
         case INTERFACE:
-            return true;
+            return !e.asType().getKind().isPrimitive(); // primitive elements don't work well.
         }
         return false;
     }
@@ -100,7 +100,10 @@ public class TreeUtil {
      * Returns the {@link Element} that corresponds to the given {@link Tree} node.
      */
     public static Element getElement(Tree t) {
-        return getElement((JCTree)t);
+        Element r = getElement((JCTree) t);
+        if(r!=null && r.asType()!=null && r.asType().getKind().isPrimitive())
+            return null;    // TypeElement for primitives aren't really functioning, so avoid returning it.
+        return r;
     }
 
     /**
