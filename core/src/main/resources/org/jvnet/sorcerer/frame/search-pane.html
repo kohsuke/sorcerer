@@ -81,8 +81,8 @@
             function copyHref(m,href) {
               m.href = href+"#"+m.line;
               if(m.children==null)  return;
-              for( var i=0; i<m.children.length; i++ ) {
-                copyHref( m.children[i], href );
+              for( var j=0; j<m.children.length; j++ ) {
+                copyHref( m.children[j], href );
               }
             }
             copyHref(c,c.href);
