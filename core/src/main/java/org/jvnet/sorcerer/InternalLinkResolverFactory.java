@@ -166,7 +166,11 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
                 return null;
 
             // compare this package with the current package list and compute the list
-            String[] to = p.getQualifiedName().toString().split("\\.");
+            String[] to;
+            if(p.isUnnamed())
+                to = new String[0]; // split returns {""}.
+            else
+                to = p.getQualifiedName().toString().split("\\.");
 
             // skip the common prefix
             int i;
