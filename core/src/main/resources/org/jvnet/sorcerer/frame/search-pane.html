@@ -158,6 +158,13 @@
     }
   }
 
+  function cutHash(s) {
+    var idx=s.indexOf('#');
+    if(idx>=0)
+      s = s.substring(0,idx);
+    return s;
+  }
+
   // insert a tree node from a model node
   function insertNode( parent, m, expanded ) {
     if(window.parent.toolbar.strategy(m)) {
@@ -178,6 +185,22 @@
     }
     addChildren( m.children, m.kind=="package"?tree.getRoot():parent, false );
     addChildren( m.classes, parent, false );
+    if(m.leaves!=null) {
+      for( var i=0; i<m.leaves.length; i++ ) {
+        var leaf = m.leaves[i];
+        var data = {
+          label: "line"+leaf,
+          href:  cutHash(m.href)+'#'+leaf
+        };
+        var node = new YAHOO.widget.TextNode(data,parent,expanded);
+        node.onLabelClick = function(me) {
+          try {// data.target doesn't work since we are in different frameset.
+            window.top.main.location = me.data.href;
+          } catch(e) {}
+          return false;
+        }
+      }
+    }
   }
 
 </script>

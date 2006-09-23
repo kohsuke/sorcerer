@@ -58,7 +58,7 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
             this.elements = pss.getElements();
             this.types = pss.getTypes();
             this.compUnit = compUnit;
-            this.pkg = TreeUtil.getPackageName(compUnit).split("\\.");
+            this.pkg = TreeUtil.splitPackageName(TreeUtil.getPackageName(compUnit));
         }
 
         public InternalLinkResolver(PackageElement pkg, ParsedSourceSet pss) {
@@ -67,7 +67,7 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
             this.trees = pss.getTrees();
             this.elements = pss.getElements();
             this.types = pss.getTypes();
-            this.pkg = pkg.getQualifiedName().toString().split("\\.");
+            this.pkg = TreeUtil.splitPackageName(pkg);
         }
 
         public String href(Element e) {
@@ -166,11 +166,7 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
                 return null;
 
             // compare this package with the current package list and compute the list
-            String[] to;
-            if(p.isUnnamed())
-                to = new String[0]; // split returns {""}.
-            else
-                to = p.getQualifiedName().toString().split("\\.");
+            String[] to = TreeUtil.splitPackageName(p);
 
             // skip the common prefix
             int i;

@@ -149,6 +149,15 @@ public class JsonWriter {
         return this;
     }
 
+    /**
+     * Writes out an int value.
+     */
+    public JsonWriter object(int n) {
+        sep();
+        w.print(n);
+        return this;
+    }
+
     public JsonWriter object(Writable root) {
         startObject();
         root.write(this);
