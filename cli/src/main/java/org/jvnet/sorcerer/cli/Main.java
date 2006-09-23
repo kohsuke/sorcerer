@@ -70,10 +70,10 @@ public class Main {
         List<URL> urls = new ArrayList<URL>();
         StringTokenizer tokens = new StringTokenizer(System.getProperty("java.class.path"),File.pathSeparator);
         while(tokens.hasMoreTokens()) {
-            urls.add(new File(tokens.nextToken()).toURL());
+            urls.add(new File(tokens.nextToken()).toURI().toURL());
         }
         // then also add tools.jar
-        urls.add(new File(new File(System.getProperty("java.home")),"../lib/tools.jar").toURL());
+        urls.add(new File(new File(System.getProperty("java.home")),"../lib/tools.jar").toURI().toURL());
 
         ClassLoader cl = new URLClassLoader(urls.toArray(new URL[urls.size()]),null);
         Thread.currentThread().setContextClassLoader(cl);
@@ -89,18 +89,19 @@ public class Main {
         CmdLineParser p = new CmdLineParser(m);
         try {
             p.parseArgument(args);
+
+            if(m.files.isEmpty()) {
+                printUsage(p, System.err);
+                return -1;
+            }
+
+            m.run();
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
             printUsage(p, System.err);
             return -1;
         }
 
-        if(m.files.isEmpty()) {
-            printUsage(p, System.err);
-            return -1;
-        }
-
-        m.run();
         return 0;
     }
 
@@ -117,7 +118,7 @@ public class Main {
             return new CSSHandler.Default();
     }
 
-    private void run() throws IOException {
+    private void run() throws IOException, CmdLineException {
         if(debug)
             System.setProperty("sorcerer.debug","true");
 
@@ -125,6 +126,8 @@ public class Main {
 
         for (String f : files) {
             File file = new File(f);
+            if(!file.exists())
+                throw new CmdLineException("No such file nor directory exists: "+file);
             if(file.isDirectory()) {
                 if(auto)
                     autoScan(file,a);
