@@ -88,10 +88,9 @@ public class Main {
             Throwable t = e.getCause();
             if(t instanceof Error)
                 throw (Error)t;
-            if (t instanceof RuntimeException) {
+            if (t instanceof RuntimeException)
                 throw (RuntimeException) t;
-
-            }
+            throw e;
         }
     }
 
