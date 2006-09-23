@@ -64,3 +64,20 @@ BODY.toolbar {
   border-bottom: 1px solid ThreeDShadow;
   border-top: 1px solid ThreeDLightShadow;
 }
+
+
+
+
+/*========================== CSS for showing centered text ==============================================*/
+#center-text-container {
+  position:absolute;
+  left:10%;
+  top:50%;
+  width:80%;
+  text-align:center;
+}
+
+#center-text-box {
+  position:relative;
+  top: -0.5em;
+}

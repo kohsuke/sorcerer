@@ -8,6 +8,11 @@
   <script type="text/javascript" src="left-pane.js" ></script>
 </head>
 <body>
+<div id=center-text-container style="display:none;">
+  <div id=center-text-box>
+    <img src="resource-files/tree/loading.gif" alt=""> loading...
+  </div>
+</div>
 <div id="treeDiv" style="white-space:nowrap;"></div>
 <script type="text/javascript">
   // tree for displaying "find usage" search result
@@ -45,6 +50,7 @@
       // post process model
       // step.1 : compute full package name
       function buildChildren(model,pkgPrefix) {
+        if(model.children==null)  return; // no children
         for( var i=0; i<model.children.length; i++ )
           postProcess( model.children[i], pkgPrefix );
       }
@@ -113,10 +119,15 @@
 
   // redraw the tree by using the current strategy, and the search target
   function redraw() {
+    if(current==null)   return; // this happens when tool buttons are clicked when nothing is shown
+
+    resetTree();
+    document.getElementById("center-text-container").style.display="block";
     loader.load(current.className,function(model) {
+      document.getElementById("center-text-container").style.display="none";
+
       model = model[current.anchor];
 
-      resetTree();
       if(model==null) {// not found
         var node = new YAHOO.widget.TextNode({label:"No usage found"}, tree.getRoot(), true);
         return;

@@ -121,7 +121,7 @@ window.onload = function() {
   var links = document.getElementsByTagName("span");
   for( var i=links.length-1; i>=0; i-- ) {
     var e = links[i];
-    if(e.getAttribute("u")==null) continue;
+    if(e.parentNode.getAttribute("u")==null) continue;
     e.onmouseover=function() {
       var xy = YAHOO.util.Dom.getXY(this);
       xy[0] += this.offsetWidth;
