@@ -92,6 +92,11 @@
       for( var x in model )
         setLinkTarget(model[x]);
 
+      // fix the anonymous package name. this has to be done after step.1
+      for( var x in model )
+        model[x].name="(unnamed package)";
+
+
 
       this.completedLoads[className] = model;
 
@@ -129,10 +134,10 @@
       model = model[current.anchor];
 
       if(model==null) {// not found
-        var node = new YAHOO.widget.TextNode({label:"No usage found"}, tree.getRoot(), true);
-        return;
+        new YAHOO.widget.TextNode({label:"No usage found"}, tree.getRoot(), true);
       } else {
-        addChildren(model.children, tree.getRoot(), true);
+        insertNode( tree.getRoot(), model, true);
+        // addChildren(model.children, tree.getRoot(), true);
       }
       tree.draw();
     });

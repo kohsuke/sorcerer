@@ -132,11 +132,13 @@ abstract class MarkerBuilder<R,P> extends TreeScanner<R,P> {
         StringBuilder buf = new StringBuilder();
         switch(e.getKind()) {
         case METHOD:
+        case CONSTRUCTOR:
             buf.append(((TypeElement)e.getEnclosingElement()).getQualifiedName());
             buf.append('#');
             TreeUtil.buildMethodName(buf,types,(ExecutableElement)e);
             return buf.toString();
         case FIELD:
+        case ENUM_CONSTANT:
             buf.append(((TypeElement)e.getEnclosingElement()).getQualifiedName());
             buf.append('#');
             buf.append(e.getSimpleName());

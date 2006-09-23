@@ -43,17 +43,17 @@ class TagMarker extends Marker {
 
     public void writeStart(PrintWriter w) {
         if(href!=null) {
-            w.print("<a href='");
-            w.print(href);
-            w.print("'>");
+            w.print("<a");
+            writeAttribute(w,"href",href);
+            writeAttribute(w,"u",usage);
+            w.print('>');
         }
 
         // a and span needs to be on separate tags,
         // or otherwise applying coloring in CSS becomes
         // fairly tricky because of the selector precedence rules.
-        w.print("<span ");
+        w.print("<span");
         writeAttribute(w,"class",tag);
-        writeAttribute(w,"u",usage);
         writeAttribute(w,"id",id);
         w.print('>');
     }

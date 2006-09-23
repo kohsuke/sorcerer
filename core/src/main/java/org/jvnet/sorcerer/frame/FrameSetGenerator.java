@@ -404,6 +404,7 @@ public class FrameSetGenerator extends AbstractWriter {
             "resource-files/event.js",
             "resource-files/container_core.js",
             "resource-files/close.gif",
+            "resource-files/package.gif",
             "resource-files/layout-flat.gif",
             "resource-files/layout-hierarchical.gif",
             "resource-files/tree/folder.css",
