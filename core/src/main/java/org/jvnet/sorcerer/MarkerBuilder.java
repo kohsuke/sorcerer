@@ -54,7 +54,7 @@ abstract class MarkerBuilder<R,P> extends TreeScanner<R,P> {
      */
     protected final void addDecl(Tree t,Element e) {
         String id = buildId(e);
-        gen.add(new TagMarker(cu,srcPos,t,'#'+id,getCssClass(e,"d"),id,buildUsage(e)));
+        addDecl(new TagMarker(cu,srcPos,t,'#'+id,getCssClass(e,"d"),buildUsage(e)),id);
     }
 
     protected final void addDecl(Token t,Element e) {
@@ -62,18 +62,23 @@ abstract class MarkerBuilder<R,P> extends TreeScanner<R,P> {
         long sp = lineMap.getPosition(t.getLine(),t.getColumn());
         long ep = sp+t.getText().length();
         String id = buildId(e);
-        gen.add(new TagMarker(sp,ep, '#'+id,getCssClass(e,"d"),id,buildUsage(e)));
+        addDecl(new TagMarker(sp,ep, '#'+id,getCssClass(e,"d"),buildUsage(e)),id);
+    }
+
+    private void addDecl(Marker m, String id) {
+        gen.add(m.createId(id,lineMap));
+        gen.add(m);
     }
 
     /**
      * Adds a reference marker.
      */
     protected final void addRef(Tree t,Element e) {
-        gen.add(new TagMarker(cu,srcPos,t,linkResolver.href(e),getCssClass(e,"r"),null,buildUsage(e)));
+        gen.add(new TagMarker(cu,srcPos,t,linkResolver.href(e),getCssClass(e,"r"),buildUsage(e)));
     }
 
     protected final void addRef(long sp, long ep,Element e) {
-        gen.add(new TagMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r"),null,buildUsage(e)));
+        gen.add(new TagMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r"),buildUsage(e)));
     }
 
     /**

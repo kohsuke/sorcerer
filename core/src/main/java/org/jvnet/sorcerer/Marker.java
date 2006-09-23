@@ -52,4 +52,26 @@ abstract class Marker implements Comparable<Marker> {
         if(r<0) return -1;
         return 0;
     }
+
+    /**
+     * Creates a new marker that represents the anchor ID for this
+     * at 10 lines above this marker.
+     */
+    public Marker createId(final String id, LineMap lineMap) {
+        long line = lineMap.getLineNumber(sp);
+        line = Math.max(1,line-10);
+
+        long idPos = lineMap.getPosition(line,1);
+
+        return new Marker(idPos,idPos) {
+            public void writeStart(PrintWriter w) {
+                w.print("<span id='");
+                w.print(id);
+                w.print("\'></span>");
+            }
+
+            public void writeEnd(PrintWriter w) {
+            }
+        };
+    }
 }
