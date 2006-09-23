@@ -56,15 +56,22 @@ window.onload = function() {
 
   var menuItems = [
       {
-        text: "Go to declaration",
+        text: "dummy", // determined dynamically
         action: function() {
-          window.location=menu.target.href;
+          window.location=menu.target.parentNode.href;
+        },
+        preshow: function(type,args,menuItem) {
+          if(YAHOO.util.Dom.hasClass(menu.target,"d"))
+            menuItem.cfg.setProperty("text", "Permalink");
+          else
+            menuItem.cfg.setProperty("text", "Go to declaration");
+          menuItem.cfg.setProperty("url",menu.target.parentNode.href);
         }
       },
       {
         text: "Find usages",
         action: function() {
-          parent.searchpane.displayController.show(menu.target);
+          parent.searchpane.displayController.show(menu.target.parentNode);
         }
       }
     ];
@@ -75,6 +82,8 @@ window.onload = function() {
           new YAHOO.widget.MenuItem(menuItems[i].text);
       menuItem.clickEvent.subscribe(menuItems[i].action);
       menu.addItem(menuItem);
+      if(menuItems[i].preshow!=null)
+        menu.beforeShowEvent.subscribe(menuItems[i].preshow,menuItem);
   }
 
 
@@ -89,11 +98,13 @@ window.onload = function() {
   menu.mouseOverEvent.subscribe(function(){canceller.cancel();});
   menu.mouseOutEvent.subscribe(function(){canceller.schedule();});
 
+  // show context menu for the program element
+  //    target : span element that has information about the program element
+  //             its parent is always <a> that has links.
   function showMenu(target) {
     menu.cfg.setProperty("context", [target, "tl", "tr"]);
-    menu.getItem(0).cfg.setProperty("url",target.href);
-    menu.show();
     menu.target=target;
+    menu.show();
     return false;
   }
 
@@ -127,7 +138,7 @@ window.onload = function() {
       xy[0] += this.offsetWidth;
       YAHOO.util.Dom.setXY(menuSelector,xy);
       menuSelector.style.visibility = "visible";
-      menuSelector.target=this.parentNode; // must be 'a' tag
+      menuSelector.target=this;
     }
     e.onmouseout=function() {
       menuSelectorCanceller.schedule();
