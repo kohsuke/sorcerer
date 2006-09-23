@@ -363,6 +363,8 @@ public class ParsedSourceSet {
             // so we should ignore any failures at this point.
         }
 
+        final Name CLASS = elements.getName("class");
+
         // then semantic ones
         new MarkerBuilder<Void,Void>(cu,gen,linkResolver,srcPos,elements,types) {
             /**
@@ -477,14 +479,16 @@ public class ParsedSourceSet {
              * "exp.token"
              */
             public Void visitMemberSelect(MemberSelectTree mst, Void _) {
-                long ep = srcPos.getEndPosition(cu,mst);
-                long sp = ep-mst.getIdentifier().length();
+                if(!mst.getIdentifier().equals(CLASS)) {
+                    // avoid marking 'Foo.class' as static reference
+                    long ep = srcPos.getEndPosition(cu,mst);
+                    long sp = ep-mst.getIdentifier().length();
 
-                // marker for the selected identifier
-                Element e = TreeUtil.getElement(mst);
-                if(e!=null)
-                    addRef(sp,ep,e);
-                // TODO: not exactly sure when it can be null
+                    // marker for the selected identifier
+                    Element e = TreeUtil.getElement(mst);
+                    if(e!=null)
+                        addRef(sp,ep,e);
+                }
 
                 return super.visitMemberSelect(mst, _);
             }
