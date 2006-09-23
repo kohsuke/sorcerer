@@ -14,5 +14,10 @@ other issues
 - better handling for jumping to external source files
   (including JRE)
 - search for usage
+  - support for searching declarations that are confied within a single compilation unit,
+    such as local variables. They don't produce usage index, so we need a different scheme.
+  - usage of private methods are always confined within a single CU.
+    think about those cases and reduce the size of the usage index.
+  - highlight the usage in the source view
 - current line number layout method doesn't work in Opera.
   define another class that does dumb-but-easy approach
