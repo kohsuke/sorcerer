@@ -54,6 +54,9 @@ public class Main {
                                "Specify the project root directory as the argument.")
     boolean auto = false;
 
+    @Option(name="-debug",usage="Produce output with debug information")
+    boolean debug = false;
+
     /**
      * Entry point from the JVM.
      *
@@ -115,6 +118,9 @@ public class Main {
     }
 
     private void run() throws IOException {
+        if(debug)
+            System.setProperty("sorcerer.debug",true);
+        
         Analyzer a = new Analyzer();
 
         for (String f : files) {
