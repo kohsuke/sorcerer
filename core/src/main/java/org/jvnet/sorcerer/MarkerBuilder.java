@@ -69,11 +69,11 @@ abstract class MarkerBuilder<R,P> extends TreeScanner<R,P> {
      * Adds a reference marker.
      */
     protected final void addRef(Tree t,Element e) {
-        gen.add(new TagMarker(cu,srcPos,t,linkResolver.href(e),getCssClass(e,"r"),null,null));
+        gen.add(new TagMarker(cu,srcPos,t,linkResolver.href(e),getCssClass(e,"r"),null,buildUsage(e)));
     }
 
     protected final void addRef(long sp, long ep,Element e) {
-        gen.add(new TagMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r"),null,null));
+        gen.add(new TagMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r"),null,buildUsage(e)));
     }
 
     /**
@@ -140,6 +140,13 @@ abstract class MarkerBuilder<R,P> extends TreeScanner<R,P> {
             buf.append(((TypeElement)e.getEnclosingElement()).getQualifiedName());
             buf.append('#');
             buf.append(e.getSimpleName());
+            return buf.toString();
+        case ANNOTATION_TYPE:
+        case CLASS:
+        case INTERFACE:
+        case ENUM:
+            buf.append(((TypeElement)e).getQualifiedName());
+            buf.append("#this");
             return buf.toString();
         default:
             return null;
