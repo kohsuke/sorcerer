@@ -1,6 +1,9 @@
 other issues
 ------------
-- think about what to generate for each leaf
+- when you reload in IE, outline view shows the main page content
+
+- local types can be only referenced from the same cu.
+- "usage search" index is often broken if source files fail to analyze
 
 - consider eliminating usage table for Object, String, and a few other very common types.
   index often just gets too large.
@@ -10,13 +13,6 @@ other issues
 - when jumping to definition, move to the center screen
 - better handling for jumping to external source files
   (including JRE)
-- permalink at the point of definition
 - search for usage
 - current line number layout method doesn't work in Opera.
   define another class that does dumb-but-easy approach
-
-- using frame for toolbar didn't work very well.
-  when I move border in IE, it just expands toolbar.
-
-- layout-wise, doubly nested frameset works OK on both FF and IE.
-  cross-domain will become an issue, though.
