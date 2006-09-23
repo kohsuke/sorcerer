@@ -121,6 +121,7 @@
   var current = null; // currently displayed
 
   function loadUsage(className,anchor) {
+    window.parent.toolbar.caption.setCaption("Usage of "+className+"."+anchor);
     current = { className:className, anchor:anchor };
     redraw();
   }
