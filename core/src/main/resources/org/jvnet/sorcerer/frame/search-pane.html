@@ -71,7 +71,10 @@
         if(m.classes!=null) {
           for( var i=0; i<m.classes.length; i++ ) {
             var c = m.classes[i];
-            c.href = m.name.replace(/\./g,"/")+"/";
+            if(m.name=="")
+              c.href="./";
+            else
+              c.href = m.name.replace(/\./g,"/")+"/";
             if(c.source==null)
               c.href += c.name;
             else
@@ -92,7 +95,7 @@
       for( var x in model )
         setLinkTarget(model[x]);
 
-      // fix the anonymous package name. this has to be done after step.1
+      // fix the anonymous package name. this has to be done after href is computed from name in step 1
       for( var x in model )
         model[x].name="(unnamed package)";
 
