@@ -9,6 +9,8 @@ import com.sun.source.util.SourcePositions;
 import java.io.PrintWriter;
 
 /**
+ * Represents a region of the source file to be annotated.
+ *
  * @author Kohsuke Kawaguchi
  */
 abstract class Marker implements Comparable<Marker> {
