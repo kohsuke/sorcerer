@@ -58,6 +58,7 @@ abstract class MarkerBuilder<R,P> extends TreeScanner<R,P> {
     }
 
     protected final void addDecl(Token t,Element e) {
+        if(t==null) return;
         long sp = lineMap.getPosition(t.getLine(),t.getColumn());
         long ep = sp+t.getText().length();
         String id = buildId(e);

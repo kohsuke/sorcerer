@@ -91,6 +91,7 @@ window.onload = function() {
 
   function showMenu(target) {
     menu.cfg.setProperty("context", [target, "tl", "tr"]);
+    menu.getItem(0).cfg.setProperty("url",target.href);
     menu.show();
     menu.target=target;
     return false;
@@ -124,10 +125,9 @@ window.onload = function() {
     e.onmouseover=function() {
       var xy = YAHOO.util.Dom.getXY(this);
       xy[0] += this.offsetWidth;
-      menuSelector.style.left = xy[0]+"px";
-      menuSelector.style.top  = xy[1]+"px";
+      YAHOO.util.Dom.setXY(menuSelector,xy);
       menuSelector.style.visibility = "visible";
-      menuSelector.target=this;
+      menuSelector.target=this.parentNode; // must be 'a' tag
     }
     e.onmouseout=function() {
       menuSelectorCanceller.schedule();

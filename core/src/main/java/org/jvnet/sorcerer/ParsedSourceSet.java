@@ -391,10 +391,7 @@ public class ParsedSourceSet {
                         // put the marker just on the variable name.
                         // the token for the variable name is after its type.
                         // note that we need to handle declarations like "int a,b".
-                        Token t = gen.findTokenAfter(vt.getType(),vt.getName().toString());
-                        if(t!=null) {
-                            addDecl(t,e);
-                        }
+                        addDecl( gen.findTokenAfter(vt.getType(), true, vt.getName().toString()), e );
                     } else {
                         // for the enum constant put the anchor around vt
                         addDecl(vt,e);
@@ -413,7 +410,12 @@ public class ParsedSourceSet {
             public Void visitMethod(MethodTree mt, Void _) {
                 ExecutableElement e = (ExecutableElement) TreeUtil.getElement(mt);
                 if(e!=null) {
-                    addDecl(mt,e);
+                    Tree prev = mt.getReturnType();
+                    if(prev!=null)
+                        addDecl(gen.findTokenAfter(prev, true, mt.getName().toString()),e);
+                    else
+                        addDecl(gen.findTokenAfter(mt, false,  mt.getName().toString()),e);
+
 
                     ParsedType pt = getParsedType((TypeElement) e.getEnclosingElement());
                     // put overridden bookmark
@@ -437,7 +439,8 @@ public class ParsedSourceSet {
             public Void visitClass(ClassTree ct, Void _) {
                 TypeElement e = (TypeElement) TreeUtil.getElement(ct);
                 if(e!=null) {
-                    addDecl(ct,e);
+                    // put the marker on the class name portion.
+                    addDecl(gen.findTokenAfter(ct, false, ct.getSimpleName().toString()),e);
 
                     // put subclass bookmark
                     List<ParsedType> descendants = getParsedType(e).descendants;

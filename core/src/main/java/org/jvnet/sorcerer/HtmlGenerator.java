@@ -99,13 +99,21 @@ public class HtmlGenerator {
      *
      * @param t
      *      The first token after the end position of this tree node will be returned.
+     * @param findAfterToken
+     *      true if the search should begin from the end of the given token.
+     *      false to start from the start of the given token.
      * @param id
      *      If non-null, find the first token that has this identifier.
      * @return null
      *      if no such node is found or a syntax error is detected.
      */
-    protected final Token findTokenAfter(Tree t, String id) {
-        long pos = pss.getSourcePositions().getEndPosition(compUnit, t);
+    protected final Token findTokenAfter(Tree t, boolean findAfterToken, String id) {
+        long pos;
+        if(findAfterToken)
+            pos = pss.getSourcePositions().getEndPosition(compUnit, t);
+        else
+            pos = pss.getSourcePositions().getStartPosition(compUnit, t);
+
         if(pos<0)   return null;
         JavaLexer lexer = new JavaLexer(new StringReader(sourceFile.substring((int) pos)));
         lexer.setTabSize(pss.getTabWidth());
