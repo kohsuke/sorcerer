@@ -4,7 +4,7 @@
   <artifactId>sorcerer</artifactId>
   <packaging>pom</packaging>
   <name>Sorcerer</name>
-  <version>0.4</version>
+  <version>0.5-SNAPSHOT</version>
   <url>https://sorcerer.dev.java.net/</url>
   <developers>
     <developer>
@@ -19,9 +19,9 @@
     </license>
   </licenses>
   <scm>
-    <connection>scm:svn:https://sorcerer.dev.java.net/svn/sorcerer/tags/sorcerer-0.4</connection>
-    <developerConnection>scm:svn:https://sorcerer.dev.java.net/svn/sorcerer/tags/sorcerer-0.4</developerConnection>
-    <url>https://sorcerer.dev.java.net/svn/sorcerer/tags/sorcerer-0.4</url>
+    <connection>scm:svn:https://sorcerer.dev.java.net/svn/sorcerer/trunk/sorcerer</connection>
+    <developerConnection>scm:svn:https://sorcerer.dev.java.net/svn/sorcerer/trunk/sorcerer</developerConnection>
+    <url>https://sorcerer.dev.java.net/source/browse/sorcerer</url>
   </scm>
   <build>
     <plugins>
