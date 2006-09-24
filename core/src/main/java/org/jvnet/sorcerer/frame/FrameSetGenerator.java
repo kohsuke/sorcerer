@@ -145,6 +145,8 @@ public class FrameSetGenerator extends AbstractWriter {
                 // local types can be only referenced from the same compilation unit.
                 if(pt.isLocal())
                     continue;
+                if(pt.isInvalid())
+                    continue;
 
                 File out = new File(outDir, pt.element.getQualifiedName().toString().replace('.','/')+"-usage.js");
                 out.getParentFile().mkdirs();

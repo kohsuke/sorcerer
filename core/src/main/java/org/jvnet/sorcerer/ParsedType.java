@@ -117,6 +117,23 @@ public final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement>
     }
 
     /**
+     * Returns true this type represents an error type.
+     *
+     * <p>
+     * javac creates {@link ElementKind#CLASS} with class names like &lt;any> in it
+     * to represent an error. So make sure that the token is a valid Java identifier.
+     */
+    public boolean isInvalid() {
+        String s = element.getQualifiedName().toString();
+        for( int i=s.length()-1; i>=0; i-- ) {
+            char ch=s.charAt(i);
+            if(!Character.isJavaIdentifierPart(ch) && ch!='.')
+                return true;
+        }
+        return false;
+    }
+
+    /**
      * All the matches discovered.
      */
     private static final class QueryResult {
