@@ -21,7 +21,7 @@ class CommentMarker extends Marker {
     }
 
     public void writeStart(PrintWriter w) {
-        w.print("<span class="+getCssClass()+">");
+        w.print("<b class="+getCssClass()+">");
     }
 
     private String getCssClass() {
@@ -37,6 +37,6 @@ class CommentMarker extends Marker {
     }
 
     public void writeEnd(PrintWriter w) {
-        w.print("</span>");
+        w.print("</b>");
     }
 }

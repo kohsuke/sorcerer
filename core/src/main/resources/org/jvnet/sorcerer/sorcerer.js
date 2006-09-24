@@ -99,7 +99,7 @@ window.onload = function() {
   menu.mouseOutEvent.subscribe(function(){canceller.schedule();});
 
   // show context menu for the program element
-  //    target : span element that has information about the program element
+  //    target : b element that has information about the program element
   //             its parent is always <a> that has links.
   function showMenu(target) {
     menu.cfg.setProperty("context", [target, "tl", "tr"]);
@@ -129,7 +129,7 @@ window.onload = function() {
   };
 
   // var links = YAHOO.util.Dom.getElementsByClassName("link",null,document.body);
-  var links = document.getElementsByTagName("span");
+  var links = document.getElementsByTagName("b");
   for( var i=links.length-1; i>=0; i-- ) {
     var e = links[i];
     if(e.parentNode.getAttribute("u")==null) continue;

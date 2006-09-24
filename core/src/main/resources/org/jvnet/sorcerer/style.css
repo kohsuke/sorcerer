@@ -42,6 +42,9 @@ div.footer {
 
   most likely you don't want to touch these
 */
+b {/* we use <b> instead of <span> to save space */
+  text-decoration: none;
+}
 span.bookmark {
 	position: relative;
 }

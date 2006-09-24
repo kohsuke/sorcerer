@@ -65,9 +65,9 @@ abstract class Marker implements Comparable<Marker> {
 
         return new Marker(idPos,idPos) {
             public void writeStart(PrintWriter w) {
-                w.print("<span id='");
+                w.print("<b id='");
                 w.print(id);
-                w.print("\'></span>");
+                w.print("\'></b>");
             }
 
             public void writeEnd(PrintWriter w) {

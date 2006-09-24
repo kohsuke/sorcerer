@@ -46,16 +46,16 @@ class TagMarker extends Marker {
             w.print('>');
         }
 
-        // a and span needs to be on separate tags,
+        // a and b needs to be on separate tags,
         // or otherwise applying coloring in CSS becomes
         // fairly tricky because of the selector precedence rules.
-        w.print("<span");
+        w.print("<b");
         writeAttribute(w,"class",tag);
         w.print('>');
     }
 
     public void writeEnd(PrintWriter w) {
-        w.print("</span>");
+        w.print("</b>");
         if(href!=null)
             w.print("</a>");
     }

@@ -33,12 +33,12 @@ class LexicalMarker extends Marker {
     }
 
     public void writeStart(PrintWriter w) {
-        w.print("<span class='");
+        w.print("<b class='");
         w.print(tag);
         w.print("\'>");
     }
 
     public void writeEnd(PrintWriter w) {
-        w.print("</span>");
+        w.print("</b>");
     }
 }
