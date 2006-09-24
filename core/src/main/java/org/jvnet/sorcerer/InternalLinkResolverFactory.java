@@ -73,6 +73,8 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
         public String href(Element e) {
             StringBuilder buf = visit(e);
             if(buf==null)   return null;
+            if(buf.length()==0)
+                return "#this"; // referencing the primariy type X from X.java causes "" to be returned.
             return buf.toString();
         }
 
@@ -116,10 +118,9 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
                     buf = new StringBuilder();
                 }
                 if(!primaryTypeName.equals(simpleName)) {
-                    return buf.append("#~").append(simpleName);
-                } else {
-                    return buf.append("#this");
+                    buf.append("#~").append(simpleName);
                 }
+                return buf;
             case MEMBER:
             case LOCAL:
                 return recurse(t).append('~').append(t.getSimpleName());
