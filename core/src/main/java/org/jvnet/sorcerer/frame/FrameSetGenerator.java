@@ -109,7 +109,6 @@ public class FrameSetGenerator extends AbstractWriter {
 
             String name = TreeUtil.getPrimaryTypeName(cu);
 
-            System.out.println(pkg+name);
             File out = new File(outDir, pkg + name+".html");
             File parent = out.getParentFile();
             if(parent!=null)    // null if outDir was "."
