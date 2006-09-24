@@ -118,6 +118,18 @@
     loader.loadComplete(className,model);
   }
 
+  var projectUsage = {}; // map of class names
+  // called from project-usage.js
+  function setProjectUsage(model) {
+    for( var i=0; i<model.length; i++ ) {
+      var pkg = model[i];
+      var prefix = pkg.package;
+      if(prefix!="") prefix+='.';
+      for( var j=0; j<pkg.classes.length; j++ )
+        projectUsage[prefix+pkg.classes[j]]=true;
+    }
+  }
+
   var current = null; // currently displayed
 
   function loadUsage(className,anchor) {
@@ -131,6 +143,18 @@
     if(current==null)   return; // this happens when tool buttons are clicked when nothing is shown
 
     resetTree();
+
+    function noUsageFound() {
+      new YAHOO.widget.TextNode({label:"No usage found"}, tree.getRoot(), true);
+    }
+
+    // does this usage exists?
+    if(projectUsage[current.className]!=true) {
+      noUsageFound();
+      tree.draw();
+      return;
+    }
+
     document.getElementById("center-text-container").style.display="block";
     loader.load(current.className,function(model) {
       document.getElementById("center-text-container").style.display="none";
@@ -138,7 +162,7 @@
       model = model[current.anchor];
 
       if(model==null) {// not found
-        new YAHOO.widget.TextNode({label:"No usage found"}, tree.getRoot(), true);
+        noUsageFound();
       } else {
         insertNode( tree.getRoot(), model, true);
         // addChildren(model.children, tree.getRoot(), true);
@@ -205,6 +229,7 @@
   }
 
 </script>
+<script type="text/javascript" src="project-usage.js" ></script>
 </body>
 </html>
 
