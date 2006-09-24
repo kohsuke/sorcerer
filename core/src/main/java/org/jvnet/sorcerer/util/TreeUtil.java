@@ -18,6 +18,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Types;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -36,7 +37,8 @@ public class TreeUtil {
         case CLASS:
         case ENUM:
         case INTERFACE:
-            return !e.asType().getKind().isPrimitive(); // primitive elements don't work well.
+            TypeKind kind = e.asType().getKind();
+            return !kind.isPrimitive() && kind!= TypeKind.VOID; // primitive elements don't work well.
         }
         return false;
     }

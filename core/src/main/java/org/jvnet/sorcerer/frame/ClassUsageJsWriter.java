@@ -36,7 +36,7 @@ public class ClassUsageJsWriter extends AbstractWriter {
 
             // builds a top-down tree.
             for (TreePath t : e.getValue())
-                root.add(t).leaves.add(t);
+                root.add(t).getLeaves().add(t);
 
             // then write it out!
             w.object(root);
@@ -72,8 +72,9 @@ public class ClassUsageJsWriter extends AbstractWriter {
         }
     }
 
-    private interface NodeMapOwner {
+    private interface ParentNode {
         NodeMap getChildren();
+        List<TreePath> getLeaves();
     }
 
     /**
@@ -81,11 +82,17 @@ public class ClassUsageJsWriter extends AbstractWriter {
      * There's the top portion of the tree that consists of {@link NodePkgInfo},
      * then there's the lower portion of the tree that consists of {@link Node}.
      */
-    class NodePkgInfo extends PkgInfo<NodePkgInfo> implements NodeMapOwner {
+    class NodePkgInfo extends PkgInfo<NodePkgInfo> implements ParentNode {
         /**
          * Child {@link Node}s keyed by their {@link Node#element}.
          */
         final NodeMap children = new NodeMap();
+
+        /**
+         * This is used for use of types in package annotations.
+         */
+        final List<TreePath> leaves = new ArrayList<TreePath>();
+
 
         public NodePkgInfo(String name) {
             super(name);
@@ -94,16 +101,19 @@ public class ClassUsageJsWriter extends AbstractWriter {
         /**
          * Adds the given {@link TreePath} to the {@link NodePkgInfo} tree rooted at this object.
          */
-        protected Node add(TreePath t) {
+        protected ParentNode add(TreePath t) {
             // enter the package portion
             NodePkgInfo leafPkg = super.add(TreeUtil.getPackageName(t.getCompilationUnit()));
             // then the rest
-            NodeMapOwner leaf = addNode(leafPkg, t);
-            return (Node)leaf;
+            return addNode(leafPkg, t);
         }
 
         public NodeMap getChildren() {
             return children;
+        }
+
+        public List<TreePath> getLeaves() {
+            return leaves;
         }
 
         public NodePkgInfo create(String name) {
@@ -128,8 +138,8 @@ public class ClassUsageJsWriter extends AbstractWriter {
      * then return the {@link Node} where
      * the {@link TreePath} is ultimately stored.
      */
-    NodeMapOwner addNode(NodeMapOwner root, TreePath t) {
-        NodeMapOwner p;
+    ParentNode addNode(ParentNode root, TreePath t) {
+        ParentNode p;
         if(t.getParentPath()!=null)
             p = addNode(root, t.getParentPath());
         else
@@ -150,7 +160,7 @@ public class ClassUsageJsWriter extends AbstractWriter {
      *
      * Used in {@link ClassUsageJsWriter#write(ParsedType,PrintWriter)}.
      */
-    protected class Node implements JsonWriter.Writable, NodeMapOwner {
+    protected class Node implements JsonWriter.Writable, ParentNode {
         /**
          * The program element that represents this node.
          * Null only if this is the root node.
@@ -179,6 +189,10 @@ public class ClassUsageJsWriter extends AbstractWriter {
 
         public NodeMap getChildren() {
             return children;
+        }
+
+        public List<TreePath> getLeaves() {
+            return leaves;
         }
 
         /**
