@@ -7,10 +7,9 @@ import com.sun.source.tree.LineMap;
 import com.sun.source.tree.Tree;
 import org.jvnet.sorcerer.impl.JavaLexer;
 import org.jvnet.sorcerer.impl.JavaTokenTypes;
-import org.jvnet.sorcerer.util.IOUtil;
+import org.jvnet.sorcerer.util.CharSequenceReader;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +26,7 @@ import java.util.Map;
  */
 public class HtmlGenerator {
 
-    protected final List<Marker> markers = new ArrayList<Marker>();
+    protected final List<Tag> tags = new ArrayList<Tag>();
 
     /**
      * {@link BookmarkSet} keyed by line number.
@@ -37,32 +36,17 @@ public class HtmlGenerator {
     /**
      * Original Java source file to be annotated.
      */
-    protected final String sourceFile;
+    protected final CharSequence sourceFile;
 
     protected final ParsedSourceSet pss;
 
     protected final CompilationUnitTree compUnit;
 
 
-    /**
-     * Iterator-like forward scanner.
-     */
-    protected final class MarkerScanner {
-        private int idx;
-
-        public Marker peek() {
-            if(idx==markers.size()) return null;
-            return markers.get(idx);
-        }
-        public Marker pop() {
-            return markers.get(idx++);
-        }
-    }
-
     protected HtmlGenerator(ParsedSourceSet pss, CompilationUnitTree cu) throws IOException {
         this.pss = pss;
         this.compUnit = cu;
-        sourceFile = IOUtil.readFully(cu.getSourceFile().openInputStream());
+        sourceFile = cu.getSourceFile().getCharContent(true);
 
         //long ep = pss.getSourcePositions().getEndPosition(cu, cu);
         //totalLines = cu.getLineMap().getLineNumber(ep);
@@ -71,9 +55,9 @@ public class HtmlGenerator {
         pss.configure(cu,this);
     }
 
-    /*package*/ boolean add(Marker o) {
+    /*package*/ boolean add(Tag o) {
         if(o.ep==-1)    return false;   // synthetic
-        return markers.add(o);
+        return tags.add(o);
     }
 
     /*package*/ final void add(long lineNumber, Bookmark bookmark) {
@@ -115,7 +99,7 @@ public class HtmlGenerator {
             pos = pss.getSourcePositions().getStartPosition(compUnit, t);
 
         if(pos<0)   return null;
-        JavaLexer lexer = new JavaLexer(new StringReader(sourceFile.substring((int) pos)));
+        JavaLexer lexer = new JavaLexer(new CharSequenceReader(sourceFile.subSequence((int)pos, sourceFile.length())));
         lexer.setTabSize(pss.getTabWidth());
         try {
             while(true) {
@@ -127,8 +111,10 @@ public class HtmlGenerator {
                     if(id!=null && !token.getText().equals(id))
                         continue;
                     LineMap lm = compUnit.getLineMap();
+                    if(token.getLine()==1) {
+                        token.setColumn(token.getColumn()+(int)lm.getColumnNumber(pos)-1);
+                    }
                     token.setLine(token.getLine()+(int)lm.getLineNumber(pos)-1);
-                    token.setColumn(token.getColumn()+(int)lm.getColumnNumber(pos)-1);
                     return token;
                 }
             }

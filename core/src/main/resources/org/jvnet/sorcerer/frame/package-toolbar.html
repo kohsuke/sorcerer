@@ -6,14 +6,19 @@
 </head>
 <body class=toolbar onload="start()">
 <div style="float:right;">
-  <img src="resource-files/layout-hierarchical.gif"
+  <img src="resource-files/layout-hierarchical.gif" class="button"
        onclick="parent.main.toggleView(this)"
        onmouseover="show(true)"
-       onmouseout="show(false)"/>
+       onmouseout="show(false)"
+  ><img src="resource-files/opentype.gif" tip="Open type" class="button"
+       onclick="opentype()" id="opentype" />
 </div>
 <span id="caption">Packages</span>
 <script type="text/javascript">
   var caption = document.getElementById("caption");
+  new Button(document.getElementById("opentype"),function() {
+    window.alert("do it!");
+  })
   function start() {
     new Caption(caption);
   }

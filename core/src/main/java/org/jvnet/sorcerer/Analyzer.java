@@ -2,6 +2,7 @@ package org.jvnet.sorcerer;
 
 import com.sun.source.util.JavacTask;
 import com.sun.tools.javac.api.JavacTool;
+import org.jvnet.sorcerer.util.TabExpandingFileManager;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.DiagnosticListener;
@@ -12,11 +13,11 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.nio.charset.Charset;
 
 /**
  * Entry point to the system.
@@ -29,6 +30,7 @@ public class Analyzer {
     private final List<File> classpath = new ArrayList<File>();
     private Charset encoding;
     private Locale locale;
+    private int tabWidth = 8;
 
     /**
      * Adds a single ".java" file for compilation.
@@ -78,6 +80,22 @@ public class Analyzer {
     }
 
     /**
+     * Gets the current TAB width.
+     */
+    public int getTabWidth() {
+        return tabWidth;
+    }
+
+    /**
+     * Sets the TAB width.
+     *
+     * Defaults to 8.
+     */
+    public void setTabWidth(int tabWidth) {
+        this.tabWidth = tabWidth;
+    }
+
+    /**
      * Analyzes all the source files.
      *
      * @return
@@ -110,7 +128,7 @@ public class Analyzer {
      *      if the underlying file system access fails.
      */
     public ParsedSourceSet analyze(DiagnosticListener<? super JavaFileObject> errorListener) throws IOException {
-        return new ParsedSourceSet(configure(errorListener));
+        return new ParsedSourceSet(configure(errorListener),tabWidth);
     }
 
     /**
@@ -118,7 +136,8 @@ public class Analyzer {
      */
     protected JavacTask configure(DiagnosticListener<? super JavaFileObject> errorListener) throws IOException {
         JavaCompiler javac = JavacTool.create();
-        StandardJavaFileManager fileManager = javac.getStandardFileManager(errorListener, locale, encoding);
+        StandardJavaFileManager fileManager = new TabExpandingFileManager(
+            javac.getStandardFileManager(errorListener, locale, encoding),encoding,tabWidth);
 
         fileManager.setLocation( StandardLocation.CLASS_PATH, classpath );
 

@@ -20,9 +20,10 @@ import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
-import org.jvnet.sorcerer.ParsedType.Match;
+import org.jvnet.sorcerer.Tag.DeclName;
 import org.jvnet.sorcerer.impl.JavaLexer;
 import org.jvnet.sorcerer.impl.JavaTokenTypes;
+import org.jvnet.sorcerer.util.CharSequenceReader;
 import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
@@ -32,12 +33,12 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.DiagnosticListener;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -46,6 +47,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -88,7 +90,7 @@ public class ParsedSourceSet {
 
     private final Set<PackageElement> packages = new TreeSet<PackageElement>(PACKAGENAME_COMPARATOR);
 
-    private int tabWidth = 8;
+    private final int tabWidth;
 
     private LinkResolverFactory linkResolverFactory = new InternalLinkResolverFactory();
 
@@ -109,11 +111,12 @@ public class ParsedSourceSet {
      * Any error found during the analysis will be reported to
      * {@link DiagnosticListener} installed on {@link JavacTask}.
      */
-    public ParsedSourceSet(JavacTask javac) throws IOException {
+    public ParsedSourceSet(JavacTask javac, int tabWidth) throws IOException {
         trees = Trees.instance(javac);
         elements = javac.getElements();
         types = javac.getTypes();
         srcPos = new SourcePositionsWrapper(trees.getSourcePositions());
+        this.tabWidth = tabWidth;
 
         Iterable<? extends CompilationUnitTree> parsed = javac.parse();
         javac.analyze();
@@ -282,15 +285,6 @@ public class ParsedSourceSet {
     }
 
     /**
-     * Sets the TAB width.
-     *
-     * Defaults to 8.
-     */
-    public void setTabWidth(int tabWidth) {
-        this.tabWidth = tabWidth;
-    }
-
-    /**
      * Sets the {@link LinkResolverFactory} used for generating cross references.
      */
     public void setLinkResolverFactory(LinkResolverFactory f) {
@@ -344,19 +338,30 @@ public class ParsedSourceSet {
         final LinkResolver linkResolver = linkResolverFactory.create(cu,this);
 
         // add lexical markers
-        JavaLexer lexer = new JavaLexer(new StringReader(gen.sourceFile));
+        JavaLexer lexer = new JavaLexer(new CharSequenceReader(gen.sourceFile));
         lexer.setTabSize(tabWidth);
         try {
+            Stack<Long> openBraces = new Stack<Long>();
+
             while(true) {
                 Token token = lexer.nextToken();
                 int type = token.getType();
                 if(type == JavaTokenTypes.EOF)
                     break;
                 if(type == JavaTokenTypes.IDENT && ReservedWords.LIST.contains(token.getText()))
-                    gen.add(new LexicalMarker(lineMap,token,"rw"));
+                    gen.add(new Tag.ReservedWord(lineMap,token));
                 if(type == JavaTokenTypes.ML_COMMENT
                 || type == JavaTokenTypes.SL_COMMENT)
-                    gen.add(new CommentMarker(lineMap,token));
+                    gen.add(new Tag.Comment(lineMap,token));
+                if(type == JavaTokenTypes.LCURLY) {
+                    openBraces.push(getPosition(lineMap,token));
+                    gen.add(new Tag.Killer(lineMap,token)); // CurlyBracket tag yields '{'. so kill this off.
+                }
+                if(type == JavaTokenTypes.RCURLY) {
+                    long sp = openBraces.pop();
+                    gen.add(new Tag.CurlyBracket(sp,getPosition(lineMap,token)+1));
+                    gen.add(new Tag.Killer(lineMap,token));
+                }
             }
         } catch (TokenStreamException e) {
             // the analysis phase should have reported all the errors,
@@ -371,7 +376,8 @@ public class ParsedSourceSet {
              * primitive types like int, long, void, etc.
              */
             public Void visitPrimitiveType(PrimitiveTypeTree pt, Void _) {
-                gen.add(new LexicalMarker(cu,srcPos,pt,"pr"));
+                // all primitives should be marked up by lexer
+                // gen.add(new Tag.PrimitiveType(cu,srcPos,pt));
                 return super.visitPrimitiveType(pt,_);
             }
 
@@ -379,7 +385,7 @@ public class ParsedSourceSet {
              * literal string, int, etc. Null.
              */
             public Void visitLiteral(LiteralTree lit, Void _) {
-                gen.add(new LexicalMarker(cu,srcPos,lit,"lt"));
+                gen.add(new Tag.Literal(cu,srcPos,lit));
                 return super.visitLiteral(lit, _);
             }
 
@@ -387,16 +393,17 @@ public class ParsedSourceSet {
              * Definition of a variable, such as parameter, field, and local variables.
              */
             public Void visitVariable(VariableTree vt, Void _) {
-                Element e = TreeUtil.getElement(vt);
+                VariableElement e = (VariableElement) TreeUtil.getElement(vt);
                 if(e!=null) {
                     if(e.getKind()!= ElementKind.ENUM_CONSTANT) {
                         // put the marker just on the variable name.
                         // the token for the variable name is after its type.
                         // note that we need to handle declarations like "int a,b".
-                        addDecl( gen.findTokenAfter(vt.getType(), true, vt.getName().toString()), e );
+                        gen.add(new Tag.VarDecl(lineMap,
+                            gen.findTokenAfter(vt.getType(), true, vt.getName().toString()),e));
                     } else {
                         // for the enum constant put the anchor around vt
-                        addDecl(vt,e);
+                        gen.add(new Tag.VarDecl(cu,srcPos,vt,e));
                     }
                 }
                 return super.visitVariable(vt,_);
@@ -412,24 +419,24 @@ public class ParsedSourceSet {
             public Void visitMethod(MethodTree mt, Void _) {
                 ExecutableElement e = (ExecutableElement) TreeUtil.getElement(mt);
                 if(e!=null) {
+                    // mark up the method name
                     Tree prev = mt.getReturnType();
+                    String name = mt.getName().toString();
+                    Token token;
                     if(prev!=null)
-                        addDecl(gen.findTokenAfter(prev, true, mt.getName().toString()),e);
+                        token = gen.findTokenAfter(prev, true, name);
                     else
-                        addDecl(gen.findTokenAfter(mt, false,  mt.getName().toString()),e);
+                        token = gen.findTokenAfter(mt,false,name);
 
+                    if(token!=null)
+                        gen.add(new Tag.DeclName(lineMap,token));
 
                     ParsedType pt = getParsedType((TypeElement) e.getEnclosingElement());
-                    // put overridden bookmark
-                    Set<Match> r = pt.findOverriddenMethods(elements, e);
-                    if(!r.isEmpty()) {
-                        addBookmark(mt,new OverriddenMethodsBookmark(r,linkResolver));
-                    }
-                    // ... and overriding bookmark
-                    r = pt.findOverridingMethods(elements, e);
-                    if(!r.isEmpty()) {
-                        addBookmark(mt,new OverridingMethodsBookmark(r,linkResolver));
-                    }
+
+                    gen.add(new Tag.MethodDecl(cu, srcPos, mt, e,
+                        pt.findOverriddenMethods(elements, e),
+                        pt.findOverridingMethods(elements, e)
+                        ));
                 }
 
                 return super.visitMethod(mt, _);
@@ -442,13 +449,14 @@ public class ParsedSourceSet {
                 TypeElement e = (TypeElement) TreeUtil.getElement(ct);
                 if(e!=null) {
                     // put the marker on the class name portion.
-                    addDecl(gen.findTokenAfter(ct, false, ct.getSimpleName().toString()),e);
+                    // TODO: this doesn't work when the same class name appears in the annotations
+                    Token token = gen.findTokenAfter(ct, false, ct.getSimpleName().toString());
+                    if(token!=null)
+                        gen.add(new DeclName(lineMap, token));
 
-                    // put subclass bookmark
                     List<ParsedType> descendants = getParsedType(e).descendants;
-                    if(!descendants.isEmpty()) {
-                        addBookmark(ct,new SubClassBookmark(descendants,linkResolver));
-                    }
+
+                    gen.add(new Tag.ClassDecl(cu, srcPos, ct, e, descendants));
 
                     if(e.getNestingKind()== NestingKind.ANONYMOUS) {
                         // don't visit the extends and implements clause as
@@ -467,6 +475,14 @@ public class ParsedSourceSet {
                 if(!ReservedWords.LIST.contains(id.getName().toString())) {
                     Element e = TreeUtil.getElement(id);
                     if(e!=null) {
+                        switch (e.getKind()) {
+                        case ANNOTATION_TYPE:
+                        case CLASS:
+                        case ENUM:
+                        case INTERFACE:
+                            gen.add(new Tag.TypeRef(cu,srcPos,id,(TypeElement)e));
+                            break;
+                        }
                         // add a marker for syntax coloring and jump to definition
                         addRef(id,e);
                     }
@@ -479,28 +495,47 @@ public class ParsedSourceSet {
              * "exp.token"
              */
             public Void visitMemberSelect(MemberSelectTree mst, Void _) {
+                // avoid marking 'Foo.class' as static reference
                 if(!mst.getIdentifier().equals(CLASS)) {
-                    // avoid marking 'Foo.class' as static reference
+                    // just select the 'token' portion
                     long ep = srcPos.getEndPosition(cu,mst);
                     long sp = ep-mst.getIdentifier().length();
 
                     // marker for the selected identifier
                     Element e = TreeUtil.getElement(mst);
-                    if(e!=null)
-                        addRef(sp,ep,e);
+                    if(e!=null) {
+                        switch(e.getKind()) {
+                        case FIELD:
+                        case ENUM_CONSTANT:
+                            gen.add(new Tag.FieldRef(sp,ep,(VariableElement)e));
+                            break;
+
+                        // these show up in the import statement
+                        case ANNOTATION_TYPE:
+                        case CLASS:
+                        case ENUM:
+                        case INTERFACE:
+                            gen.add(new Tag.TypeRef(sp,ep,(TypeElement)e));
+                            break;
+                        }
+                    }
                 }
 
                 return super.visitMemberSelect(mst, _);
             }
 
+            /**
+             * Constructor invocation.
+             */
             public Void visitNewClass(NewClassTree nt, Void _) {
                 long ep = srcPos.getEndPosition(cu, nt.getIdentifier());
                 long sp = srcPos.getStartPosition(cu, nt.getIdentifier());
 
                 // marker for jumping to the definition
                 Element e = TreeUtil.getElement(nt);
-                if(e!=null) // be defensive
-                    addRef(sp,ep,e);
+                if(e!=null) {
+                    gen.add(new Tag.MethodRef(sp,ep,(ExecutableElement)e));
+                }
 
                 scan(nt.getEnclosingExpression());
                 scan(nt.getArguments());
@@ -511,19 +546,21 @@ public class ParsedSourceSet {
             }
 
 
+            // TODO: how is the 'super' or 'this' constructor invocation handled?
 
             /**
              * Method invocation of the form "exp.method()"
              */
             public Void visitMethodInvocation(MethodInvocationTree mi, Void _) {
                 ExpressionTree ms = mi.getMethodSelect(); // PRIMARY.methodName portion
-                Element e = TreeUtil.getElement(mi);
+                ExecutableElement e = (ExecutableElement) TreeUtil.getElement(mi);
                 if(e!=null) {
                     Name methodName = e.getSimpleName();
                     long ep = srcPos.getEndPosition(cu, ms);
-                    if(ep>=0)
+                    if(ep>=0) {
                         // marker for the method name (and jump to definition)
-                        addRef(ep-methodName.length(),ep,e);
+                        gen.add(new Tag.MethodRef(ep-methodName.length(),ep,e));
+                    }
                 }
 
                 return super.visitMethodInvocation(mi,_);
@@ -569,6 +606,10 @@ public class ParsedSourceSet {
                 }
             }.scan(packageName,null);
         }
+    }
+
+    private long getPosition(LineMap lineMap, Token token) {
+        return lineMap.getPosition(token.getLine(),token.getColumn());
     }
 
     public static final Comparator<PackageElement> PACKAGENAME_COMPARATOR = new Comparator<PackageElement>() {

@@ -66,19 +66,22 @@ abstract class MarkerBuilder<R,P> extends TreeScanner<R,P> {
     }
 
     private void addDecl(Marker m, String id) {
-        gen.add(m.createId(id,lineMap));
-        gen.add(m);
+        // TODO
+        //gen.add(m.createId(id,lineMap));
+        //gen.add(m);
     }
 
     /**
      * Adds a reference marker.
      */
     protected final void addRef(Tree t,Element e) {
-        gen.add(new TagMarker(cu,srcPos,t,linkResolver.href(e),getCssClass(e,"r"),buildUsage(e)));
+        // TODO
+        //gen.add(new TagMarker(cu,srcPos,t,linkResolver.href(e),getCssClass(e,"r"),buildUsage(e)));
     }
 
     protected final void addRef(long sp, long ep,Element e) {
-        gen.add(new TagMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r"),buildUsage(e)));
+        // TODO
+        //gen.add(new TagMarker(sp,ep,linkResolver.href(e),getCssClass(e,"r"),buildUsage(e)));
     }
 
     /**

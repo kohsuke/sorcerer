@@ -109,7 +109,7 @@ public class FrameSetGenerator extends AbstractWriter {
 
             String name = TreeUtil.getPrimaryTypeName(cu);
 
-            File out = new File(outDir, pkg + name+".html");
+            File out = new File(outDir, pkg + name+".js");
             File parent = out.getParentFile();
             if(parent!=null)    // null if outDir was "."
                 parent.mkdirs();
@@ -118,8 +118,8 @@ public class FrameSetGenerator extends AbstractWriter {
             gen.setCss(css.href(cu));
             gen.write(out);
 
-            File js = new File(outDir, pkg + name + "-outline.js");
-            generateClassOutlineJs(cu,new PrintWriter(js));
+            //File js = new File(outDir, pkg + name + "-outline.js");
+            //generateClassOutlineJs(cu,new PrintWriter(js));
         }
 
         generateIndex(new PrintWriter(open(outDir,"index.html")));
@@ -406,8 +406,9 @@ public class FrameSetGenerator extends AbstractWriter {
             "resource-files/yahoo.js",
             "resource-files/dom.js",
             "resource-files/event.js",
-            "resource-files/container_core.js",
+            "resource-files/container.js",
             "resource-files/close.gif",
+            "resource-files/opentype.gif",
             "resource-files/package.gif",
             "resource-files/layout-flat.gif",
             "resource-files/layout-hierarchical.gif",

@@ -83,3 +83,17 @@ function RadioButton(e,group,callback) {
     caption.cancelTip();
   }
 }
+
+// ordinary button
+function Button(e,callback) {
+  e.onclick = function() {
+    if(callback!=null)
+      callback(this);
+  }
+  e.onmouseover = function() {
+    caption.showTip(this.getAttribute("tip"));
+  }
+  e.onmouseout = function() {
+    caption.cancelTip();
+  }
+}

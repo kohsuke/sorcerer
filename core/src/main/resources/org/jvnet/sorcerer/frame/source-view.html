@@ -1,0 +1,327 @@
+<!DOCTYPE html public "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="../style.css">
+  <script type="text/javascript" src="resource-files/yahoo.js" ></script>
+  <script type="text/javascript" src="left-pane.js" ></script>
+<script type="text/javascript">
+
+function object(o) {
+  function F() {}
+  F.prototype = o;
+  return new F();
+}
+
+String.prototype.startsWith = function(rhs) {
+  var len = rhs.length;
+  if(this.length<len)  return false;
+  return this.substr(0,len)==rhs;
+}
+
+// take a base factory implementation and make it 'full' by deriving additional properties and functions.
+function makeFull(f) {
+  f = object(f);
+
+  f.a  = f.reservedWord('abstract');
+  f.as = f.reservedWord('assert');
+  f.b  = f.primitiveType('boolean');
+  f.br = f.reservedWord('break');
+  f.by = f.primitiveType('byte');
+  f.ca = f.reservedWord('case');
+  f.ct = f.reservedWord('catch');
+  f.ch = f.primitiveType('char');
+  f.c  = f.reservedWord('class');
+  f.cs = f.reservedWord('const');
+  f.co = f.reservedWord('continue');
+  f.de = f.reservedWord('default');
+  f.d  = f.reservedWord('do');
+  f.db = f.primitiveType('double');
+  f.e  = f.reservedWord('else');
+  f.en = f.reservedWord('enum');
+  f.ex = f.reservedWord('extends');
+  f.f  = f.reservedWord('final');
+  f.fn = f.reservedWord('finally');
+  f.fl = f.primitiveType('float');
+  f.fo = f.reservedWord('for');
+  f.i  = f.reservedWord('if');
+  f.im = f.reservedWord('implements');
+  f.ip = f.reservedWord('import');
+  f.is = f.reservedWord('instanceof');
+  f.j  = f.primitiveType('int');
+  f.it = f.reservedWord('interface');
+  f.l  = f.primitiveType('long');
+  f.na = f.reservedWord('native');
+  f.n  = f.reservedWord('new');
+  f.pa = f.reservedWord('package');
+  f.pi = f.reservedWord('private');
+  f.po = f.reservedWord('protected');
+  f.pu = f.reservedWord('public');
+  f.r  = f.reservedWord('return');
+  f.sh = f.primitiveType('short');
+  f.s  = f.reservedWord('static');
+  f.sf = f.reservedWord('strictfp');
+  f.su = f.reservedWord('super');
+  f.sw = f.reservedWord('switch');
+  f.sy = f.reservedWord('synchronized');
+  f.t  = f.reservedWord('this');
+  f.tw = f.reservedWord('throw');
+  f.ts = f.reservedWord('throws');
+  f.tt = f.reservedWord('transient');
+  f.tr = f.reservedWord('try');
+  f.v  = f.primitiveType('void');
+  f.vl = f.reservedWord('volatile');
+  f.wh = f.reservedWord('while');
+  f._  = f.w(1);
+
+  f.conv = function(a) {
+    if(typeof a=='string')
+      a=f.sourceText(a);
+    return a;
+  };
+
+  f.$ = function(/*...*/) {
+    // convert one instance
+
+    var len=arguments.length;
+    if(len==1)  return f.conv(arguments[0]);
+
+    return f.$$(arguments);
+  };
+
+  f.$$ = function(array) {
+    // pack multiple items into a container
+    var len=array.length;
+    for( var i=len-1; i>=0; i-- )
+      array[i] = f.conv(array[i]);
+    return f.group(array);
+  };
+
+  return f;
+}
+
+        var makeWhitespace = function() {
+          var s="";
+          var wsTable = [];
+          for(var i=0; i<8; i++ ) {
+            wsTable[i]=s;
+            s += ' ';
+          }
+          return function(n) {
+            if(n<8)   return wsTable[n];
+
+            var s="";
+            while(n>=8) {
+              s+="        ";
+              n-=8;
+            }
+            return s+wsTable[n];
+          }
+        }();
+
+builder = makeFull({
+
+  reservedWord : function(name) {
+    return function(context) {
+      context.css('rw').appendText(name).pop();
+    }
+  },
+  primitiveType : function(name) {
+    return function(context) {
+      context.css('pr').appendText(name).pop();
+    }
+  },
+  group : function(children) {
+    return function(context) {
+      for(var i=0;i<children.length;i++)
+        children[i](context);
+    }
+  },
+  sourceText : function(text) {
+    return function(context) {
+      context.appendText(text);
+    }
+  },
+
+  // comment
+  O : function(/*...*/) {
+    // determine CSS class
+    var head = arguments[0];
+    var style;
+    if(head.startsWith("//"))
+      style = "cs";
+    else
+    if(head.startsWith("/**"))
+      style = "cj";
+    else
+      style = "cm";
+
+    var children = this.$$(arguments);
+
+    return function(context) {
+      context.css(style);
+      children(context);
+      context.pop();
+    }
+  },
+
+  // whitespace
+  w : function(n) {
+    return function(context) {
+      context.appendText(makeWhitespace(n));
+    }
+  },
+
+  nl : function(context) {
+    context.appendText('\n');
+    context.lineNumber++;
+  },
+
+  C : function(descendants,children) {
+    // TODO: handle descendants
+    return children;
+  },
+
+  I : function(text) { // TODO: how do we communicate with the parent M and C?
+    return this.sourceText(text);
+  },
+
+  B : function(/*...*/) {
+    var children=this.$$(arguments);
+    return function(context) { // TODO: balanced bracket highlight
+      context.appendText('{');
+      children(context);
+      context.appendText('}');
+    }
+  },
+
+  M : function(sup,sub,children) {
+    // TODO: handle annotation
+    return children;
+  },
+
+  T : function(n) {
+    return function(context) {
+      // TODO: type table needs to remember the kind so that we can use the right CSS style
+      context.css("cl r").appendText(context.me.types[n].shortName).pop();
+    }
+  },
+
+  V : function(/*arguments*/) {// TODO: mark up and annotation
+    return this.$$(arguments);
+  },
+
+  F : function(type,mods,name) {// TODO: mark up and annotation
+    return this.sourceText(name);
+  },
+
+  N : function(n) {
+    return function(context) {
+      context.appendText(context.me.methods[n].name);
+    }
+  },
+
+  L : function(str) { // literal
+    return function(context) {
+      context.css("lt").appendText(str).pop();
+    }
+  },
+
+
+  typeTable: function(table) {
+    for(var i=0;i<table.length;i++) {
+      var t = { fullName:table[i][0] };
+
+      idx=t.fullName.lastIndexOf('.');
+      t.shortName=t.fullName.substring(idx+1);
+      table[i] = t;
+    }
+    // assign this to the table
+    this.types = table;
+  },
+  methodTable: function(table) {
+    for(var i=0;i<table.length;i++) {
+      var e = table[i];
+      var t = {};
+      t.owner = this.types[e[0]];
+      t.name = e[1];
+      t.params = e[2];
+      for(var j=0;j<t.params.length;j++) {
+        if(typeof t.params[j] == "number")
+          t.params[j] = this.types[t.params[j]];
+      }
+      table[i] = t;
+    }
+    this.methods = table;
+  },
+
+        classDef : function(/*...*/) {
+          return this.$$(arguments);
+        }
+});
+
+
+
+function load(name) {
+  loadScript(name);
+}
+
+function defineStructure(className,tree) {
+  // use a copy of builder (this will receive symbol tables)
+  var b=object(builder);
+  var sourceBuilder = tree(b);
+  var pre = document.getElementById("main");
+
+  // the context object to be passed around the dom builder functions
+  var context = {
+    node : pre,     // current node
+    me : b,         // to access the builder
+    lineNumber : 1, // current line
+    appendText : function(text) {
+      this.node.appendChild(document.createTextNode(text));
+      return this;
+    },
+    push : function(e) {
+      this.node.appendChild(e);
+      this.node = e;
+      return e;
+    },
+    pop : function() {
+      this.node = this.node.parentNode;
+    },
+    // wrap by a CSS class
+    css : function(style) {
+      e = document.createElement("span");
+      e.setAttribute("class",style)
+      this.push(e);
+      return this;
+    }
+  };
+  // build the main source code HTML
+  sourceBuilder(context);
+
+  // build the line number table
+  function pad(s,n) {
+    while(s.length<n)
+      s=' '+s;
+    return s;
+  }
+
+  var lnt = document.getElementById("lineNumberTable");
+  for(var i=1;i<=context.lineNumber;i++) {
+    var a = document.createElement("a");
+    a.setAttribute("name",i);
+    a.setAttribute("href",'#'+String(i));
+    a.appendChild(document.createTextNode(pad(String(i),4)+'\n'));
+    lnt.appendChild(a);
+  }
+}
+</script>
+</head>
+<body onload="load('java/lang/Test.js')">
+<div style='position:relative;'>
+  <pre id=main style='padding-left:3em'></pre>
+  <pre id=lineNumberTable style='position:absolute; left:0; top:0;'></pre>
+</div>
+</body>
+</html>
+

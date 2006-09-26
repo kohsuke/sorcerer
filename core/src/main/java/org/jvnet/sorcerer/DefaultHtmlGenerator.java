@@ -1,6 +1,8 @@
 package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
+import org.jvnet.sorcerer.Tag.Root;
+import org.jvnet.sorcerer.util.CharSequenceReader;
 import org.jvnet.sorcerer.util.TreeUtil;
 
 import java.io.BufferedWriter;
@@ -11,9 +13,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.io.StringReader;
+import java.io.Writer;
 import java.util.Collections;
-import java.util.Date;
 import java.util.StringTokenizer;
 
 /**
@@ -76,31 +77,32 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
     }
 
     /**
-     * Writes the complete HTML (header, body, then footer.)
+     * Writes the complete structure java script.
      *
      * @param out
-     *      The writer to receive HTML. This writer must be closed by the caller.
+     *      The writer to receive JavaScript. This writer must be closed by the caller.
      */
-    public void write(PrintWriter out) throws IOException {
+    public void write(JavaScriptStreamWriter out) throws IOException {
         writeHeader(out);
         writeBody(out);
         writeFooter(out);
     }
 
     /**
-     * Writes the complete HTML (header, body, then footer.)
+     * Writes the complete structure java script.
      *
      * @param os
-     *      The writer to receive HTML. This writer must be closed by the caller.
+     *      The writer to receive JavaScript. This writer must be closed by the caller.
      */
     public void write(OutputStream os) throws IOException {
-        PrintWriter w = new PrintWriter(new BufferedWriter(new OutputStreamWriter(os, "UTF-8")));
-        write(w);
+        // TODO: think about encoding.
+        Writer w = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+        write(new JavaScriptStreamWriter(w,pss));
         w.flush();
     }
 
     /**
-     * Writes the complete HTML (header, body, then footer.)
+     * Writes the complete structure java script.
      */
     public void write(File out) throws IOException {
         FileOutputStream os = new FileOutputStream(out);
@@ -113,64 +115,143 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
 
 
     /**
-     * Just write sthe body annotated source code without a surrounding
-     * &lt;body> tag. This method can be invoked directly if the caller
-     * wants to embed the generated HTML into a bigger HTML document.
+     * Organizes {@link #tags} to the tree structure.
      */
-    public void writeBody(PrintWriter out) throws IOException {
-        Reader in = new StringReader(sourceFile);
-        Collections.sort(markers);
-
+    public Tag.Root buildTree() throws IOException {
+        Reader in = new CharSequenceReader(sourceFile);
+        long curPos = 0;    // chars from input that are written so far
+        StringBuilder sb = new StringBuilder();
         char[] buf = new char[256];
 
-        MarkerStack opened = new MarkerStack();
-        MarkerScanner upcoming = new MarkerScanner();
+        Collections.sort(tags);
 
-        long curPos = 0;    // chars from input that are written so far
+        TagStack opened = new TagStack();
+        // start with the root tag
+        Root root = new Root(sourceFile.length());
+        opened.push(root);
 
-        writeNewLine(out);
+        TagScanner upcoming = new TagScanner(tags);
 
         OUTER:
         while(true) {
             // determine the next marker position
-            Marker lhs = opened.peek();
-            Marker rhs = upcoming.peek();
+            TagStack.Adder lhs = opened.peek();
+            Tag rhs = upcoming.peek();
 
-            long nextPos = Math.min(getPos(lhs,false),getPos(rhs,true));
+            long nextPos = Math.min(
+                lhs==null ? Long.MAX_VALUE : lhs.endPos(),
+                rhs==null ? Long.MAX_VALUE : rhs.sp );
 
             // read until nextPos
+            sb.setLength(0);
             while(curPos<nextPos) {
                 int sz = in.read(buf,0, (int)Math.min(nextPos-curPos,buf.length));
                 if(sz<0)    break OUTER; // all streams read
-                writeSourceCode(out, buf, sz);
+                sb.append(buf,0,sz);
                 curPos += sz;
             }
 
-            if(getPos(lhs,false)==nextPos) {
-                lhs.writeEnd(out);
+            assert lhs!=null;   // this is only possible when curPos==sourceFile.length
+
+            if(sb.length()>0) {
+                lhs.add(new Tag.SourceText(curPos-sb.length(),curPos,sb.toString()));
+            }
+
+            if(lhs.endPos()==nextPos) {
+                // the current range closes
                 opened.pop();
             } else {
-                rhs.writeStart(out);
+                // new range opens
+                lhs.add(rhs);
                 opened.push(rhs);
                 upcoming.pop();
             }
         }
 
         while(upcoming.peek()!=null) {
-            Marker m = upcoming.pop();
-            m.writeStart(out);
-            opened.push(m);
+            Tag t = upcoming.pop();
+            opened.peek().add(t);
+            opened.push(t);
         }
 
-        while(opened.peek()!=null) {
-            opened.pop().writeEnd(out);
-        }
-
-        writeEOL(out);
-
-        in.close();
-        // don't close out
+        return root;
     }
+
+    /**
+     * Just write sthe body annotated source code without a surrounding
+     * &lt;body> tag. This method can be invoked directly if the caller
+     * wants to embed the generated HTML into a bigger HTML document.
+     */
+    public void writeBody(JavaScriptStreamWriter out) throws IOException {
+        Root tree = buildTree();
+        tree.collectSymbols(out);
+        out.writeSymbolTable();
+
+        // write the body
+        out.resetList();
+        out.print("return ");
+        tree.write(out);
+    }
+
+    ///**
+    // * Just write sthe body annotated source code without a surrounding
+    // * &lt;body> tag. This method can be invoked directly if the caller
+    // * wants to embed the generated HTML into a bigger HTML document.
+    // */
+    //public void writeBody(PrintWriter out) throws IOException {
+    //    Reader in = new StringReader(sourceFile);
+    //    Collections.sort(tags);
+    //
+    //    char[] buf = new char[256];
+    //
+    //    MarkerStack opened = new MarkerStack();
+    //    MarkerScanner upcoming = new MarkerScanner();
+    //
+    //    long curPos = 0;    // chars from input that are written so far
+    //
+    //    writeNewLine(out);
+    //
+    //    OUTER:
+    //    while(true) {
+    //        // determine the next marker position
+    //        Marker lhs = opened.peek();
+    //        Marker rhs = upcoming.peek();
+    //
+    //        long nextPos = Math.min(getPos(lhs,false),getPos(rhs,true));
+    //
+    //        // read until nextPos
+    //        while(curPos<nextPos) {
+    //            int sz = in.read(buf,0, (int)Math.min(nextPos-curPos,buf.length));
+    //            if(sz<0)    break OUTER; // all streams read
+    //            writeSourceCode(out, buf, sz);
+    //            curPos += sz;
+    //        }
+    //
+    //        if(getPos(lhs,false)==nextPos) {
+    //            lhs.writeEnd(out);
+    //            opened.pop();
+    //        } else {
+    //            rhs.writeStart(out);
+    //            opened.push(rhs);
+    //            upcoming.pop();
+    //        }
+    //    }
+    //
+    //    while(upcoming.peek()!=null) {
+    //        Marker m = upcoming.pop();
+    //        m.writeStart(out);
+    //        opened.push(m);
+    //    }
+    //
+    //    while(opened.peek()!=null) {
+    //        opened.pop().writeEnd(out);
+    //    }
+    //
+    //    writeEOL(out);
+    //
+    //    in.close();
+    //    // don't close out
+    //}
 
     /**
      * Writes the bytes from the source code.
@@ -227,30 +308,36 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
     /**
      * Writes the preamble.
      */
-    protected void writeHeader(PrintWriter out) {
-        out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">");
-        out.println("<html><head>");
-        if(css==null)
-            css = relativeLinkToTop+"style.css";
-        writeCssTag(out, css);
-        writeCssTag(out,relativeLinkToTop+"menu/menu.css");
+    protected void writeHeader(JavaScriptStreamWriter out) {
+        out.println("defineStructure(");
+        out.string(TreeUtil.getPrimaryTypeName(compUnit));
+        out.print(',');
+        out.print("function(factory){with(factory) { ");
+        out.i().nl();
 
-        writeScriptTag(out,"resource-files/yahoo.js");
-        writeScriptTag(out,"resource-files/dom.js");
-        writeScriptTag(out,"resource-files/event.js");
-        writeScriptTag(out,"resource-files/container_core.js");
-        writeScriptTag(out,"menu/menu.js");
-        writeScriptTag(out,"behavior.js");
-        writeScriptTag(out,"sorcerer.js");
-        out.println("</head>");
-
-        writeBodyTag(out);
-        out.println("<div style='position:relative;'>");
-
-        // IE6 aligns the absolute positioned box to the first box, so use this dummy div to make it align to
-        // the proper palce
-        out.print("<div style='height:0px; overflow:hidden'></div>");
-        out.print("<pre id=main style='padding-left:3em'>");
+        //out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">");
+        //out.println("<html><head>");
+        //if(css==null)
+        //    css = relativeLinkToTop+"style.css";
+        //writeCssTag(out, css);
+        //writeCssTag(out,relativeLinkToTop+"menu/menu.css");
+        //
+        //writeScriptTag(out,"resource-files/yahoo.js");
+        //writeScriptTag(out,"resource-files/dom.js");
+        //writeScriptTag(out,"resource-files/event.js");
+        //writeScriptTag(out,"resource-files/container_core.js");
+        //writeScriptTag(out,"menu/menu.js");
+        //writeScriptTag(out,"behavior.js");
+        //writeScriptTag(out,"sorcerer.js");
+        //out.println("</head>");
+        //
+        //writeBodyTag(out);
+        //out.println("<div style='position:relative;'>");
+        //
+        //// IE6 aligns the absolute positioned box to the first box, so use this dummy div to make it align to
+        //// the proper palce
+        //out.print("<div style='height:0px; overflow:hidden'></div>");
+        //out.print("<pre id=main style='padding-left:3em'>");
     }
 
     private void writeCssTag(PrintWriter out, String name) {
@@ -275,15 +362,18 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
     /**
      * Writes the footer.
      */
-    protected void writeFooter(PrintWriter out) {
-        out.println("</pre>");
-        writeLineNumberTable(out);
-        out.println("</div>");
-        out.printf(
-            "<div class=footer>" +
-            "Generated by <a id=homelink href='https://sorcerer.dev.java.net/'>Sorcerer</a> on %tc" +
-            "</div>",new Date());
-        out.println("</body></html>");
+    protected void writeFooter(JavaScriptStreamWriter out) {
+        out.o().nl().print(";}});");
+
+
+        //out.println("</pre>");
+        //writeLineNumberTable(out);
+        //out.println("</div>");
+        //out.printf(
+        //    "<div class=footer>" +
+        //    "Generated by <a id=homelink href='https://sorcerer.dev.java.net/'>Sorcerer</a> on %tc" +
+        //    "</div>",new Date());
+        //out.println("</body></html>");
     }
 
     /**
