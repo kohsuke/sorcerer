@@ -10,6 +10,7 @@ import javax.lang.model.type.TypeMirror;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.LinkedHashMap;
+import java.util.Set;
 
 /**
  * {@link PrintWriter} extended for writing JavaScript in sorcerer.
@@ -166,13 +167,7 @@ public class JavaScriptStreamWriter extends PrintWriter {
      * Writes the modifier set for a reference.
      */
     public void writeModifiers(Element e) {
-        StringBuilder b = new StringBuilder();
-        if(e.getModifiers().contains(Modifier.STATIC))
-            b.append('s');
-        if(pss.getElements().isDeprecated(e))
-            b.append('d');
-        if(b.length()>0)
-            sep().string(b);
+        sep().string(getCssClass(e));
     }
 
     /**
@@ -246,6 +241,55 @@ public class JavaScriptStreamWriter extends PrintWriter {
         beginList();
         methodTable.write();
         print(");");
+    }
+
+    /**
+     * Computes the CSS class name for the given program element.
+     *
+     * @param seed
+     *      This will be also added to the CSS list.
+     */
+    public String getCssClass(Element e) {
+        StringBuilder buf = new StringBuilder();
+
+        // static marker
+        Set<Modifier> mods = e.getModifiers();
+        if(mods.contains(Modifier.STATIC)) {
+            if(buf.length()>0)
+                buf.append(' ');
+            buf.append("st");
+        }
+
+        // deprecated marker
+        if(pss.getElements().isDeprecated(e)) {
+            if(buf.length()>0)
+                buf.append(' ');
+            buf.append("dp");
+        }
+
+        if(buf.length()>0)
+            buf.append(' ');
+
+        switch (e.getKind()) {
+        case ANNOTATION_TYPE:       buf.append("an"); break;
+        case CLASS:                 buf.append("cl"); break;
+        case CONSTRUCTOR:           buf.append("co"); break;
+        case ENUM:                  buf.append("en"); break;
+        case ENUM_CONSTANT:         buf.append("ec"); break;
+        case EXCEPTION_PARAMETER:   buf.append("ex"); break;
+        case FIELD:                 buf.append("fi"); break;
+        case INSTANCE_INIT:         buf.append("ii"); break;
+        case INTERFACE:             buf.append("it"); break;
+        case LOCAL_VARIABLE:        buf.append("lv"); break;
+        case METHOD:                buf.append("me"); break;
+        case PACKAGE:               buf.append("pk"); break;
+        case PARAMETER:             buf.append("pa"); break;
+        case STATIC_INIT:           buf.append("si"); break;
+        case TYPE_PARAMETER:        buf.append("tp"); break;
+        default:                    break;
+        }
+
+        return buf.toString();
     }
 
     static boolean doIdent=false;

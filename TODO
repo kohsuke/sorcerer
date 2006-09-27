@@ -1,5 +1,6 @@
 other issues
 ------------
+- #this shouldn't be used like "#this-fieldName".
 - when you reload in IE, outline view shows the main page content
 
 - local types can be only referenced from the same cu.
@@ -21,3 +22,28 @@ other issues
   - highlight the usage in the source view
 - current line number layout method doesn't work in Opera.
   define another class that does dumb-but-easy approach
+
+
+HTML in JS
+----------
+Pros:
+  - cross domain reference and linking
+
+Cons:
+  - opening a particular class from file explorer is no longer very easy
+
+
+Format:
+
+ [ token stream ... ]
+
+   string means literal to be printed.
+   object means an intelligent marker.
+   certain markers can yield text (like reserved word markers.)
+   markers can have nested token stream to organize information in a hierarchy.
+
+Experiments:
+
+  - it's really crucial that we can override the prototype of those objects to make them intelligent.
+    -> Nope. But write 'new Foo(...)' to create a specific object type.
+  - check that '#anchor' navigation can be still made to work.

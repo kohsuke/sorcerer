@@ -1,0 +1,111 @@
+JavaScript factory methods and their meanings
+=============================================
+
+reserved words: first one or two characters (except a few exceptions like 'protected vs 'private'
+                lower case
+
+constants
+---------
+.a  abstract
+.as assert
+.b  boolean
+.br break
+.by byte
+.ca case
+.ch char
+.c  class
+.co continue
+.cs const
+.ct catch
+.de default
+.db double
+.d  do
+.e  else
+.en enum
+.ex extends
+.f  final
+.fl float
+.fn finally
+.fo for
+.g
+.h
+.i  if
+.im implements
+.ip import
+.is instanceof
+.it interface
+.j  int
+.k
+.l  long
+.m
+.n  new
+.na native
+.nl NL in the source text
+.o
+.pi private
+.pu public
+.po protected
+.pa package
+.q
+.r  return
+.s  static
+.sf strictfp
+.sh short
+.su super
+.sw switch
+.sy synchronized
+.t  this
+.tr try
+.ts throws
+.tt transient
+.tw throw
+.u
+.v  void
+.vl volatile
+.w  consecutive whitespae in source text (this is function that takes n)
+.wh while
+.x
+.y
+.z
+._  one whitespace char
+
+functions: bigger programing element
+------------------------------------
+.A
+.B  yields braces. B(children). Source text is '{' ... '}'
+.C  class declaration. C([...typeRef]/*descendants*/, children)
+.D
+.E
+.F  field/enumconst reference. F(lhsType, refMods, name). Source text is just the field name.
+.G
+.H
+.I  marks class/method name in the class/method declaration
+.J
+.K
+.L  literal like '5' or "abc"
+.M  method/constructor declaration. M([..methodRef..]/*super methods*/,[..methodRef..]/*sub methods*., children).
+.N  method reference. N(methodRef). source text is just the method name.
+.O  comment
+.P
+.Q
+.R
+.S  marks the variable scope (like class, method, or { ... }).
+    surrounds the whole declaration as well as uses.
+.T  type reference (e.g., T(5) means 5th type in the table)
+.U
+.V  variable declaration (field, local var, etc.)   V(children...)
+.W  variable reference N(refMods, children). first child represents the variable name
+.X
+.Y
+.Z
+
+source text are printed as strings
+
+methodRef := [lhsType,simpleName,[paramTypes...],refMods]
+  note that for constructors, simpleName is the name of the class. 
+
+typeRef := [fullName,css]
+  css: css class list to be used for this package.
+
+refMods = "<CSS style class list, separate by whitespace>"
+  this format is aligned with CSS class names.

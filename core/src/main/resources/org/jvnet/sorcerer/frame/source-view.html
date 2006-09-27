@@ -4,13 +4,55 @@
   <link rel="stylesheet" type="text/css" href="../style.css">
   <script type="text/javascript" src="resource-files/yahoo.js" ></script>
   <script type="text/javascript" src="left-pane.js" ></script>
+<!-- the prototype-oriented programming library -->
 <script type="text/javascript">
+  function object(o) {
+    function F() {}
+    F.prototype = o;
+    return new F();
+  }
+  // create a new object by using the given prototype then copying over
+  // all properties from v.
+  function derive(proto,v) {
+    o = object(proto);
+    for(p in v)
+      o[p] = v[p];
+    return o;
+  }
 
-function object(o) {
-  function F() {}
-  F.prototype = o;
-  return new F();
-}
+</script>
+<!-- computes link target -->
+<script type="text/javascript">
+  var linker = {
+    // computes a link to a type.
+    //   t: type table entry
+    type : function(t) { return null; },
+    // computes a link to a method.
+    //   m: method table entry
+    method: function(m) { return null; },
+    // computes a link to a field
+    //   t: type table entry
+    //   name: field name
+    field: function(t,name) { return null; }
+  };
+
+  // generates links to external javadoc
+  var javadocLinker = derive(linker, {
+    baseURL: null, // the base URL of the javadoc
+    type : function(t) {
+      return this.baseURL+t.fullName.replace(/\./g,"/")+".html";
+    },
+    method : function(m) {
+      return this.type(m.owner)+'#'+m.name;
+    },
+    field : function(t,name) {
+      return this.type(t)+'#'+name;
+    }
+  });
+
+</script>
+<!-- main script -->
+<script type="text/javascript">
 
 String.prototype.startsWith = function(rhs) {
   var len = rhs.length;
@@ -99,24 +141,24 @@ function makeFull(f) {
   return f;
 }
 
-        var makeWhitespace = function() {
-          var s="";
-          var wsTable = [];
-          for(var i=0; i<8; i++ ) {
-            wsTable[i]=s;
-            s += ' ';
-          }
-          return function(n) {
-            if(n<8)   return wsTable[n];
+var makeWhitespace = function() {
+  var s="";
+  var wsTable = [];
+  for(var i=0; i<8; i++ ) {
+    wsTable[i]=s;
+    s += ' ';
+  }
+  return function(n) {
+    if(n<8)   return wsTable[n];
 
-            var s="";
-            while(n>=8) {
-              s+="        ";
-              n-=8;
-            }
-            return s+wsTable[n];
-          }
-        }();
+    var s="";
+    while(n>=8) {
+      s+="        ";
+      n-=8;
+    }
+    return s+wsTable[n];
+  }
+}();
 
 builder = makeFull({
 
@@ -194,15 +236,23 @@ builder = makeFull({
     }
   },
 
-  M : function(sup,sub,children) {
+  M : function(sup,sub,children) { // method declaration
     // TODO: handle annotation
     return children;
   },
 
-  T : function(n) {
+  N : function(n) { // method reference
     return function(context) {
-      // TODO: type table needs to remember the kind so that we can use the right CSS style
-      context.css("cl r").appendText(context.me.types[n].shortName).pop();
+      var m = context.me.methods[n];
+      context.link(m.href).css(m.css+" r").appendText(m.name).pop().pop();
+    }
+  },
+
+
+  T : function(n) { // type reference
+    return function(context) {
+      var t = context.me.types[n];
+      context.link(t.href).css(t.css+" r").appendText(t.shortName).pop().pop();
     }
   },
 
@@ -210,13 +260,10 @@ builder = makeFull({
     return this.$$(arguments);
   },
 
-  F : function(type,mods,name) {// TODO: mark up and annotation
-    return this.sourceText(name);
-  },
-
-  N : function(n) {
+  F : function(typeIdx,mods,name) {// TODO: mark up and annotation
     return function(context) {
-      context.appendText(context.me.methods[n].name);
+      var t = context.me.types[typeIdx];
+      context.link(t.linker.field(t,name)).css(mods+" r").appendText(name).pop().pop();
     }
   },
 
@@ -229,10 +276,15 @@ builder = makeFull({
 
   typeTable: function(table) {
     for(var i=0;i<table.length;i++) {
-      var t = { fullName:table[i][0] };
+      var t = { fullName:table[i][0], css:table[i][1] };
 
       idx=t.fullName.lastIndexOf('.');
       t.shortName=t.fullName.substring(idx+1);
+
+      // TODO: testing. need to be configurable
+      t.linker = derive(javadocLinker,{baseURL:"http://java.sun.com/j2se/1.5.0/docs/api/"});
+      t.href = t.linker.type(t);
+
       table[i] = t;
     }
     // assign this to the table
@@ -241,22 +293,26 @@ builder = makeFull({
   methodTable: function(table) {
     for(var i=0;i<table.length;i++) {
       var e = table[i];
-      var t = {};
-      t.owner = this.types[e[0]];
-      t.name = e[1];
-      t.params = e[2];
-      for(var j=0;j<t.params.length;j++) {
-        if(typeof t.params[j] == "number")
-          t.params[j] = this.types[t.params[j]];
+      var m = {};
+      m.owner = this.types[e[0]];
+      m.name = e[1];
+      m.params = e[2];
+      for(var j=0;j<m.params.length;j++) {
+        if(typeof m.params[j] == "number")
+          m.params[j] = this.types[m.params[j]];
       }
-      table[i] = t;
+
+      m.css = e[3]+" r";
+      m.href = m.owner.linker.method(m);
+
+      table[i] = m;
     }
     this.methods = table;
   },
 
-        classDef : function(/*...*/) {
-          return this.$$(arguments);
-        }
+  classDef : function(/*...*/) {
+    return this.$$(arguments);
+  }
 });
 
 
@@ -287,11 +343,20 @@ function defineStructure(className,tree) {
     },
     pop : function() {
       this.node = this.node.parentNode;
+      return this;
     },
     // wrap by a CSS class
     css : function(style) {
       e = document.createElement("span");
       e.setAttribute("class",style)
+      this.push(e);
+      return this;
+    },
+    // wrap by anchor link
+    link : function(href) {
+      e = document.createElement("a");
+      if(href!=null)
+        e.setAttribute("href",href);
       this.push(e);
       return this;
     }

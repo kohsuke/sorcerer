@@ -18,6 +18,7 @@ public class TestCode {
         public void run() {}
     }
 
+    @Deprecated
     public class Inner extends Base {
         public void run() {}
     }

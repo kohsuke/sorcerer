@@ -226,8 +226,8 @@ public abstract class AbstractSorcererReport
 
                 a.setSourceEncoding(encoding);
                 a.setLocale(locale);
+                a.setTabWidth(tabWidth);
                 ParsedSourceSet pss = a.analyze(new Listener(getLog()));
-                pss.setTabWidth(tabWidth);
                 pss.setLinkResolverFactory(createLinkResolverFactory());
 
                 // TODO: support i18n and use locale for HTML generation

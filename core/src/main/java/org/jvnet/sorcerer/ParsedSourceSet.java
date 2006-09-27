@@ -483,8 +483,6 @@ public class ParsedSourceSet {
                             gen.add(new Tag.TypeRef(cu,srcPos,id,(TypeElement)e));
                             break;
                         }
-                        // add a marker for syntax coloring and jump to definition
-                        addRef(id,e);
                     }
                 }
 
@@ -587,7 +585,7 @@ public class ParsedSourceSet {
                 public String visitIdentifier(IdentifierTree id, Void _) {
                     String name = id.getName().toString();
                     PackageElement pe = elements.getPackageElement(name);
-                    addRef(id,pe);
+                    // addRef(id,pe);
                     return name;
                 }
 
@@ -601,7 +599,7 @@ public class ParsedSourceSet {
                     long ep = srcPos.getEndPosition(cu,mst);
                     long sp = ep-mst.getIdentifier().length();
 
-                    addRef(sp,ep,pe);
+                    // addRef(sp,ep,pe);
                     return name;
                 }
             }.scan(packageName,null);

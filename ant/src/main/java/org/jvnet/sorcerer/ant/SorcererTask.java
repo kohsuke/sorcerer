@@ -98,8 +98,8 @@ public class SorcererTask extends MatchingTask {
             for (String p : classpath.list())
                 a.addClasspath(getProject().resolveFile(p));
 
+            a.setTabWidth(tabWidth);
             ParsedSourceSet pss = a.analyze(new DiagnosticPrinter());
-            pss.setTabWidth(tabWidth);
             pss.setLinkResolverFactory(createLinkResolverFactory());
 
             CSSHandler css = createCSSHandler();
