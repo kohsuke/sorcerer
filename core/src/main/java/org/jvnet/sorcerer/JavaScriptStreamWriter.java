@@ -1,6 +1,7 @@
 package org.jvnet.sorcerer;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -64,7 +65,10 @@ public class JavaScriptStreamWriter extends PrintWriter {
             sep();
             ref((TypeElement)e.getEnclosingElement());
             sep();
-            string(e.getSimpleName());
+            if(e.getKind()== ElementKind.CONSTRUCTOR)
+                string(e.getEnclosingElement().getSimpleName());
+            else
+                string(e.getSimpleName());
             beginArray();
             for (VariableElement v : e.getParameters()) {
                 sep();
