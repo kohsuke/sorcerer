@@ -34,6 +34,10 @@ div.footer {
 #lineNumberTable {
   color: gray;
 }
+.highlighted-bracket {/* when you hover on '{', the corresponding '}' gets this class. */
+  background-color: cornflowerblue;
+  color: white;
+}
 
 
 /*

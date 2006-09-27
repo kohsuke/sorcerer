@@ -43,7 +43,13 @@
       return this.baseURL+t.fullName.replace(/\./g,"/")+".html";
     },
     method : function(m) {
-      return this.type(m.owner)+'#'+m.name;
+      var s = this.type(m.owner)+'#'+m.name+'(';
+      for(var i=0; i<m.params.length; i++) {
+        if(i!=0) s+=',';
+        s+=m.params[i];
+      }
+      s+=')';
+      return s;
     },
     field : function(t,name) {
       return this.type(t)+'#'+name;
@@ -229,10 +235,34 @@ builder = makeFull({
 
   B : function(/*...*/) {
     var children=this.$$(arguments);
-    return function(context) { // TODO: balanced bracket highlight
+    return function(context) { // TODO: scroll to the other bracket by clicking
+      var span = document.createElement("span");
+      context.push(span);
+
+      var open = document.createElement("span");
+      context.push(open);
       context.appendText('{');
+      context.pop();
+
       children(context);
+
+      var closed = document.createElement("span");
+      context.push(closed);
       context.appendText('}');
+      context.pop();
+
+      context.pop();
+
+      var highlighter = function(lhs,rhs) {
+        lhs.onmouseover = function() {
+          rhs.className="highlighted-bracket";
+        }
+        lhs.onmouseout = function() {
+          rhs.className="";
+        }
+      };
+      highlighter(open,closed);
+      highlighter(closed,open);
     }
   },
 
@@ -260,7 +290,7 @@ builder = makeFull({
     return this.$$(arguments);
   },
 
-  F : function(typeIdx,mods,name) {// TODO: mark up and annotation
+  F : function(typeIdx,mods,name) {// field reference
     return function(context) {
       var t = context.me.types[typeIdx];
       context.link(t.linker.field(t,name)).css(mods+" r").appendText(name).pop().pop();
@@ -299,7 +329,7 @@ builder = makeFull({
       m.params = e[2];
       for(var j=0;j<m.params.length;j++) {
         if(typeof m.params[j] == "number")
-          m.params[j] = this.types[m.params[j]];
+          m.params[j] = this.types[m.params[j]].fullName;
       }
 
       m.css = e[3]+" r";
