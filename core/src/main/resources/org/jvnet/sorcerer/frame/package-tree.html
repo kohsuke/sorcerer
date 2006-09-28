@@ -50,15 +50,10 @@
     },
 
     postProcess : function(packageName,classList) {
-      if(packageName=="")
-        base = "";
-      else
-        base = packageName.replace(/\./g,"/")+"/";
-
       for( var j=0; j<classList.length; j++ ) {
         var c = classList[j];
         c.label = "<img src='resource-files/"+c.kind+"_"+c.access+".gif'> "+c.name;
-        c.href = "source-view.html?"+base+c.href;
+        c.href = "source-view.html?"+c.script;
       }
     }
   });
@@ -158,7 +153,7 @@
       var cnode = new YAHOO.widget.TextNode(c, node, false);
       cnode.onLabelClick = function(me) {
         try {
-          top.main.location = me.data.href;
+          top.main.load(me.data.script);
         } catch(e) {/*don't let the navigation failure leak (which causes the page to be loaded on this frame.*/}
         return false;
       }

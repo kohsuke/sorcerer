@@ -603,9 +603,10 @@ window.onload = function() {
   };
 
   // testing. load the source code
-  if(window.location.search!=null) {
+  var qs = window.location.search;
+  if(qs!=null && qs.length>1) {
     // TODO: this is a security hole as it allows any script to be loaded.
-    load(window.location.search.substring(1)+".js");
+    load(qs.substring(1));
   }
 
   //Behaviour.register({

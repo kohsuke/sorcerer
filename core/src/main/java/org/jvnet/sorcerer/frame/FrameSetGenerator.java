@@ -157,7 +157,6 @@ public class FrameSetGenerator extends AbstractWriter {
 
         // other resources from core
         System.out.println("Generating static resource files");
-        copyResource(outDir, "behavior.js");
         copyResource(outDir, "sorcerer.js");
         copyResource(outDir, "style.css");
 
@@ -258,7 +257,7 @@ public class FrameSetGenerator extends AbstractWriter {
                 jw.startObject();
                 jw.property("name",t.getSimpleName());
                 jw.property("kind",getKindString(t.getKind()));
-                jw.property("href",linkResolver.href(t));
+                jw.property("script",linkResolver.href(t));
                 jw.property("access",getAccessLevel(t));
                 jw.endObject();
             }
@@ -400,6 +399,7 @@ public class FrameSetGenerator extends AbstractWriter {
             "search-pane.html",
             "search-toolbar.html",
             "search-container.html",
+            "source-view.html",
             "eclipse-public-license.url",
             "left-pane.js",
             "left-pane.css",

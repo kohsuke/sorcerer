@@ -4,12 +4,12 @@ setClassList("java.util",
       name: "Collection",
       kind: "interface",
       access: "private",
-      href: "Collection"
+      script: "java/util/Collection.js"
     },
     {
       name: "List",
       kind: "interface",
       access: "default",
-      href: "List"
+      script: "java/util/List.js"
     }
 ]);

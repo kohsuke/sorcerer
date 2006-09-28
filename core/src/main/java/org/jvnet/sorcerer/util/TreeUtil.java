@@ -16,7 +16,6 @@ import com.sun.tools.javac.tree.TreeInfo;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Types;
@@ -51,20 +50,6 @@ public class TreeUtil {
 
     public static String getFullMethodName(Types types, ExecutableElement e) {
         return buildMethodName(new StringBuilder(),types,e).toString();
-    }
-
-    public static String[] splitPackageName(PackageElement e) {
-        if(e.isUnnamed())
-            return new String[0];
-        else
-            return splitPackageName(e.getQualifiedName().toString());
-    }
-
-    public static String[] splitPackageName(String name) {
-        if(name.length()==0)
-            return new String[0];
-        else
-            return name.split("\\.");
     }
 
     /**

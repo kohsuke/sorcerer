@@ -4,12 +4,12 @@ setClassList("java.lang",
       name: "String",
       kind: "class",
       access: "protected",
-      href: "Test"
+      script: "java/lang/Test.js"
     },
     {
       name: "Deprecated",
       kind: "annotation",
       access: "public",
-      href: "Class"
+      script: "java/lang/Class.js"
     }
 ]);

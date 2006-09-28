@@ -31,16 +31,10 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
     }
 
     public LinkResolver create(PackageElement pkg, ParsedSourceSet sources) {
-        return new InternalLinkResolver(pkg, sources);
+        return new InternalLinkResolver(sources);
     }
 
     static final class InternalLinkResolver extends AbstractElementVisitor6<StringBuilder,Void> implements LinkResolver {
-        /**
-         * The package in which the current compilation unit is in. Tokenized.
-         * e.g., {"org","acme","foo"}. Never null.
-         */
-        private final String[] pkg;
-
         private final ParsedSourceSet pss;
         private final Trees trees;
         private final Types types;
@@ -58,16 +52,14 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
             this.elements = pss.getElements();
             this.types = pss.getTypes();
             this.compUnit = compUnit;
-            this.pkg = TreeUtil.splitPackageName(TreeUtil.getPackageName(compUnit));
         }
 
-        public InternalLinkResolver(PackageElement pkg, ParsedSourceSet pss) {
+        public InternalLinkResolver(ParsedSourceSet pss) {
             this.pss = pss;
             this.compUnit = null;
             this.trees = pss.getTrees();
             this.elements = pss.getElements();
             this.types = pss.getTypes();
-            this.pkg = TreeUtil.splitPackageName(pkg);
         }
 
         public String href(Element e) {
@@ -113,7 +105,7 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
 
                 StringBuilder buf;
                 if(!owner.equals(compUnit)) {
-                    buf = combine(recurse(t)).append(primaryTypeName).append(".html");
+                    buf = combine(recurse(t)).append(primaryTypeName).append(".js");
                 } else {
                     buf = new StringBuilder();
                 }
@@ -167,24 +159,12 @@ public final class InternalLinkResolverFactory implements LinkResolverFactory {
             if(!pss.getPackageElement().contains(p))
                 return null;
 
-            // compare this package with the current package list and compute the list
-            String[] to = TreeUtil.splitPackageName(p);
-
-            // skip the common prefix
-            int i;
-            for( i=0; i<Math.min(to.length,pkg.length); i++ )
-                if(!pkg[i].equals(to[i]))
-                    break;
-
             StringBuilder buf = new StringBuilder();
-            for( int j=i; j<pkg.length; j++ ) {
-                buf.append("../");
-            }
-            for( int j=i; j<to.length; j++ ) {
-                buf.append(to[j]).append('/');
-            }
-
-            if(buf.length()==0) buf.append("./");
+            if(p.isUnnamed())
+                buf.append('.');
+            else
+                buf.append(p.getQualifiedName().toString().replace('.','/'));
+            buf.append('/');
 
             return buf;
         }
