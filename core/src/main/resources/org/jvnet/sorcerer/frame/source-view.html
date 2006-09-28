@@ -1,8 +1,18 @@
 <!DOCTYPE html public "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
+  <!-- control visual presentation of the generated HTML -->
   <link rel="stylesheet" type="text/css" href="../style.css">
+
+  <!-- stock JavaScript from YUI -->
   <script type="text/javascript" src="resource-files/yahoo.js" ></script>
+  <link type='text/css' rel='stylesheet' href='../menu/menu.css' />
+  <script type='text/javascript' src='resource-files/yahoo.js'></script>
+  <script type='text/javascript' src='resource-files/dom.js'></script>
+  <script type='text/javascript' src='resource-files/event.js'></script>
+  <script type='text/javascript' src='resource-files/container.js'></script>
+  <script type='text/javascript' src='../menu/menu.js'></script>
+
   <script type="text/javascript" src="left-pane.js" ></script>
 <!-- the prototype-oriented programming library -->
 <script type="text/javascript">
@@ -43,13 +53,8 @@
       return this.baseURL+t.fullName.replace(/\./g,"/")+".html";
     },
     method : function(m) {
-      var s = this.type(m.owner)+'#'+m.name+'(';
-      for(var i=0; i<m.params.length; i++) {
-        if(i!=0) s+=',';
-        s+=m.params[i];
-      }
-      s+=')';
-      return s;
+      // TODO: javadoc doesn't really use erasure format. Doh!
+      return this.type(m.owner)+'#'+m.signature();
     },
     field : function(t,name) {
       return this.type(t)+'#'+name;
@@ -57,7 +62,7 @@
   });
 
 </script>
-<!-- main script -->
+<!-- HTML generator -->
 <script type="text/javascript">
 
 String.prototype.startsWith = function(rhs) {
@@ -165,6 +170,28 @@ var makeWhitespace = function() {
     return s+wsTable[n];
   }
 }();
+
+
+// one entry of the method table
+var methodTableEntry = {
+  owner: null, // reference to owner type
+  name : null, // short method name
+  params : [], // array of strings that represent erased parameter type names in FQCN
+  css : null,  // CSS classes to be used for referencing this method
+  href : null, // link to the definition of this method
+
+  // compute the method signature of the form "methodName(param1,param2,...)"
+  signature : function() {
+    var s = this.name+'(';
+    for(var i=0; i<this.params.length; i++) {
+      if(i!=0) s+=',';
+      s+=this.params[i];
+    }
+    s+=')';
+    return s;
+  }
+};
+
 
 builder = makeFull({
 
@@ -274,7 +301,7 @@ builder = makeFull({
   N : function(n) { // method reference
     return function(context) {
       var m = context.me.methods[n];
-      context.link(m.href).css(m.css+" r").appendText(m.name).pop().pop();
+      context.link(m.href).css(m.css+" r", m.owner.fullName+'#'+m.signature()).appendText(m.name).pop().pop();
     }
   },
 
@@ -282,7 +309,7 @@ builder = makeFull({
   T : function(n) { // type reference
     return function(context) {
       var t = context.me.types[n];
-      context.link(t.href).css(t.css+" r").appendText(t.shortName).pop().pop();
+      context.link(t.href).css(t.css+" r", t.fullName+"#this").appendText(t.shortName).pop().pop();
     }
   },
 
@@ -293,7 +320,7 @@ builder = makeFull({
   F : function(typeIdx,mods,name) {// field reference
     return function(context) {
       var t = context.me.types[typeIdx];
-      context.link(t.linker.field(t,name)).css(mods+" r").appendText(name).pop().pop();
+      context.link(t.linker.field(t,name)).css(mods+" r",t.fullName+'#'+name).appendText(name).pop().pop();
     }
   },
 
@@ -323,7 +350,7 @@ builder = makeFull({
   methodTable: function(table) {
     for(var i=0;i<table.length;i++) {
       var e = table[i];
-      var m = {};
+      var m = object(methodTableEntry);
       m.owner = this.types[e[0]];
       m.name = e[1];
       m.params = e[2];
@@ -376,10 +403,15 @@ function defineStructure(className,tree) {
       return this;
     },
     // wrap by a CSS class
-    css : function(style) {
+    //   usageKey : optional. usage search key like "java.lang.String#indexOf()"
+    css : function(style,usageKey) {
       e = document.createElement("span");
-      e.setAttribute("class",style)
+      e.setAttribute("class",style);
       this.push(e);
+      if(usageKey!=null) {
+        e.parentNode.setAttribute("u",usageKey);
+        prepareMenu(e);
+      }
       return this;
     },
     // wrap by anchor link
@@ -411,9 +443,151 @@ function defineStructure(className,tree) {
   }
 }
 </script>
+<!-- menu handling -->
+<script type="text/javascript">
+// controls time out action and cancellation
+function Future(action,timeout) {
+  this.schedule=function() {
+    if(this.token!=null)
+      window.clearTimeout(this.token);
+    this.token=window.setTimeout(function() {
+      this.token=null;
+      action();
+    },timeout);
+  }
+  this.cancel=function() {
+    if(this.token!=null)
+      window.clearTimeout(this.token);
+    this.token=null;
+  }
+}
+
+
+
+var menu;
+var menuSelector;
+var menuSelectorCanceller;
+
+/*
+  prepare context menu hook up for the given span element.
+*/
+function prepareMenu(span) {
+  span.onmouseover=function() {
+    var xy = YAHOO.util.Dom.getXY(this);
+    xy[0] += this.offsetWidth;
+    YAHOO.util.Dom.setXY(menuSelector,xy);
+    menuSelector.style.visibility = "visible";
+    menuSelector.target=this;
+  }
+  span.onmouseout=function() {
+    menuSelectorCanceller.schedule();
+  }
+}
+
+window.onload = function() {
+  // Create the menu
+  menu = new YAHOO.widget.Menu("contextmenu");
+  menuSelector = document.getElementById('menuSelector');
+
+  var menuItems = [
+      {
+        text: "dummy", // determined dynamically
+        action: function() {
+          window.location=menu.target.parentNode.href;
+        },
+        preshow: function(type,args,menuItem) {
+          if(YAHOO.util.Dom.hasClass(menu.target,"d"))
+            menuItem.cfg.setProperty("text", "Permalink");
+          else
+            menuItem.cfg.setProperty("text", "Go to declaration");
+          menuItem.cfg.setProperty("url",menu.target.parentNode.href);
+        }
+      },
+      {
+        text: "Find usages",
+        action: function() {
+          parent.searchpane.displayController.show(menu.target.parentNode);
+        }
+      }
+    ];
+
+  // Add items to the main menu
+  for(var i=0; i<menuItems.length; i++) {
+      menuItem =
+          new YAHOO.widget.MenuItem(menuItems[i].text);
+      menuItem.clickEvent.subscribe(menuItems[i].action);
+      menu.addItem(menuItem);
+      if(menuItems[i].preshow!=null)
+        menu.beforeShowEvent.subscribe(menuItems[i].preshow,menuItem);
+  }
+
+
+  menu.render(document.body);
+
+
+  // for hiding menu after a timeout
+  var canceller = new Future(function() {
+    menu.hide();
+  },750);
+
+  menu.mouseOverEvent.subscribe(function(){canceller.cancel();});
+  menu.mouseOutEvent.subscribe(function(){canceller.schedule();});
+
+  // show context menu for the program element
+  //    target : b element that has information about the program element
+  //             its parent is always <a> that has links.
+  function showMenu(target) {
+    menu.cfg.setProperty("context", [target, "tl", "tr"]);
+    menu.target=target;
+    menu.show();
+    return false;
+  }
+
+  document.onclick=function(e) {
+    if(YAHOO.util.Event.getTarget(e,false)!=menuSelector)
+      menu.hide();
+  }
+
+  // menu selector control
+  menuSelectorCanceller = new Future(function() {
+    menuSelector.style.visibility = "hidden";
+  },750);
+  menuSelector.onmouseover=function() {
+    menuSelectorCanceller.cancel();
+  };
+  menuSelector.onmouseout=function() {
+    menuSelectorCanceller.schedule();
+  };
+  menuSelector.onclick=function() {
+    showMenu(this.target);
+    menuSelector.style.visibility="hidden";
+  };
+
+  // testing. load the source code
+  load('java/lang/Test.js');
+
+  //Behaviour.register({
+  //  ".popup" : function(e) {
+  //    e.parentNode.popup = e;
+  //  },
+  //
+  //  ".bookmark" : function(e) {
+  //    e.onmouseover = function() {
+  //      this.popup.style.display="block";
+  //    };
+  //    e.onmouseout  = function() {
+  //      this.popup.style.display="none";
+  //    };
+  //  }
+  //});
+
+}
+</script>
 </head>
-<body onload="load('java/lang/Test.js')">
+<body>
 <div style='position:relative;'>
+  <!-- the '>' floating tip -->
+  <div id="menuSelector"></div>
   <pre id=main style='padding-left:3em'></pre>
   <pre id=lineNumberTable style='position:absolute; left:0; top:0;'></pre>
 </div>

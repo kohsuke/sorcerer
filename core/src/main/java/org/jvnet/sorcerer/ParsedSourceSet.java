@@ -482,6 +482,10 @@ public class ParsedSourceSet {
                         case INTERFACE:
                             gen.add(new Tag.TypeRef(cu,srcPos,id,(TypeElement)e));
                             break;
+                        case FIELD: // such as objects imported by static import.
+                        case ENUM_CONSTANT:
+                            gen.add(new Tag.FieldRef(cu,srcPos,id,(VariableElement)e));
+                            break;
                         }
                     }
                 }
