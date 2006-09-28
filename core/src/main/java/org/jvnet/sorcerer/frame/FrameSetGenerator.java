@@ -8,6 +8,7 @@ import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePathScanner;
+import org.jvnet.sorcerer.Analyzer;
 import org.jvnet.sorcerer.LinkResolver;
 import org.jvnet.sorcerer.LinkResolverFactory;
 import org.jvnet.sorcerer.ParsedSourceSet;
@@ -170,7 +171,7 @@ public class FrameSetGenerator extends AbstractWriter {
         for (String res : RESOURCES) {
             File o = new File(outDir, res);
             o.getParentFile().mkdirs();
-            InputStream in = getClass().getResourceAsStream(res);
+            InputStream in = Analyzer.class.getResourceAsStream(res);
             if(in==null)
                 throw new Error("Resource "+res+" not found");
             IOUtil.copy(in,o);
