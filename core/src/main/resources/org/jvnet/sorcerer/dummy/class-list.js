@@ -1,15 +1,15 @@
-setClassList("java.lang",
+setClassList("dummy",
 [
     {
-      name: "String",
+      name: "TestCode",
       kind: "class",
       access: "protected",
-      script: "java/lang/Test.js"
+      script: "dummy/Test.js"
     },
     {
       name: "Deprecated",
       kind: "annotation",
       access: "public",
-      script: "java/lang/Class.js"
+      script: "dummy/Class.js"
     }
 ]);

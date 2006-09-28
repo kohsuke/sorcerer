@@ -155,10 +155,16 @@ public class JavaScriptStreamWriter extends PrintWriter {
         String str = s.toString();
         for( int i=0; i<str.length(); i++ ) {
             char ch=str.charAt(i);
-            if(ch=='"')
+            switch(ch){
+            case '\\':
+                print("\\\\");
+                break;
+            case '"':
                 print("\\\"");
-            else
+                break;
+            default:
                 print(ch);
+            }
         }
         print('"');
     }
@@ -245,9 +251,6 @@ public class JavaScriptStreamWriter extends PrintWriter {
 
     /**
      * Computes the CSS class name for the given program element.
-     *
-     * @param seed
-     *      This will be also added to the CSS list.
      */
     public String getCssClass(Element e) {
         StringBuilder buf = new StringBuilder();

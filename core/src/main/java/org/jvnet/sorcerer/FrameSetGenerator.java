@@ -1,19 +1,12 @@
 package org.jvnet.sorcerer;
 
-import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.MethodTree;
-import com.sun.source.tree.Tree;
-import com.sun.source.tree.VariableTree;
-import com.sun.source.util.SourcePositions;
-import com.sun.source.util.TreePathScanner;
 import org.jvnet.sorcerer.util.AbstractResourceResolver;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;
 import org.jvnet.sorcerer.util.TreeUtil;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import java.io.BufferedReader;
@@ -49,7 +42,6 @@ import java.util.TreeMap;
 public class FrameSetGenerator extends AbstractWriter {
 
     private String title = "Sorcerer report";
-    private final LinkResolverFactory linkResolverFactory;
     /**
      * Reference to the unnamed package.
      */
@@ -57,7 +49,6 @@ public class FrameSetGenerator extends AbstractWriter {
 
     public FrameSetGenerator(ParsedSourceSet pss) {
         super(pss);
-        this.linkResolverFactory = pss.getLinkResolverFactory();
         this.unnamed = pss.getElements().getPackageElement("");
     }
 
@@ -97,7 +88,6 @@ public class FrameSetGenerator extends AbstractWriter {
             };
         }
 
-        pss.setLinkResolverFactories(linkResolverFactory);
         for (CompilationUnitTree cu : pss.getCompilationUnits()) {
             ExpressionTree packageName = cu.getPackageName();
             String pkg = packageName==null?"":packageName.toString().replace('.','/')+'/';
@@ -112,9 +102,6 @@ public class FrameSetGenerator extends AbstractWriter {
             FrameHtmlGenerator gen = new FrameHtmlGenerator(pss,cu);
             gen.setCss(css.href(cu));
             gen.write(out);
-
-            //File js = new File(outDir, pkg + name + "-outline.js");
-            //generateClassOutlineJs(cu,new PrintWriter(js));
         }
 
         generateIndex(new PrintWriter(open(outDir,"index.html")));
@@ -191,37 +178,26 @@ public class FrameSetGenerator extends AbstractWriter {
     }
 
     public void generatePackageListJs(PrintWriter w) throws IOException {
-        class DefinedPkgInfo extends PkgInfo<DefinedPkgInfo> {
-            public DefinedPkgInfo(String name) {
-                super(name);
-            }
-
-            protected DefinedPkgInfo create(String name) {
-                return new DefinedPkgInfo(name);
-            }
-
-            /**
-             * False if this class doesn't have any classes in it (excluding descendants.)
-             */
-            boolean hasClasses;
-
-            public void write(JsonWriter js) {
-                super.write(js);
-                if(hasClasses)
-                    js.property("hasClasses",true);
-            }
-        }
-
-        // build package tree info
-        DefinedPkgInfo root = new DefinedPkgInfo("");
-
-        for (PackageElement pe : pss.getPackageElement()) {
-            root.add(pe.getQualifiedName().toString()).hasClasses=true;
-        }
+        PackageSet packageNames = new PackageSet();
+        for (PackageElement pe : pss.getPackageElement())
+            packageNames.add(pe.getQualifiedName().toString());
+        packageNames.sort();
 
         try {
-            w.println("setPackageList(");
-            new JsonWriter(w).object(root);
+            w.println("setProject(");
+            JsonWriter jw = new JsonWriter(w);
+            jw.startArray();
+            {// write self
+                jw.startObject();
+                jw.property("name","Project"); // TODO
+                jw.propertyUnquoted("linker","linker.self");
+                jw.property("packages",packageNames);
+                jw.endObject();
+            }
+            // write dependencies
+            for (Dependency dep : pss.getDependencies())
+                jw.object(dep);
+            jw.endArray();
             w.println(");");
         } finally {
             w.close();
@@ -242,8 +218,6 @@ public class FrameSetGenerator extends AbstractWriter {
     }
 
     public void generateClassListJs(PackageElement p, PrintWriter w) throws IOException {
-        LinkResolver linkResolver = linkResolverFactory.create(p, pss);
-
         try {
             w.printf("setClassList(\"%s\",",p.getQualifiedName());
             JsonWriter jw = new JsonWriter(w);
@@ -252,7 +226,7 @@ public class FrameSetGenerator extends AbstractWriter {
                 jw.startObject();
                 jw.property("name",t.getSimpleName());
                 jw.property("kind",getKindString(t.getKind()));
-                jw.property("script",linkResolver.href(t));
+                jw.property("script",t.getQualifiedName().toString().replace('.','/')+".js");
                 jw.property("access",getAccessLevel(t));
                 jw.endObject();
             }
@@ -262,72 +236,6 @@ public class FrameSetGenerator extends AbstractWriter {
             w.close();
         }
     }
-
-    public void generateClassOutlineJs(final CompilationUnitTree cu, PrintWriter w) throws IOException {
-        try {
-            w.printf("loadOutline(");
-            final JsonWriter jw = new JsonWriter(w);
-            jw.startObject();
-            jw.property("packageName", TreeUtil.getPackageName(cu));
-            jw.key("children").startArray();
-
-            final LinkResolver linkResolver = linkResolverFactory.create(cu, pss);
-
-            new TreePathScanner<Void,Void>() {
-                private final SourcePositions sourcePositions = pss.getSourcePositions();
-                public Void visitClass(ClassTree ct, Void _) {
-                    boolean r = pre(ct);
-                    super.visitClass(ct,_);
-                    if(r)   post();
-                    return _;
-                }
-
-                public Void visitMethod(MethodTree mt, Void _) {
-                    boolean r = pre(mt);
-                    super.visitMethod(mt,_);
-                    if(r)   post();
-                    return _;
-                }
-
-                public Void visitVariable(VariableTree vt, Void _) {
-                    boolean r = pre(vt);
-                    super.visitVariable(vt,_);
-                    if(r)   post();
-                    return _;
-                }
-
-                boolean pre(Tree t) {
-                    Element e = pss.getTrees().getElement(getCurrentPath());
-                    if(e==null)     return false;
-
-                    long endPos = sourcePositions.getEndPosition(cu,t);
-                    if(endPos<0)    return false; // synthetic
-
-                    if(TreeUtil.OUTLINE_WORTHY_ELEMENT.contains(e.getKind())) {
-                        jw.startObject();
-                        writeOutlineNodeProperties(jw,e,cu,t);
-                        jw.property("href",linkResolver.href(e));
-                        jw.key("children").startArray();
-                        return true;
-                    }
-
-                    return false;
-                }
-
-                private Void post() {
-                    jw.endArray().endObject();
-                    return null;
-                }
-
-            }.scan(cu,null);
-
-            jw.endArray().endObject();
-            w.println(");");
-        } finally {
-            w.close();
-        }
-    }
-
 
     /**
      * Writes out <tt>project-usage.js</tt> that lists all classes for which
@@ -405,6 +313,7 @@ public class FrameSetGenerator extends AbstractWriter {
             "resource-files/close.gif",
             "resource-files/opentype.gif",
             "resource-files/package.gif",
+            "resource-files/library.gif",
             "resource-files/layout-flat.gif",
             "resource-files/layout-hierarchical.gif",
             "resource-files/tree/folder.css",

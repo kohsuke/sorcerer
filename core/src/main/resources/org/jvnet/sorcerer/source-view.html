@@ -11,49 +11,14 @@
   <script type='text/javascript' src='resource-files/dom.js'></script>
   <script type='text/javascript' src='resource-files/event.js'></script>
   <script type='text/javascript' src='resource-files/container.js'></script>
+  <link type='text/css' rel='stylesheet' href='resource-files/logger.css' />
+  <script type='text/javascript' src='resource-files/logger.js'></script>
   <script type='text/javascript' src='menu/menu.js'></script>
 
   <script type="text/javascript" src="sorcerer.js" ></script>
   <script type="text/javascript" src="left-pane.js" ></script>
-<!-- computes link target -->
-<script type="text/javascript">
-  var linker = {
-    // computes a link to a type.
-    //   t: type table entry
-    type : function(t) { return null; },
-    // computes a link to a method.
-    //   m: method table entry
-    method: function(m) { return null; },
-    // computes a link to a field
-    //   t: type table entry
-    //   name: field name
-    field: function(t,name) { return null; }
-  };
-
-  // generates links to external javadoc
-  var javadocLinker = derive(linker, {
-    baseURL: null, // the base URL of the javadoc
-    type : function(t) {
-      return this.baseURL+t.fullName.replace(/\./g,"/")+".html";
-    },
-    method : function(m) {
-      // TODO: javadoc doesn't really use erasure format. Doh!
-      return this.type(m.owner)+'#'+m.signature();
-    },
-    field : function(t,name) {
-      return this.type(t)+'#'+name;
-    }
-  });
-
-</script>
 <!-- HTML generator -->
 <script type="text/javascript">
-
-String.prototype.startsWith = function(rhs) {
-  var len = rhs.length;
-  if(this.length<len)  return false;
-  return this.substr(0,len)==rhs;
-}
 
 // take a base factory implementation and make it 'full' by deriving additional properties and functions.
 function makeFull(f) {
@@ -374,9 +339,16 @@ builder = makeFull({
       // this is not a correct way to compute the short name, for nested classes
       idx=t.fullName.lastIndexOf('.');
       t.shortName=t.fullName.substring(idx+1);
+      if(idx<0)
+        t.packageName="";
+      else
+        t.packageName=t.fullName.substring(0,idx);
 
-      // TODO: testing. need to be configurable
-      t.linker = derive(javadocLinker,{baseURL:"http://java.sun.com/j2se/1.5.0/docs/api/"});
+      // TODO: it'd be nice if the source view page can be loaded on its own.
+      // the way it's done today requires package view to be loaded.
+      t.linker = window.top.packageView.main.linker.get(t.packageName);
+      YAHOO.log("linker for ["+t.packageName+"] is "+t.linker.name());
+
       t.href = t.linker.type(t);
 
       table[i] = t;
@@ -398,6 +370,7 @@ builder = makeFull({
 
       m.css = e[3]+" r";
       m.href = m.owner.linker.method(m);
+      // YAHOO.log("linker for ["+m.signature()+"] is "+m.owner.linker.name());
 
       table[i] = m;
     }
@@ -524,6 +497,14 @@ function prepareMenu(span) {
 }
 
 window.onload = function() {
+  try {
+    // TODO: how to selectively enable debugging?
+    // log reader for debugging
+    new YAHOO.widget.LogReader();
+  } catch(e) {
+    // in the production environment 
+  }
+
   // Create the menu
   menu = new YAHOO.widget.Menu("contextmenu");
   menuSelector = document.getElementById('menuSelector');

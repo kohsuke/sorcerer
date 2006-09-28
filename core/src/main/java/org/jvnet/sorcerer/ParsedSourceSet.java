@@ -19,6 +19,7 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
+import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
 import org.jvnet.sorcerer.Tag.DeclName;
 import org.jvnet.sorcerer.impl.JavaLexer;
@@ -90,9 +91,9 @@ public class ParsedSourceSet {
 
     private final Set<PackageElement> packages = new TreeSet<PackageElement>(PACKAGENAME_COMPARATOR);
 
-    private final int tabWidth;
+    private final List<Dependency> dependencies = new ArrayList<Dependency>();
 
-    private LinkResolverFactory linkResolverFactory = new InternalLinkResolverFactory();
+    private final int tabWidth;
 
     /**
      * {@link ParsedType}s keyed by its {@link ParsedType#element}.
@@ -179,6 +180,17 @@ public class ParsedSourceSet {
      */
     public Map<ClassTree,TreePath> getTreePathByClass() {
         return treePathByClass;
+    }
+
+    /**
+     * Gets the javadoc/sorcerer locations of dependencies.
+     */
+    public List<Dependency> getDependencies() {
+        return dependencies;
+    }
+
+    public void addDependency(Dependency d) {
+        dependencies.add(d);
     }
 
     /**
@@ -285,31 +297,6 @@ public class ParsedSourceSet {
     }
 
     /**
-     * Sets the {@link LinkResolverFactory} used for generating cross references.
-     */
-    public void setLinkResolverFactory(LinkResolverFactory f) {
-        this.linkResolverFactory = f;
-    }
-
-    /**
-     * Sets the {@link LinkResolverFactory}s used for generating cross references.
-     *
-     * <p>
-     * Specified factories are consulted in the order they are given,
-     * and the first one that produced a link will be used. Even when
-     * you are adding extra resolvers, normally
-     * you'd still want to add {@link InternalLinkResolverFactory} to the list
-     * so that internal references between the generated files are produced.
-     */
-    public void setLinkResolverFactories(LinkResolverFactory... factories) {
-        this.linkResolverFactory = new LinkResolverFacade(factories);
-    }
-
-    public LinkResolverFactory getLinkResolverFactory() {
-        return linkResolverFactory;
-    }
-
-    /**
      * Gets or creates a {@link ParsedType} for the given {@link TypeElement}.
      */
     public ParsedType getParsedType(TypeElement e) {
@@ -334,8 +321,6 @@ public class ParsedSourceSet {
      */
     protected void configure(final CompilationUnitTree cu, final HtmlGenerator gen) throws IOException {
         final LineMap lineMap = cu.getLineMap();
-
-        final LinkResolver linkResolver = linkResolverFactory.create(cu,this);
 
         // add lexical markers
         JavaLexer lexer = new JavaLexer(new CharSequenceReader(gen.sourceFile));
@@ -376,7 +361,7 @@ public class ParsedSourceSet {
         final Name CLASS = elements.getName("class");
 
         // then semantic ones
-        new MarkerBuilder<Void,Void>(cu,gen,linkResolver,srcPos,elements,types) {
+        new TreeScanner<Void,Void>() {
             /**
              * primitive types like int, long, void, etc.
              */
@@ -412,10 +397,6 @@ public class ParsedSourceSet {
                     }
                 }
                 return super.visitVariable(vt,_);
-            }
-
-            private void addBookmark(Tree t, Bookmark bookmark) {
-                gen.add( lineMap.getLineNumber(srcPos.getStartPosition(cu,t)),bookmark);
             }
 
             /**
@@ -587,7 +568,7 @@ public class ParsedSourceSet {
         // but it fails to create an element, so do this manually
         ExpressionTree packageName = cu.getPackageName();
         if(packageName!=null) {
-            new MarkerBuilder<String,Void>(cu,gen,linkResolver,srcPos,elements,types) {
+            new TreeScanner<String,Void>() {
                 /**
                  * For "a" of "a.b.c"
                  */

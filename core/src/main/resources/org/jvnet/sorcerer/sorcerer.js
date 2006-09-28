@@ -14,6 +14,18 @@ function derive(proto,v) {
   return o;
 }
 
+// extension to built-in objects
+Array.prototype.forEach = function(closure) {
+  for(var i=0; i<this.length; i++)
+    closure(this[i]);
+}
+
+String.prototype.startsWith = function(rhs) {
+  var len = rhs.length;
+  if(this.length<len)  return false;
+  return this.substr(0,len)==rhs;
+}
+
 
 
 

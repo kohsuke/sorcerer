@@ -100,6 +100,18 @@ public class JsonWriter {
         return endArray();
     }
 
+    public JsonWriter propertyUnquoted(String key, Object value) {
+        key_(key);
+        w.print(value);
+        return this;
+    }
+
+    public JsonWriter property(String key, Writable value) {
+        key(key);
+        object(value);
+        return this;
+    }
+
     public JsonWriter property(String key, Object value) {
         key_(key);
         quote(value);

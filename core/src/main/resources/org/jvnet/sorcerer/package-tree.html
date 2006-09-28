@@ -10,29 +10,116 @@
 </head>
 <body onload="start()">
 <div id="treeDiv" style="white-space:nowrap;"></div>
+<!-- linker definitions -->
+<script type="text/javascript">
+var linker = {
+  // common basis for all linker instances
+  prototype: {
+    // computes a link to a type.
+    //   t: type table entry
+    type : function(t) { return null; },
+    // computes a link to a method.
+    //   m: method table entry
+    method: function(m) { return null; },
+    // computes a link to a field
+    //   t: type table entry
+    //   name: field name
+    field: function(t,name) { return null; },
 
+    // debug assist
+    name: function() { return "prototype"; }
+  },
+
+  // generates links to external javadoc.
+  //   model: items in the package-list.js
+  javadoc: function(baseURL) {
+    return derive(this.prototype, {
+      baseURL: baseURL, // the base URL of the javadoc
+      type : function(t) {
+        return this.baseURL+t.fullName.replace(/\./g,"/")+".html";
+      },
+      method : function(m) {
+        // TODO: javadoc doesn't really use erasure format. Doh!
+        return this.type(m.owner)+'#'+m.signature();
+      },
+      field : function(t,name) {
+        return this.type(t)+'#'+name;
+      },
+      name: function() { return "javadocLinker to "+this.baseURL; }
+    });
+  },
+
+  // generate links within this document
+  self: function(url) {
+    return derive(linker.sorcerer("./"),{
+      name: function() { return "self"; }
+    });
+  },
+
+  sorcerer: function(baseURL) {
+    return derive(this.prototype,{
+      baseURL: baseURL, // the base URL of the sorcerer website
+      type : function(t) {
+        return "?"+this.baseURL+t.fullName.replace(/\./g,"/")+".js";
+      },
+      method : function(m) {
+        return this.type(m.owner)+'#'+m.signature();
+      },
+      name: function() {
+        return "sorcererLinker to "+this.baseURL;
+      }
+    });
+  },
+
+  // obtain a linker for the given package name
+  get: function(packageName) {
+    var lib = packageName2Lib[packageName];
+    if(lib!=null)
+      return lib.linker;
+    else
+      return linker.prototype;
+
+  }
+};
+
+</script>
+
+<!-- main script -->
 <script type="text/javascript">
   var treeDiv = document.getElementById("treeDiv");
   var tree;
-  var packageList;
+  var packageList; // see package-list.js for the structure of this object.
 
-  function setPackageList(o) {
+  // map from package name (e.g., "java.lang") to its corresponding library object in "packageList".
+  var packageName2Lib = {};
+
+  // called from package-list.js, before window.onload fires.
+  function setProject(o) {
     packageList = o;
 
+    packageList.forEach(function(lib) {
+      // create a linker for the project
+      lib.linker = lib.linker(lib.baseURL);
 
-    // augument the model objects by adding inferable properties to it
-    function build(model,prefix) {
-      model.fullName = (prefix+model.name).substring(1);
+      // augument the model objects by adding inferable properties to it
+      function build(model,prefix) {
+        model.fullName = (prefix+model.name).substring(1);
 
-      // true if this is intermediate node and thus collapsed even for hierarchical view
-      if(!model.hasClasses && model.children.length==1)
-        model.intermediate = model.children[0]; // point to the sole child
+        if(model.leaf)
+          packageName2Lib[model.fullName]=lib;
 
-      if(model.children!=null)
-        for( var i=0; i<model.children.length; i++ )
-          build(model.children[i], prefix+model.name+".");
-    }
-    build(packageList,"");
+        // true if this is intermediate node and thus collapsed even for hierarchical view
+        if(!model.leaf && model.children.length==1)
+          model.intermediate = model.children[0]; // point to the sole child
+
+        if(model.children!=null)
+          model.children.forEach(function(child) {
+            build(child, prefix+model.name+".");
+          });
+      }
+
+      build(lib.packages,"");
+    });
   }
 
   var loader = derive(scriptLoadManager,{
@@ -50,11 +137,10 @@
     },
 
     postProcess : function(packageName,classList) {
-      for( var j=0; j<classList.length; j++ ) {
-        var c = classList[j];
+      classList.forEach(function(c) {
         c.label = "<img src='resource-files/"+c.kind+"_"+c.access+".gif'> "+c.name;
         c.href = "source-view.html?"+c.script;
-      }
+      });
     }
   });
 
@@ -63,15 +149,13 @@
     icon: "resource-files/layout-hierarchical.gif",
     tooltip: "Hierarchical view",
 
-    loadPackage : function() {
+    loadPackage : function(node,model) {
       // adds the child packages and classes to the given treeNode asynchronously,
       // and when ready, call back.
       function addChildPackagesTo(treeNode,model,callback) {
         // first add child packages
         if(model.children!=null) {
-          for( var i=0; i<model.children.length; i++ ) {
-            var cmodel = model.children[i];
-
+          model.children.forEach(function(cmodel){
             // skip any intermediate nodes
             var prefix="";
             while(cmodel.intermediate!=null) {
@@ -85,11 +169,11 @@
             n.setDynamicLoad(function(node,onCompleteCallback) {
               addChildPackagesTo(node, node.data.model, onCompleteCallback);
             });
-          }
+          });
         }
 
         // then load class list, if any
-        if(model.hasClasses) {
+        if(model.leaf) {
           loader.loadClassList(model,treeNode,callback);
         } else {
           // if no class is in there, we are done
@@ -97,7 +181,7 @@
         }
       }
 
-      addChildPackagesTo(tree.getRoot(),packageList,function(){tree.draw();});
+      addChildPackagesTo(node,model,function(){tree.draw();});
     },
 
     setClassList : function(packageName,classList) {
@@ -109,12 +193,10 @@
     icon: "resource-files/layout-flat.gif",
     tooltip: "Flat view",
 
-    loadPackage : function() {
-      var root = tree.getRoot();
-
+    loadPackage : function(root,model) {
       // recursively add model nodes as flat pacakge list
       function buildTree(model) {
-        if(model.hasClasses) {
+        if(model.leaf) {
           var o = {};
           o.model = model;
           if(model.fullName=="")
@@ -132,7 +214,7 @@
             buildTree(model.children[i]);
       }
 
-      buildTree(packageList);
+      buildTree(model);
 
       tree.draw();
     }
@@ -153,11 +235,13 @@
       var cnode = new YAHOO.widget.TextNode(c, node, false);
       cnode.onLabelClick = function(me) {
         try {
-          top.main.load(me.data.script);
+          top.main.location.search="?"+me.data.script;
+          // TODO: the following is clever in the sense that it doesn't reload the source view page,
+          // but it renders the back button useless. is there anyway to fix this?
+          // top.main.load(me.data.script);
         } catch(e) {/*don't let the navigation failure leak (which causes the page to be loaded on this frame.*/}
         return false;
       }
-      // href is the only way to get link. you have to put javascript fragment in there
     }
     onComplete();
   }
@@ -178,9 +262,23 @@
 
     flatView.nextView = hierarchicalView;
     hierarchicalView.nextView = flatView; // couldn't figure out how to set this up with literal syntax
+    loadView();
+  }
 
+  function loadView() {
     tree = new YAHOO.widget.TreeView(treeDiv);
-    currentView.loadPackage();
+
+    if(packageList.length==1) {
+      currentView.loadPackage( tree.getRoot(), packageList[0].packages );
+    } else {
+      // display library nodes
+      for(var i=0;i<packageList.length;i++) {
+        var lmodel = packageList[i];
+        var lnode = new YAHOO.widget.TextNode({label:lmodel.name},tree.getRoot(),false);
+
+        currentView.loadPackage(lnode,lmodel.packages);
+      }
+    }
   }
 
   function toggleView(img) {
@@ -191,8 +289,7 @@
 
     // create a new tree
     treeDiv.innerHTML="";
-    tree = new YAHOO.widget.TreeView(treeDiv);
-    currentView.loadPackage();
+    loadView();
   }
 </script>
 
