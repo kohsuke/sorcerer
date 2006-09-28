@@ -22,12 +22,12 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
 import org.jvnet.sorcerer.Analyzer;
+import org.jvnet.sorcerer.FrameSetGenerator;
 import org.jvnet.sorcerer.InternalLinkResolverFactory;
 import org.jvnet.sorcerer.JavadocLinkResolverFactory;
 import org.jvnet.sorcerer.LinkResolverFacade;
 import org.jvnet.sorcerer.LinkResolverFactory;
 import org.jvnet.sorcerer.ParsedSourceSet;
-import org.jvnet.sorcerer.frame.FrameSetGenerator;
 
 import java.io.File;
 import java.io.IOException;

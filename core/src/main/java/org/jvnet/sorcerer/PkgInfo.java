@@ -1,4 +1,4 @@
-package org.jvnet.sorcerer.frame;
+package org.jvnet.sorcerer;
 
 import org.jvnet.sorcerer.util.JsonWriter;
 

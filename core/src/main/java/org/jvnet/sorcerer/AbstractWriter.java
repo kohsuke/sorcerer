@@ -1,9 +1,7 @@
-package org.jvnet.sorcerer.frame;
+package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
-import org.jvnet.sorcerer.OutlineNameVisitor;
-import org.jvnet.sorcerer.ParsedSourceSet;
 import org.jvnet.sorcerer.util.JsonWriter;
 import org.jvnet.sorcerer.util.TreeUtil;
 

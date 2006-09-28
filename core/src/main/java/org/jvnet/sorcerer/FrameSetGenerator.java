@@ -1,4 +1,4 @@
-package org.jvnet.sorcerer.frame;
+package org.jvnet.sorcerer;
 
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -8,12 +8,6 @@ import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePathScanner;
-import org.jvnet.sorcerer.Analyzer;
-import org.jvnet.sorcerer.LinkResolver;
-import org.jvnet.sorcerer.LinkResolverFactory;
-import org.jvnet.sorcerer.ParsedSourceSet;
-import org.jvnet.sorcerer.ParsedType;
-import org.jvnet.sorcerer.ResourceResolver;
 import org.jvnet.sorcerer.util.AbstractResourceResolver;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;

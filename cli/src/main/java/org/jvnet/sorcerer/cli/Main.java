@@ -1,12 +1,12 @@
 package org.jvnet.sorcerer.cli;
 
 import org.jvnet.sorcerer.Analyzer;
+import org.jvnet.sorcerer.FrameSetGenerator;
 import org.jvnet.sorcerer.InternalLinkResolverFactory;
 import org.jvnet.sorcerer.JavadocLinkResolverFactory;
 import org.jvnet.sorcerer.LinkResolverFacade;
 import org.jvnet.sorcerer.LinkResolverFactory;
 import org.jvnet.sorcerer.ParsedSourceSet;
-import org.jvnet.sorcerer.frame.FrameSetGenerator;
 import org.jvnet.sorcerer.util.CSSHandler;
 import org.jvnet.sorcerer.util.DiagnosticPrinter;
 import org.kohsuke.args4j.Argument;

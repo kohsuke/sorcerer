@@ -1,8 +1,6 @@
-package org.jvnet.sorcerer.frame;
+package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
-import org.jvnet.sorcerer.DefaultHtmlGenerator;
-import org.jvnet.sorcerer.ParsedSourceSet;
 
 import java.io.IOException;
 
