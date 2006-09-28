@@ -86,7 +86,7 @@ functions: bigger programing element
 .M  method/constructor declaration. M([..methodRef..]/*super methods*/,[..methodRef..]/*sub methods*., children).
 .N  method reference. N(methodRef). source text is just the method name.
 .O  comment
-.P
+.P  yields parenthesis. P(children). Source text is '(' ... ')'
 .Q
 .R
 .S  marks the variable scope (like class, method, or { ... }).
