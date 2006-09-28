@@ -14,7 +14,7 @@
       <resource>
         <directory>src/main/resources</directory>
         <excludes>
-          <exclude>org/jvnet/sorcerer/frame/java/**/*</exclude>
+          <exclude>org/jvnet/sorcerer/java/**/*</exclude>
           <exclude>**/Thumbs.db</exclude>
         </excludes>
       </resource>
