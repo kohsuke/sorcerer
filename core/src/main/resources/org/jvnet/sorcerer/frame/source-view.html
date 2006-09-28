@@ -260,31 +260,40 @@ builder = makeFull({
     return this.sourceText(text);
   },
 
-  B : function(/*...*/) {
-    var children=this.$$(arguments);
+  B : function(/*...*/) { // curly brackets {...}
+    return this.parenthesis('{','}',this.$$(arguments));
+  },
+
+  P : function(/*...*/) { // parenthesis (...)
+    return this.parenthesis('(',')',this.$$(arguments));
+  },
+
+  parenthesis : function(L,R,children) {
     return function(context) { // TODO: scroll to the other bracket by clicking
       var span = document.createElement("span");
       context.push(span);
 
       var open = document.createElement("span");
       context.push(open);
-      context.appendText('{');
+      context.appendText(L);
       context.pop();
 
       children(context);
 
       var closed = document.createElement("span");
       context.push(closed);
-      context.appendText('}');
+      context.appendText(R);
       context.pop();
 
       context.pop();
 
       var highlighter = function(lhs,rhs) {
         lhs.onmouseover = function() {
+          lhs.className="highlighted-bracket";
           rhs.className="highlighted-bracket";
         }
         lhs.onmouseout = function() {
+          lhs.className="";
           rhs.className="";
         }
       };

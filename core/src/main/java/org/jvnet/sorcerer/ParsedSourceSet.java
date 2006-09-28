@@ -353,13 +353,18 @@ public class ParsedSourceSet {
                 if(type == JavaTokenTypes.ML_COMMENT
                 || type == JavaTokenTypes.SL_COMMENT)
                     gen.add(new Tag.Comment(lineMap,token));
-                if(type == JavaTokenTypes.LCURLY) {
+                if(type == JavaTokenTypes.LCURLY || type==JavaTokenTypes.LPAREN) {
                     openBraces.push(getPosition(lineMap,token));
                     gen.add(new Tag.Killer(lineMap,token)); // CurlyBracket tag yields '{'. so kill this off.
                 }
                 if(type == JavaTokenTypes.RCURLY) {
                     long sp = openBraces.pop();
                     gen.add(new Tag.CurlyBracket(sp,getPosition(lineMap,token)+1));
+                    gen.add(new Tag.Killer(lineMap,token));
+                }
+                if(type == JavaTokenTypes.RPAREN) {
+                    long sp = openBraces.pop();
+                    gen.add(new Tag.Parenthesis(sp,getPosition(lineMap,token)+1));
                     gen.add(new Tag.Killer(lineMap,token));
                 }
             }

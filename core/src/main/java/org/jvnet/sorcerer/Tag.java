@@ -148,6 +148,20 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
     }
 
     /**
+     * Parenthesis (...).
+     */
+    public static final class Parenthesis extends Tag {
+        public Parenthesis(long sp, long ep) {
+            super(sp,ep);
+        }
+
+        @Override
+        void write(JavaScriptStreamWriter w) {
+            writeChildren("P",w);
+        }
+    }
+
+    /**
      * Used to scrape off certain lexical tokens.
      */
     public static final class Killer extends Tag {
