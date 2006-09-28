@@ -408,9 +408,4 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
         }
         out.println("</pre>");
     }
-
-    private long getPos(Marker m, boolean start) {
-        if(m==null) return Long.MAX_VALUE;
-        else        return start?m.sp:m.ep;
-    }
 }
