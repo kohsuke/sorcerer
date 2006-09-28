@@ -171,14 +171,40 @@ var makeWhitespace = function() {
   }
 }();
 
+var tableEntry = {
+  kind: null,   // tag that identifies the kind of table
+  css:  null,   // CSS classes to be used for referencing this method
+  href : null,  // link to the definition of this method
+  usage : function(){},  // computes the "find usage" index key.
+  displayText : function() {} // computes the text to be displayed
+};
+
+var typeTableEntry = derive(tableEntry,{
+  kind: "type",
+  fullName: null,   // FQCN
+  shortName: null,  // name within the package
+  linker: null,     // hyperlinks to this type shall be generated using this linker
+  usage : function() {
+    return this.fullName+"#this";
+  },
+  displayText : function() {
+    return this.shortName; // TODO: this is incorrect --- we just show the short name even for nested classes.
+  }
+});
 
 // one entry of the method table
-var methodTableEntry = {
+var methodTableEntry = derive(tableEntry,{
+  kind: "method",
+  usage : function() {
+    return this.owner.fullName+"#"+this.signature();
+  },
+  displayText : function() {
+    return this.name;
+  },
+
   owner: null, // reference to owner type
   name : null, // short method name
   params : [], // array of strings that represent erased parameter type names in FQCN
-  css : null,  // CSS classes to be used for referencing this method
-  href : null, // link to the definition of this method
 
   // compute the method signature of the form "methodName(param1,param2,...)"
   signature : function() {
@@ -190,7 +216,7 @@ var methodTableEntry = {
     s+=')';
     return s;
   }
-};
+});
 
 
 builder = makeFull({
@@ -251,13 +277,22 @@ builder = makeFull({
     context.lineNumber++;
   },
 
-  C : function(descendants,children) {
+  C : function(typeTableIndex,descendants,children) { // class
     // TODO: handle descendants
-    return children;
+    return function(context) {
+      var old = context.currentDecl;
+      context.currentDecl = context.me.types[typeTableIndex];
+      children(context);
+      context.currentDecl = old;
+    }
   },
 
-  I : function(text) { // TODO: how do we communicate with the parent M and C?
-    return this.sourceText(text);
+  I : function(text) { // identifier in method/class declaration
+    return function(context) {
+      var d = context.currentDecl;
+      context.link(d.href).css(d.css+" d",d.usage())
+          .appendText(d.displayText()).pop().pop();
+    }
   },
 
   B : function(/*...*/) { // curly brackets {...}
@@ -302,15 +337,20 @@ builder = makeFull({
     }
   },
 
-  M : function(sup,sub,children) { // method declaration
+  M : function(methodTableIndex,sup,sub,children) { // method declaration
     // TODO: handle annotation
-    return children;
+    return function(context) {
+      var old = context.currentDecl;
+      context.currentDecl = context.me.methods[methodTableIndex];
+      children(context);
+      context.currentDecl = old;
+    }
   },
 
   N : function(n) { // method reference
     return function(context) {
       var m = context.me.methods[n];
-      context.link(m.href).css(m.css+" r", m.owner.fullName+'#'+m.signature()).appendText(m.name).pop().pop();
+      context.link(m.href).css(m.css+" r",m.usage()).appendText(m.name).pop().pop();
     }
   },
 
@@ -318,7 +358,7 @@ builder = makeFull({
   T : function(n) { // type reference
     return function(context) {
       var t = context.me.types[n];
-      context.link(t.href).css(t.css+" r", t.fullName+"#this").appendText(t.shortName).pop().pop();
+      context.link(t.href).css(t.css+" r",t.usage()).appendText(t.shortName).pop().pop();
     }
   },
 
@@ -342,8 +382,12 @@ builder = makeFull({
 
   typeTable: function(table) {
     for(var i=0;i<table.length;i++) {
-      var t = { fullName:table[i][0], css:table[i][1] };
+      var t = object(typeTableEntry);
 
+      t.fullName = table[i][0];
+      t.css = table[i][1];
+
+      // this is not a correct way to compute the short name, for nested classes
       idx=t.fullName.lastIndexOf('.');
       t.shortName=t.fullName.substring(idx+1);
 
@@ -395,9 +439,11 @@ function defineStructure(className,tree) {
 
   // the context object to be passed around the dom builder functions
   var context = {
-    node : pre,     // current node
-    me : b,         // to access the builder
-    lineNumber : 1, // current line
+    node : pre,         // current node
+    me : b,             // to access the builder
+    currentDecl : null, // when we are building inside a method/class declaration,
+                        // this field points to that declaration
+    lineNumber : 1,     // current line
     appendText : function(text) {
       this.node.appendChild(document.createTextNode(text));
       return this;

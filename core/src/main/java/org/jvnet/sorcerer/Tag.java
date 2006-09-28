@@ -300,6 +300,7 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
         @Override
         void write(JavaScriptStreamWriter w) {
             w.beginMethod("C");
+            w.sep().ref(type);
             w.beginArray();
             for (ParsedType d : descendants)
                 w.sep().ref(d.element);
@@ -434,6 +435,7 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
         @Override
         void write(JavaScriptStreamWriter w) {
             w.beginMethod("M");
+            w.sep().ref(method);
             writeSet(w,overridden);
             writeSet(w,overriding);
             writeChildren("$",w);
