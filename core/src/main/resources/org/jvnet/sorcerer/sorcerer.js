@@ -1,4 +1,22 @@
 
+// the prototype-oriented programming library
+function object(o) {
+  function F() {}
+  F.prototype = o;
+  return new F();
+}
+// create a new object by using the given prototype then copying over
+// all properties from v.
+function derive(proto,v) {
+  o = object(proto);
+  for(p in v)
+    o[p] = v[p];
+  return o;
+}
+
+
+
+
 // class to fade a tag
 function Fader(e,r,g,b) {
   self = this;
@@ -27,3 +45,59 @@ function Fader(e,r,g,b) {
   window.setTimeout(this.away,1000);
 }
 
+
+// manages loading of scripts and avoids duplicates.
+var scriptLoadManager = {
+  completedLoads : {},
+  pendingLoads : {},
+
+//
+// overridable methods
+//
+  // compute href to .js from the key name.
+  getScriptName : function(key) {return key;},
+
+  // perform the post processing of the model objects
+  postProcess : function(key,model) {},
+
+  /*
+    loads the given script.
+
+    when the loading is complete, "callback(model)" is invoked
+    where 'model' is what's given to 'loadComplete'.
+  */
+  load : function(key,callback) {
+    var model = this.completedLoads[key];
+    if(model!=null) {
+      callback(model);
+    } else {
+      var inject=false;
+      var p = this.pendingLoads[key];
+      if(p==null) {
+        p = [];
+        inject = true;
+        this.pendingLoads[key] = p;
+      }
+      p.push(callback);
+      if(inject) {
+        loadScript(this.getScriptName(key));
+      }
+    }
+  },
+
+  // to be invoked from scripts that are loaded.
+  loadComplete : function(key,model) {
+    this.postProcess(key,model);
+
+    this.completedLoads[key] = model;
+
+    var p = this.pendingLoads[key];
+    this.pendingLoads[key]=null;
+
+    // fire callbacks
+    if(p!=null) {// this should be always true, but just to be defensive
+      for( var i=0; i<p.length; i++ )
+        p[i](model);
+    }
+  }
+}

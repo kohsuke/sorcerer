@@ -13,24 +13,8 @@
   <script type='text/javascript' src='resource-files/container.js'></script>
   <script type='text/javascript' src='../menu/menu.js'></script>
 
+  <script type="text/javascript" src="../sorcerer.js" ></script>
   <script type="text/javascript" src="left-pane.js" ></script>
-<!-- the prototype-oriented programming library -->
-<script type="text/javascript">
-  function object(o) {
-    function F() {}
-    F.prototype = o;
-    return new F();
-  }
-  // create a new object by using the given prototype then copying over
-  // all properties from v.
-  function derive(proto,v) {
-    o = object(proto);
-    for(p in v)
-      o[p] = v[p];
-    return o;
-  }
-
-</script>
 <!-- computes link target -->
 <script type="text/javascript">
   var linker = {
@@ -619,7 +603,10 @@ window.onload = function() {
   };
 
   // testing. load the source code
-  load('java/lang/Test.js');
+  if(window.location.search!=null) {
+    // TODO: this is a security hole as it allows any script to be loaded.
+    load(window.location.search.substring(1)+".js");
+  }
 
   //Behaviour.register({
   //  ".popup" : function(e) {

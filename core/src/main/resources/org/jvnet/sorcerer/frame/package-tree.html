@@ -6,6 +6,7 @@
   <script type="text/javascript" src="resource-files/yahoo.js" ></script>
   <script type="text/javascript" src="resource-files/tree/treeview.js" ></script>
   <script type="text/javascript" src="left-pane.js" ></script>
+  <script type="text/javascript" src="../sorcerer.js" ></script>
 </head>
 <body onload="start()">
 <div id="treeDiv" style="white-space:nowrap;"></div>
@@ -23,9 +24,6 @@
     function build(model,prefix) {
       model.fullName = (prefix+model.name).substring(1);
 
-      // path to class-list.js
-      model.classList = model.fullName=="" ? "./class-list.js" : model.fullName.replace(/\./g,"/")+"/class-list.js";
-
       // true if this is intermediate node and thus collapsed even for hierarchical view
       if(!model.hasClasses && model.children.length==1)
         model.intermediate = model.children[0]; // point to the sole child
@@ -37,20 +35,33 @@
     build(packageList,"");
   }
 
-  var pendingLoads = {};    // stores on-going class-list loading activities
-  var completedLoads = {};  // stores completed load activities to avoid reload
+  var loader = derive(scriptLoadManager,{
+    // entry point to the load method
+    loadClassList: function(model,treeNode,callback) {
+      this.load(model.fullName, function(list) {
+        addClassList(list,treeNode,callback);
+      })
+    },
 
-  // load class-list.js when a package name is clicked
-  function loadClassList(model,treeNode,callback) {
-    var l = completedLoads[model.fullName];
-    if(l!=null) {
-      // already loaded. resuse.
-      addClassList(l,treeNode,callback);
-    } else {
-      pendingLoads[model.fullName] = { node:treeNode, onComplete:callback };
-      loadScript(model.classList);
+    // load class-list.js by using the package name as the key
+    getScriptName : function(packageName) {
+      // path to class-list.js
+      return packageName=="" ? "./class-list.js" : packageName.replace(/\./g,"/")+"/class-list.js";
+    },
+
+    postProcess : function(packageName,classList) {
+      if(packageName=="")
+        base = "";
+      else
+        base = packageName.replace(/\./g,"/")+"/";
+
+      for( var j=0; j<classList.length; j++ ) {
+        var c = classList[j];
+        c.label = "<img src='resource-files/"+c.kind+"_"+c.access+".gif'> "+c.name;
+        c.href = "source-view.html?"+base+c.href;
+      }
     }
-  }
+  });
 
   // display packages in a nested tree view
   var hierarchicalView = {
@@ -84,7 +95,7 @@
 
         // then load class list, if any
         if(model.hasClasses) {
-          loadClassList(model,treeNode,callback);
+          loader.loadClassList(model,treeNode,callback);
         } else {
           // if no class is in there, we are done
           callback();
@@ -118,7 +129,7 @@
 
           var n = new YAHOO.widget.TextNode(o,root,false);
           n.setDynamicLoad(function(node,callback) {
-            loadClassList(node.data.model, node, callback);
+            loader.loadClassList(node.data.model, node, callback);
           });
         }
         if(model.children!=null)
@@ -137,23 +148,10 @@
 
   // called when class-list.js is loaded
   function setClassList(packageName,classList) {
-    var o = pendingLoads[packageName];
-
-    if(packageName=="")
-      base = "";
-    else
-      base = packageName.replace(/\./g,"/")+"/";
-
-    for( var j=0; j<classList.length; j++ ) {
-      var c = classList[j];
-      c.label = "<img src='resource-files/"+c.kind+"_"+c.access+".gif'> "+c.name;
-      c.href = base+c.href;
-    }
-
-    completedLoads[packageName] = classList;
-    addClassList(classList, o.node, o.onComplete);
+    loader.loadComplete(packageName,classList);
   }
 
+  // TODO: shouldn't this be merged into loader?
   function addClassList(classList, node, onComplete) {
     for( var j=0; j<classList.length; j++ ) {
       var c = classList[j];

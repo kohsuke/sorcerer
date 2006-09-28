@@ -5,6 +5,7 @@
   <link rel="stylesheet" type="text/css" href="resource-files/tree/noicon.css">
   <script type="text/javascript" src="resource-files/yahoo.js" ></script>
   <script type="text/javascript" src="resource-files/tree/treeview.js" ></script>
+  <script type="text/javascript" src="../sorcerer.js" ></script>
   <script type="text/javascript" src="left-pane.js" ></script>
 </head>
 <body>
@@ -19,42 +20,21 @@
   var treeDiv = document.getElementById("treeDiv");
   var tree = new YAHOO.widget.TreeView(treeDiv);
 
-  var loader = {
-    completedLoads : {},
-    pendingLoads : {},
-
-    /*
-      load the usage for the given class name and anchor,
-      and when ready invoke the callback with the loaded model
-    */
-    load : function(className,callback) {
-      var model = this.completedLoads[className];
-      if(model!=null) {
-        callback(model);
-      } else {
-        var inject=false;
-        var p = this.pendingLoads[className];
-        if(p==null) {
-          p = [];
-          inject = true;
-          this.pendingLoads[className] = p;
-        }
-        p.push(callback);
-        if(inject) {
-          loadScript(className.replace(/\./g,"/")+"-usage.js");
-        }
-      }
+  // handle loading of "*-usage.js"
+  var loader = derive(scriptLoadManager,{
+    getScriptName : function(className) {
+      return className.replace(/\./g,"/")+"-usage.js";
     },
 
-    loadComplete : function(className,model) {
+    postProcess : function(className,model) {
       // post process model
       // step.1 : compute full package name
       function buildChildren(model,pkgPrefix) {
         if(model.children==null)  return; // no children
         for( var i=0; i<model.children.length; i++ )
-          postProcess( model.children[i], pkgPrefix );
+          buildChild( model.children[i], pkgPrefix );
       }
-      function postProcess(model,pkgPrefix) {
+      function buildChild(model,pkgPrefix) {
         model.name = pkgPrefix+model.name;
         if(model.kind=="package" && model.children!=null)
           buildChildren(model,model.name+".");
@@ -98,20 +78,8 @@
       // fix the anonymous package name. this has to be done after href is computed from name in step 1
       for( var x in model )
         model[x].name="(unnamed package)";
-
-
-
-      this.completedLoads[className] = model;
-
-      var p = this.pendingLoads[className];
-      this.pendingLoads[className]=null;
-
-      if(p!=null) {// this should be always true, but just to be defensive
-        for( var i=0; i<p.length; i++ )
-          p[i](model);
-      }
     }
-  }
+  });
 
   // called when *-usage.js is loaded
   function setClassUsage(className,model) {
