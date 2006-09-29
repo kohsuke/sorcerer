@@ -416,7 +416,14 @@ bookmark.makeSubtype = function(typeTable,descendants) {
       var t = typeTable[d];
       var menuItem = new YAHOO.widget.MenuItem(t.fullName);
       menuItem.cfg.setProperty("url",t.href);
+
+      // set icon. shouldn't there be a better way?
+      menuItem.element.style.backgroundImage="url('resource-files/"+t.getType()+"_public.gif')";
+      menuItem.element.style.backgroundRepeat="no-repeat";
+      menuItem.element.style.paddingLeft="20px";
       return menuItem;
     })
   });
+
+  return b;
 }
