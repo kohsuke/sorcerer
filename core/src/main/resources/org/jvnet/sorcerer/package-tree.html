@@ -51,7 +51,7 @@ var linker = {
 
   // generate links within this document
   self: function(url) {
-    return derive(linker.sorcerer("./"),{
+    return derive(linker.sorcerer(""),{
       name: function() { return "self"; }
     });
   },

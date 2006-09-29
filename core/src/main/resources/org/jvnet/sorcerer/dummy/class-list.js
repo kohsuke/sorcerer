@@ -4,7 +4,7 @@ setClassList("dummy",
       name: "TestCode",
       kind: "class",
       access: "protected",
-      script: "dummy/Test.js"
+      script: "dummy/TestCode.js"
     },
     {
       name: "Deprecated",

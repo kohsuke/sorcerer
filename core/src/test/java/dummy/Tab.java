@@ -1,3 +1,5 @@
+package dummy;
+
 import java.util.Random;
 
 /**
@@ -5,7 +7,7 @@ import java.util.Random;
  * @author Kohsuke Kawaguchi
  */
 public class Tab {
-	int x = new Random().nextInt();
+    int x = new Random().nextInt();
 }
 
 class AnotherLocal {

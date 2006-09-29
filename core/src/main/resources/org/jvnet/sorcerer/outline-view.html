@@ -6,66 +6,49 @@
   <script type="text/javascript" src="resource-files/yahoo.js" ></script>
   <script type="text/javascript" src="resource-files/tree/treeview.js" ></script>
   <script type="text/javascript" src="left-pane.js" ></script>
+  <script type="text/javascript" src="sorcerer.js" ></script>
 </head>
-<body onload="start()">
+<body>
 
 <div id="treeDiv" style="white-space:nowrap;"></div>
 
-
 <script type="text/javascript">
-  var tree;
-  var model;
+// this builder builds an outline tree view
+var noop = function() { return function(context){} };
 
-  var mainLoc = new String(top.main.location.href);
-  idx = mainLoc.lastIndexOf('#');
-  if(idx>=0)
-    mainLoc = mainLoc.substring(0,idx);
+// the AST builds the function tree, which in turn builds the treeBuilders, which finally build a tree nodes in YUI
+// phew!
 
-  function start() {
-    targetPage = "" + window.location.search;
-    if (targetPage != "" && targetPage != "undefined") {
-       targetPage = targetPage.substring(1);
-       loadScript(targetPage);
-    }
-  }
+var treeBuilder = {
+  children: [], // child tree builders
 
-  function loadOutline(def) {
-    // figure out the root package
-    if(def.packageName=="")
-      base = "";
-    else
-      base = def.packageName.replace(/\./g,"/")+"/";
-    model = def;
-    refresh();
-  }
+  // tree properties
+  kind: null,   // node type. class, interface, enum, annotation, field, or method.
+  access: "default",  // access modifier. default, private, protected, or public.
+  name: null,   // display name of the tree
+  href: null,   // link target
 
-  function refresh() {
-    var div = document.getElementById("treeDiv");
-    div.innerHTML=""; // reset
-
-    tree = new YAHOO.widget.TreeView(div);
-    addChildren( model.children, tree.getRoot(), true );
-    tree.draw();
-  }
-
-  function addChildren( children, node, expanded ) {
-    if(children==null)  return;
+  // insert all children under the given tree
+  addChildren : function( node, expanded ) {
+    if(this.children==null)  return;
 
     if(window.parent.toolbar.sort) // work defensively in case it's not fully loaded yet
-      children = window.parent.toolbar.sort(children);
+      this.children = window.parent.toolbar.sort(this.children);
 
-    for( var i=0; i<children.length; i++ ) {
-      insertNode( node, children[i], expanded );
-    }
-  }
+    this.children.forEach(function(c) {
+      c.insertNode( node, expanded );
+    });
+  },
 
-  function insertNode( parent, def, expanded ) {
+  // insert this node under the tree
+  insertNode: function( parent, expanded ) {
     var data = {
-      label : "<img src='resource-files/"+def.kind+"_"+def.access+".gif'> "+def.name,
-      href : mainLoc+def.href
+      label : "<img src='resource-files/"+this.kind+"_"+this.access+".gif'> "+this.name,
+      href : mainLoc+this.href
     };
 
-    if(window.parent.toolbar.filter && window.parent.toolbar.filter(def)) // work defensively in case it's not fully loaded yet
+    var f= window.parent.toolbar.filter;
+    if(f && f(this)) // work defensively in case it's not fully loaded yet
       return; // filtered out
 
     var node = new YAHOO.widget.TextNode(data, parent, expanded);
@@ -73,7 +56,117 @@
       top.main.location = me.data.href;
       return false;
     }
-    addChildren( def.children, node, false );
+    this.addChildren( node, false );
+  }
+};
+
+var builder = makeFull(derive(abstractBuilder,{
+  // ignored AST nodes
+  primitiveType : noop,
+  sourceText : noop,
+  O : noop,
+  w : noop,
+  nl : noop,
+  B : noop,
+  P : noop,
+  N : noop,
+  T : noop,
+  F : noop,
+  L : noop,
+
+  reservedWord : function(name) {
+    if(name=="public" || name=="protected" || name=="private") {
+      return function(context) {
+        context.node.access=name;
+      }
+    } else {
+      return function(context) {}
+    }
+  },
+
+  // visit the declaration to be shown in the outline
+  decl : function(context,decl,kind,children) {
+    var parent = context.node;
+    var child = object(treeBuilder);
+    child.kind = kind;
+    child.name = decl.displayText();
+    child.href = decl.href;
+    // access is filled later
+
+    parent.children.push(child);
+
+    context.node=child;
+    children(context);
+    context.node = parent;
+  },
+
+  // significant AST nodes
+  C : function(typeTableIndex,descendants,children) { // class
+    return function(context) {
+      var t = context.me.types[typeTableIndex];
+      context.me.decl(context,t,t.getType(),children);
+    }
+  },
+
+  M : function(methodTableIndex,sup,sub,children) { // method declaration
+    return function(context) {
+      var m = context.me.methods[methodTableIndex];
+      context.me.decl(context,m,"method",children);
+    }
+  },
+
+  I : function(text) { // identifier in method/class declaration
+    return function(context) {
+        context.node.name=text;
+    }
+  },
+
+  V : function(/*arguments*/) {// TODO: mark up and annotation
+    return this.$$(arguments);
+  }
+
+}));
+
+// builds the outline tree model.
+//   ast: Java AST loaded from generated *.js files
+function load(ast) {
+  // use a copy of builder (this will receive symbol tables)
+  var parser=object(builder);
+  var outlineBuilder = ast(parser);
+
+  // build the outline tree nodes
+  var root = object(treeBuilder);
+  // the context object to be passed around the dom builder functions
+  var context = {
+    node : root,        // current treeBuilder node
+    me : parser,        // to access the symbol tables
+    currentDecl : null  // when we are building inside a method/class declaration,
+                        // this field points to that declaration
+  };
+
+  outlineModel = outlineBuilder(context);
+}
+</script>
+
+
+
+
+<script type="text/javascript">
+  var outlineModel; // filter/sort independent outline model
+
+  var mainLoc = new String(top.main.location.href);
+  idx = mainLoc.lastIndexOf('#');
+  if(idx>=0)
+    mainLoc = mainLoc.substring(0,idx);
+
+  // called whenever filter/sort settings change
+  function refresh() {
+    var div = document.getElementById("treeDiv");
+    div.innerHTML=""; // reset
+
+    var tree = new YAHOO.widget.TreeView(div);
+    outlineModel.addChildren(tree.getRoot(),true);
+    tree.draw();
   }
 </script>
   </body>
