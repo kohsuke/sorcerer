@@ -11,9 +11,7 @@ import org.jvnet.sorcerer.util.CharSequenceReader;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Generates an HTML file from a source file (but for a single class.)
@@ -27,11 +25,6 @@ import java.util.Map;
 public class HtmlGenerator {
 
     protected final List<Tag> tags = new ArrayList<Tag>();
-
-    /**
-     * {@link BookmarkSet} keyed by line number.
-     */
-    protected final Map<Integer,BookmarkSet> bookmarks = new HashMap<Integer,BookmarkSet>();
 
     /**
      * Original Java source file to be annotated.
@@ -58,20 +51,6 @@ public class HtmlGenerator {
     /*package*/ boolean add(Tag o) {
         if(o.ep==-1)    return false;   // synthetic
         return tags.add(o);
-    }
-
-    /*package*/ final void add(long lineNumber, Bookmark bookmark) {
-        // tree API uses long for line numbers
-        add((int)lineNumber,bookmark);
-    }
-
-    /*package*/ void add(int lineNumber, Bookmark bookmark) {
-        BookmarkSet set = bookmarks.get(lineNumber);
-        if(set==null) {
-            set = new BookmarkSet(lineNumber);
-            bookmarks.put(lineNumber,set);
-        }
-        set.add(bookmark);
     }
 
     /**
