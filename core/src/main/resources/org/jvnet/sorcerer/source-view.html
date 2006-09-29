@@ -82,7 +82,7 @@ var builder = makeFull(derive(abstractBuilder,{
   },
 
   I : function(text) { // identifier in method/class declaration
-    return function(context) {
+    var f = function(context) {
       var d = context.currentDecl;
       context.link(d.href);
 
@@ -91,6 +91,8 @@ var builder = makeFull(derive(abstractBuilder,{
       context.css(d.css+" d",d.usage())
           .appendText(d.displayText()).pop().pop();
     }
+    f.identifier = text;
+    return f;
   },
 
   B : function(/*...*/) { // curly brackets {...}
@@ -161,7 +163,14 @@ var builder = makeFull(derive(abstractBuilder,{
   },
 
   V : function(/*arguments*/) {// TODO: mark up and annotation
-    return this.$$(arguments);
+    var argList = arguments;
+    var children = this.$$(arguments);
+    return function(context) {
+      var old = context.currentDecl;
+      context.currentDecl = makeVariableEntry(context.currentDecl,argList);
+      children(context);
+      context.currentDecl = old;
+    }
   },
 
   F : function(typeIdx,mods,name) {// field reference

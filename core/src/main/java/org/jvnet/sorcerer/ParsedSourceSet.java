@@ -385,16 +385,19 @@ public class ParsedSourceSet {
             public Void visitVariable(VariableTree vt, Void _) {
                 VariableElement e = (VariableElement) TreeUtil.getElement(vt);
                 if(e!=null) {
+                    gen.add(new Tag.VarDecl(cu,srcPos,vt,e));
+
+                    Token token;
                     if(e.getKind()!= ElementKind.ENUM_CONSTANT) {
                         // put the marker just on the variable name.
                         // the token for the variable name is after its type.
                         // note that we need to handle declarations like "int a,b".
-                        gen.add(new Tag.VarDecl(lineMap,
-                            gen.findTokenAfter(vt.getType(), true, vt.getName().toString()),e));
+                        token = gen.findTokenAfter(vt.getType(), true, vt.getName().toString());
                     } else {
                         // for the enum constant put the anchor around vt
-                        gen.add(new Tag.VarDecl(cu,srcPos,vt,e));
+                        token = gen.findTokenAfter(vt, false, vt.getName().toString());
                     }
+                    gen.add(new Tag.DeclName(lineMap,token));
                 }
                 return super.visitVariable(vt,_);
             }

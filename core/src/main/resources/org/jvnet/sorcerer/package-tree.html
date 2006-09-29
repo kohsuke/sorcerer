@@ -68,6 +68,9 @@ var linker = {
       method : function(m) {
         return this.calc(m.owner,m.signature());
       },
+      field : function(t,name) {
+        return this.calc(t,name);
+      },
       name: function() {
         return "sorcererLinker to "+this.baseURL;
       }

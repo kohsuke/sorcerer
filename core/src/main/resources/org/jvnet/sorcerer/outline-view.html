@@ -115,11 +115,14 @@ var builder = makeFull(derive(abstractBuilder,{
     parent.children.push(child);
 
     var currentLocality = context.isLocal;
+    var currentDecl = context.currentDecl;
     context.isLocal |= isLocal;
     context.node=child;
+    context.currentDecl = decl;
     children(context);
     context.node = parent;
     context.isLocal = currentLocality;
+    context.currentDecl = currentDecl;
   },
 
   // significant AST nodes
@@ -137,15 +140,28 @@ var builder = makeFull(derive(abstractBuilder,{
     }
   },
 
-  I : function(text) { // identifier in method/class declaration
+  V : function(/*arguments*/) {// TODO: mark up and annotation
+    var argList = arguments;
+    var children = this.$$(arguments);
     return function(context) {
-        context.node.afterName=true;
-        context.node.name=text;
+      if(context.node.kind=="method") {
+        children(context); // don't display local variables
+      } else {
+        var f = makeVariableEntry(context.currentDecl,argList);
+        context.me.decl(context,f,"field",true,children);
+      }
     }
   },
 
-  V : function(/*arguments*/) {// TODO: mark up and annotation
-    return this.$$(arguments);
+  I : function(text) { // identifier in method/class declaration
+    var f= function(context) {
+        if(!context.node.afterName) {
+          context.node.name=text;
+          context.node.afterName=true;
+        }
+    }
+    f.identifier = text;
+    return f;
   }
 
 }));

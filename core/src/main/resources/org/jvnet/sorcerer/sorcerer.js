@@ -288,6 +288,30 @@ var methodTableEntry = derive(tableEntry,{
   }
 });
 
+// currently variable decls/refs are not stored in *.js but we generate ones when we need them.
+var variableTableEntry = derive(tableEntry,{
+  kind: "field",
+  displayText: function() {
+    return this.name;
+  }
+});
+
+function makeVariableEntry(parentDecl, childASTs) {
+  var f = object(variableTableEntry);
+  for( var i=0; i<childASTs.length; i++) {
+    if(childASTs[i].identifier) {
+      f.name = childASTs[i].identifier;
+      break;
+    }
+  }
+  var t = parentDecl; // find enclosing type table entry, to pick up the linker
+  if(t.kind=="method")
+    t=t.owner;
+  f.href = t.linker.field(t,f.name);
+
+  return f;
+}
+
 var abstractBuilder = {
   typeTable: function(table) {
     for(var i=0;i<table.length;i++) {
