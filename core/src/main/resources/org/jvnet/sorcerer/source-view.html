@@ -72,8 +72,10 @@ var builder = makeFull(derive(abstractBuilder,{
   },
 
   C : function(typeTableIndex,descendants,children) { // class
-    // TODO: handle descendants
     return function(context) {
+      if(descendants.length>0)
+        context.addBookmark(bookmark.makeSubtype(context.me.types,descendants));
+
       var old = context.currentDecl;
       context.currentDecl = context.me.types[typeTableIndex];
       children(context);
@@ -207,6 +209,8 @@ function defineStructure(className,ast) {
     currentDecl : null, // when we are building inside a method/class declaration,
                         // this field points to that declaration
     lineNumber : 1,     // current line
+    bookmarks: {},      // bookmark map. Map<lineNumber,Array<Bookmark>>
+
     appendText : function(text) {
       this.node.appendChild(document.createTextNode(text));
       return this;
@@ -239,10 +243,19 @@ function defineStructure(className,ast) {
         e.setAttribute("href",href);
       this.push(e);
       return this;
+    },
+    addBookmark : function(b) {
+      var a = this.bookmarks[this.lineNumber];
+      if(!a) {
+        a = [];
+        this.bookmarks[this.lineNumber] = a;
+      }
+      a.push(b);
     }
   };
   // build the main source code HTML
   sourceBuilder(context);
+
 
   // build the line number table
   function pad(s,n) {
@@ -253,10 +266,20 @@ function defineStructure(className,ast) {
 
   var lnt = document.getElementById("lineNumberTable");
   for(var i=1;i<=context.lineNumber;i++) {
+    var lineText = pad(String(i),4);
+
+    var bookmarks = context.bookmarks[i];
+    if(bookmarks) {
+      bookmarks.forEach(function(b) {
+        lnt.appendChild(b.buildAnchor());
+      });
+      lineText = lineText.substring(bookmarks.length*2);
+    }
+
     var a = document.createElement("a");
     a.setAttribute("name",i);
     a.setAttribute("href",'#'+String(i));
-    a.appendChild(document.createTextNode(pad(String(i),4)+'\n'));
+    a.appendChild(document.createTextNode(lineText+'\n'));
     lnt.appendChild(a);
   }
 
@@ -298,6 +321,7 @@ function Future(action,timeout) {
 var menu;
 var menuSelector;
 var menuSelectorCanceller;
+var bookmarkMenu=null;
 
 /*
   prepare context menu hook up for the given span element.
@@ -385,6 +409,8 @@ window.onload = function() {
   document.onclick=function(e) {
     if(YAHOO.util.Event.getTarget(e,false)!=menuSelector)
       menu.hide();
+    if(bookmarkMenu!=null)
+      bookmarkMenu.hide();
   }
 
   // menu selector control

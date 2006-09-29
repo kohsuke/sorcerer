@@ -365,3 +365,58 @@ var abstractBuilder = {
     return this.$$(arguments);
   }
 };
+
+
+
+
+//============================ bookmarks ============================
+var bookmark = {}
+bookmark.prototype = {
+  mark: "[]",    // bookmark char to be displayed. must be two chars wide
+  caption: null, // menu caption
+  items: [],     // array of menu item builders. Each is a function that returns menuItem.
+  onclick: function(anchor) {
+    if(bookmarkMenu!=null)
+      bookmarkMenu.destroy();
+    bookmarkMenu = new YAHOO.widget.Menu("bookmarkmenu");
+
+    // Add caption
+    var captionItem = new YAHOO.widget.MenuItem(this.caption);
+    captionItem.cfg.setProperty("disabled",true);
+    bookmarkMenu.addItem(captionItem);
+
+    // Add items to the main menu
+    this.items.forEach(function(item){bookmarkMenu.addItem(item())});
+
+    bookmarkMenu.render(document.body);
+    bookmarkMenu.cfg.setProperty("context", [anchor, "tl", "bl"]);
+    bookmarkMenu.show();
+  },
+  buildAnchor: function() {
+    var a = document.createElement("a");
+    var text = document.createTextNode(this.mark);
+    a.appendChild(text);
+    var self = this;
+    a.onclick=function(){self.onclick(this);return false;}
+    a.setAttribute("href","#");
+    return a;
+  }
+};
+
+// create a bookmark for listing subtypes
+bookmark.makeSubtype = function(typeTable,descendants) {
+  var b = derive(bookmark.prototype,{
+    mark: "\u25BC",
+    caption: "Jump to subtypes"
+  });
+
+  b.items = [];
+  descendants.forEach(function(d) {
+    b.items.push(function() {
+      var t = typeTable[d];
+      var menuItem = new YAHOO.widget.MenuItem(t.fullName);
+      menuItem.cfg.setProperty("url",t.href);
+      return menuItem;
+    })
+  });
+}

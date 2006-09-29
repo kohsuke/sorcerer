@@ -215,7 +215,8 @@ div.yuimenubar li.selected a.selected {
 
 div.yuimenu li.disabled, 
 div.yuimenubar li.disabled {
-
+    /* this is used as the caption. see below */
+    text-align:center;
     cursor:default;
 
 }
@@ -223,8 +224,8 @@ div.yuimenubar li.disabled {
 div.yuimenu li.disabled a.disabled,
 div.yuimenu li.disabled em.disabled,
 div.yuimenubar li.disabled a.disabled {
-
-    color:#b9b9b9;
+    /* using this as a caption */
+    /*color:#b9b9b9;*/
     cursor:default;
     
 }
