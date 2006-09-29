@@ -20,22 +20,25 @@ var noop = function() { return function(context){} };
 // phew!
 
 var treeBuilder = {
-  children: [], // child tree builders
+  children: null, // child tree builders
 
   // tree properties
   kind: null,   // node type. class, interface, enum, annotation, field, or method.
   access: "default",  // access modifier. default, private, protected, or public.
   name: null,   // display name of the tree
   href: null,   // link target
+  static: false,  // is this member static?
+  local: false,     // is this a local declaration?
+  afterName: false, // once we are beyond the declaration name, set to true.
 
   // insert all children under the given tree
   addChildren : function( node, expanded ) {
-    if(this.children==null)  return;
-
+    var list = this.children;
     if(window.parent.toolbar.sort) // work defensively in case it's not fully loaded yet
-      this.children = window.parent.toolbar.sort(this.children);
+      list = window.parent.toolbar.sort(list);
 
-    this.children.forEach(function(c) {
+    // log("Adding "+this.children.length+" children of "+this.name);
+    list.forEach(function(c) {
       c.insertNode( node, expanded );
     });
   },
@@ -67,8 +70,6 @@ var builder = makeFull(derive(abstractBuilder,{
   O : noop,
   w : noop,
   nl : noop,
-  B : noop,
-  P : noop,
   N : noop,
   T : noop,
   F : noop,
@@ -77,46 +78,68 @@ var builder = makeFull(derive(abstractBuilder,{
   reservedWord : function(name) {
     if(name=="public" || name=="protected" || name=="private") {
       return function(context) {
-        context.node.access=name;
+        if(!context.node.afterName)
+          context.node.access=name;
+      }
+    } else
+    if(name=="static") {
+      return function(context) {
+        if(!context.node.afterName)
+          context.node.static=true;
       }
     } else {
       return function(context) {}
     }
   },
 
+  B : function(/*...*/) { // curly brackets {...}
+    return this.$$(arguments);
+  },
+
+  P : function(/*...*/) { // parenthesis (...)
+    return this.$$(arguments);
+  },
+
+
   // visit the declaration to be shown in the outline
-  decl : function(context,decl,kind,children) {
+  decl : function(context,decl,kind,isLocal,children) {
     var parent = context.node;
     var child = object(treeBuilder);
+    child.children = [];
     child.kind = kind;
+    child.local = context.isLocal;
     child.name = decl.displayText();
     child.href = decl.href;
     // access is filled later
 
     parent.children.push(child);
 
+    var currentLocality = context.isLocal;
+    context.isLocal |= isLocal;
     context.node=child;
     children(context);
     context.node = parent;
+    context.isLocal = currentLocality;
   },
 
   // significant AST nodes
   C : function(typeTableIndex,descendants,children) { // class
     return function(context) {
       var t = context.me.types[typeTableIndex];
-      context.me.decl(context,t,t.getType(),children);
+      context.me.decl(context,t,t.getType(),false,children);
     }
   },
 
   M : function(methodTableIndex,sup,sub,children) { // method declaration
     return function(context) {
       var m = context.me.methods[methodTableIndex];
-      context.me.decl(context,m,"method",children);
+      context.me.decl(context,m,"method",true,children);
     }
   },
 
   I : function(text) { // identifier in method/class declaration
     return function(context) {
+        context.node.afterName=true;
         context.node.name=text;
     }
   },
@@ -130,21 +153,26 @@ var builder = makeFull(derive(abstractBuilder,{
 // builds the outline tree model.
 //   ast: Java AST loaded from generated *.js files
 function load(ast) {
+  log("loading outline");
   // use a copy of builder (this will receive symbol tables)
   var parser=object(builder);
   var outlineBuilder = ast(parser);
 
   // build the outline tree nodes
-  var root = object(treeBuilder);
+  outlineModel = object(treeBuilder);
+  outlineModel.children = [];
+  outlineModel.name="root";
   // the context object to be passed around the dom builder functions
   var context = {
-    node : root,        // current treeBuilder node
+    node : outlineModel,// current treeBuilder node
     me : parser,        // to access the symbol tables
+    isLocal : false,    // if we are inside methods or fields, set to true
     currentDecl : null  // when we are building inside a method/class declaration,
                         // this field points to that declaration
   };
+  outlineBuilder(context);
 
-  outlineModel = outlineBuilder(context);
+  refresh();
 }
 </script>
 
@@ -167,6 +195,12 @@ function load(ast) {
     var tree = new YAHOO.widget.TreeView(div);
     outlineModel.addChildren(tree.getRoot(),true);
     tree.draw();
+  }
+
+  function log(str) {
+    //try {
+      window.top.main.YAHOO.log(str);
+    //} catch(x) {}
   }
 </script>
   </body>
