@@ -183,7 +183,7 @@ function load(ast) {
   var outlineModel; // filter/sort independent outline model
 
   var mainLoc = new String(top.main.location.href);
-  idx = mainLoc.lastIndexOf('#');
+  idx = mainLoc.lastIndexOf('?');
   if(idx>=0)
     mainLoc = mainLoc.substring(0,idx);
 

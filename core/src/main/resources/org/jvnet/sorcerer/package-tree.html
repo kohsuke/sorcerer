@@ -59,11 +59,14 @@ var linker = {
   sorcerer: function(baseURL) {
     return derive(this.prototype,{
       baseURL: baseURL, // the base URL of the sorcerer website
+      calc : function(t,suffix) {
+        return "?"+this.baseURL+t.fullName.replace(/\./g,"/")+".js#"+suffix;
+      },
       type : function(t) {
-        return "?"+this.baseURL+t.fullName.replace(/\./g,"/")+".js";
+        return this.calc(t,"this");
       },
       method : function(m) {
-        return this.type(m.owner)+'#'+m.signature();
+        return this.calc(m.owner,m.signature());
       },
       name: function() {
         return "sorcererLinker to "+this.baseURL;
