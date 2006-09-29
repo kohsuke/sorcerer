@@ -79,7 +79,7 @@ functions: bigger programing element
 .F  field/enumconst reference. F(lhsType, refMods, name). Source text is just the field name.
 .G
 .H
-.I  marks class/method name in the class/method declaration
+.I  marks class/method/field name in those declarations
 .J
 .K
 .L  literal like '5' or "abc"
@@ -106,6 +106,8 @@ methodRef := [lhsType,simpleName,[paramTypes...],refMods]
 
 typeRef := [fullName,css]
   css: css class list to be used for this package.
+
+fieldRef := [lhsType,simpleName,refMods]
 
 refMods = "<CSS style class list, separate by whitespace>"
   this format is aligned with CSS class names.
