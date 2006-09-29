@@ -38,6 +38,20 @@ String.prototype.contains = function(s) {
   return this.indexOf(s)>=0;
 }
 
+if(YAHOO.widget.MenuItem) {
+  YAHOO.widget.MenuItem.prototype.addIcon = function(url) {
+    // the following kind of works, but it doesn't align with the menu text nicely
+    this.element.style.backgroundImage="url('"+url+"')";
+    this.element.style.backgroundRepeat="no-repeat";
+    this.element.style.paddingLeft="20px";
+    this.element.style.backgroundPosition="left center";
+
+    //var a = this.element.firstChild;
+    //var img = document.createElement("img");
+    //img.setAttribute("src",url);
+    //a.insertBefore(img,a.firstChild);
+  };
+}
 
 
 // class to fade a tag
@@ -416,11 +430,33 @@ bookmark.makeSubtype = function(typeTable,descendants) {
       var t = typeTable[d];
       var menuItem = new YAHOO.widget.MenuItem(t.fullName);
       menuItem.cfg.setProperty("url",t.href);
+      menuItem.addIcon("resource-files/"+t.getType()+"_public.gif");
+      return menuItem;
+    })
+  });
 
-      // set icon. shouldn't there be a better way?
-      menuItem.element.style.backgroundImage="url('resource-files/"+t.getType()+"_public.gif')";
-      menuItem.element.style.backgroundRepeat="no-repeat";
-      menuItem.element.style.paddingLeft="20px";
+  return b;
+}
+
+bookmark.makeSuperMethods = function(methodTable,list) {
+  return this.makeMethods("\u25B2","Jump to super method",methodTable,list);
+}
+
+bookmark.makeSubMethods = function(methodTable,list) {
+  return this.makeMethods("\u25BC","Jump to overriding methods",methodTable,list);
+}
+
+// create a list of methods
+bookmark.makeMethods = function(mark,caption,methodTable,list) {
+  var b = derive(bookmark.prototype,{ mark:mark, caption:caption });
+
+  b.items = [];
+  list.forEach(function(idx) {
+    b.items.push(function() {
+      var m = methodTable[idx];
+      var menuItem = new YAHOO.widget.MenuItem(m.owner.fullName);
+      menuItem.cfg.setProperty("url",m.href);
+      menuItem.addIcon("resource-files/"+m.owner.getType()+"_public.gif");
       return menuItem;
     })
   });

@@ -140,8 +140,12 @@ var builder = makeFull(derive(abstractBuilder,{
   },
 
   M : function(methodTableIndex,sup,sub,children) { // method declaration
-    // TODO: handle annotation
     return function(context) {
+      if(sup.length>0)
+        context.addBookmark(bookmark.makeSuperMethods(context.me.methods,sup));
+      if(sub.length>0)
+        context.addBookmark(bookmark.makeSubMethods(  context.me.methods,sub));
+
       var old = context.currentDecl;
       context.currentDecl = context.me.methods[methodTableIndex];
       children(context);
