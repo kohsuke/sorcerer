@@ -2,7 +2,7 @@
 <html>
 <head>
   <link rel="stylesheet" type="text/css" href="left-pane.css">
-  <link rel="stylesheet" type="text/css" href="resource-files/tree/folder.css">
+  <link rel="stylesheet" type="text/css" href="resource-files/tree/noicon.css">
   <script type="text/javascript" src="resource-files/yahoo.js" ></script>
   <script type="text/javascript" src="resource-files/tree/treeview.js" ></script>
   <script type="text/javascript" src="left-pane.js" ></script>
@@ -179,7 +179,7 @@ var linker = {
               cmodel = cmodel.intermediate;
             }
             var o = {};
-            o.label = prefix+cmodel.name;
+            o.label = "<img src='resource-files/package.gif'> "+prefix+cmodel.name;
             o.model = cmodel;
             var n = new YAHOO.widget.TextNode(o,treeNode,false);
             n.setDynamicLoad(function(node,onCompleteCallback) {
@@ -219,6 +219,8 @@ var linker = {
             o.label="(unnamed package)";
           else
             o.label=model.fullName;
+
+          o.label = "<img src='resource-files/package.gif'> "+o.label;
 
           var n = new YAHOO.widget.TextNode(o,root,false);
           n.setDynamicLoad(function(node,callback) {
@@ -290,8 +292,16 @@ var linker = {
       // display library nodes
       for(var i=0;i<packageList.length;i++) {
         var lmodel = packageList[i];
-        var lnode = new YAHOO.widget.TextNode({label:lmodel.name},tree.getRoot(),false);
+        var lnode;
 
+        if(i==0)
+          lnode = tree.getRoot(); // show project classes at top-level
+        else {
+          // the rest is displayed under library label
+          lnode = new YAHOO.widget.TextNode({
+            label:"<img src='resource-files/library.gif'> "+lmodel.name
+          }, tree.getRoot(), false);
+        }
         currentView.loadPackage(lnode,lmodel.packages);
       }
     }
