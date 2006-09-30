@@ -339,7 +339,6 @@ public class FrameSetGenerator extends AbstractWriter {
             "resource-files/library.gif",
             "resource-files/layout-flat.gif",
             "resource-files/layout-hierarchical.gif",
-            "resource-files/tree/folder.css",
             "resource-files/tree/noicon.css",
             "resource-files/tree/ln.gif",
             "resource-files/tree/loading.gif",
@@ -350,7 +349,7 @@ public class FrameSetGenerator extends AbstractWriter {
         }));
 
         for(String name : new String[]{"lm","lp","tm","tp"}) {
-            for( String folder : new String[]{"folder","noicon"}) {
+            for( String folder : new String[]{"noicon"}) {
                 RESOURCES.add("resource-files/tree/"+folder+"/"+name+".gif");
                 RESOURCES.add("resource-files/tree/"+folder+"/"+name+"h.gif");
             }
