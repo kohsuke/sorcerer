@@ -440,8 +440,11 @@ public class ParsedSourceSet {
                 TypeElement e = (TypeElement) TreeUtil.getElement(ct);
                 if(e!=null) {
                     // put the marker on the class name portion.
-                    // TODO: this doesn't work when the same class name appears in the annotations
-                    Token token = gen.findTokenAfter(ct, false, ct.getSimpleName().toString());
+                    Token token;
+                    if(ct.getModifiers()!=null)
+                        token = gen.findTokenAfter(ct.getModifiers(), true, ct.getSimpleName().toString());
+                    else
+                        token = gen.findTokenAfter(ct, false, ct.getSimpleName().toString());
                     if(token!=null)
                         gen.add(new DeclName(lineMap, token));
 

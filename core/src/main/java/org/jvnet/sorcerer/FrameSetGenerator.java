@@ -246,6 +246,8 @@ public class FrameSetGenerator extends AbstractWriter {
             JsonWriter jw = new JsonWriter(w);
             jw.startArray();
             for (TypeElement t : pss.getClassElements(p)) {
+                if(pss.getTrees().getTree(t)==null)
+                    continue;   // not a part of the compilation unit
                 jw.startObject();
                 jw.property("name",t.getSimpleName());
                 jw.property("kind",getKindString(t.getKind()));

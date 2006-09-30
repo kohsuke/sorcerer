@@ -51,15 +51,15 @@
         if(m.classes!=null) {
           for( var i=0; i<m.classes.length; i++ ) {
             var c = m.classes[i];
-            if(m.name=="")
-              c.href="./";
-            else
-              c.href = m.name.replace(/\./g,"/")+"/";
+
+            c.href = "source-view.html?";
+            if(m.name!="")
+              c.href += m.name.replace(/\./g,"/")+"/";
             if(c.source==null)
               c.href += c.name;
             else
               c.href += c.source;
-            c.href += ".html";
+            c.href += ".js";
 
             function copyHref(m,href) {
               m.href = href+"#"+m.line;
