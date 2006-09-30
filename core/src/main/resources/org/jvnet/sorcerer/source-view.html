@@ -164,7 +164,7 @@ var builder = makeFull(derive(abstractBuilder,{
   T : function(n) { // type reference
     return function(context) {
       var t = context.me.types[n];
-      context.link(t.href).css(t.css+" r",t.usage()).appendText(t.shortName).pop().pop();
+      context.link(t.href).css(t.css+" r",t.usage()).appendText(t.displayText()).pop().pop();
     }
   },
 
@@ -200,6 +200,23 @@ function load(name) {
   loadScript(name);
 }
 
+// invoked from AST JavaScript when this is a redirect to another script
+function redirect(localTypeName,targetScript) {
+  // TODO: this is somewhat unreliable.
+  var loc = String(window.location.search);
+  var idx = loc.lastIndexOf('/');
+  if(idx>0) loc=loc.substring(0,idx+1)+targetScript;
+  else      loc="?"+targetScript;
+
+  loc += "#~"+localTypeName;
+
+  if(window.location.hash!=null) {
+    loc += "-"+window.location.hash;
+  }
+  window.location.href=loc;
+}
+
+// invoked from AST JavaScript when loading is complete
 function defineStructure(className,ast) {
   // use a copy of builder (this will receive symbol tables)
   var b=object(builder);
@@ -231,7 +248,7 @@ function defineStructure(className,ast) {
     // wrap by a CSS class
     //   usageKey : optional. usage search key like "java.lang.String#indexOf()"
     css : function(style,usageKey) {
-      e = document.createElement("span");
+      var e = document.createElement("span");
       e.setAttribute("class",style);
       this.push(e);
       if(usageKey!=null) {
@@ -291,7 +308,7 @@ function defineStructure(className,ast) {
   var hash = window.location.hash;
   if(hash!="") {
     hash=hash.substring(1);
-    e = document.getElementById(hash);
+    var e = document.getElementById(hash);
     var xy = YAHOO.util.Dom.getXY(e);
     YAHOO.log("Scrolling to "+hash+" "+e+" "+xy[0]+"/"+xy[1]);
     window.scroll(xy[0],xy[1]);

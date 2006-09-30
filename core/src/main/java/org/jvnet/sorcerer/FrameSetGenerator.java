@@ -1,12 +1,16 @@
 package org.jvnet.sorcerer;
 
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.util.TreePath;
 import org.jvnet.sorcerer.util.AbstractResourceResolver;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;
 import org.jvnet.sorcerer.util.TreeUtil;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import java.io.BufferedReader;
@@ -113,6 +117,25 @@ public class FrameSetGenerator extends AbstractWriter {
             dir.mkdirs();
 
             generateClassListJs(p,new PrintWriter(openDefault(dir,"class-list.js")));
+        }
+
+        // generate redireciton files for classes that live inside another class's compilation unit
+        for(TypeElement e : pss.getClassElements()) {
+            Element pkg = e.getEnclosingElement();
+            if(pkg.getKind()!=ElementKind.PACKAGE)
+                continue;
+            ClassTree ct = pss.getTrees().getTree(e);
+            if(ct==null)    continue;
+            TreePath treePath = pss.getTreePathByClass().get(ct);
+
+            String primaryName = TreeUtil.getPrimaryTypeName(treePath.getCompilationUnit());
+            if(ct.getSimpleName().toString().equals(primaryName))
+                continue; // a primary type
+
+            PrintWriter w = new PrintWriter(openDefault(outDir,
+                ((PackageElement)pkg).getQualifiedName().toString().replace('.','/')+'/'+ct.getSimpleName()+".js"));
+            w.println("redirect('"+ct.getSimpleName()+"','"+primaryName +".js');");
+            w.close();
         }
 
         System.out.println("Generating usage index");

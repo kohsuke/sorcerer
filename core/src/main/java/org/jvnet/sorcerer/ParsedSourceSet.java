@@ -198,6 +198,8 @@ public class ParsedSourceSet {
      *
      * <p>
      * This includes interfaces, enums, and annotation types.
+     * It also includes types that are defined elsewhere (that are referenced by
+     * compiled source code.)
      *
      * @return
      *      can be empty but never null.

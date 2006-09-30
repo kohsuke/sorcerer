@@ -31,7 +31,7 @@ String.prototype.after = function(key) {
   if(idx>=0)
     return this.substring(idx+key.length);
   else
-    return undefined;
+    return this;
 }
 
 String.prototype.contains = function(s) {
@@ -257,14 +257,17 @@ var tableEntry = {
 
 var typeTableEntry = derive(tableEntry,{
   kind: "type",
-  fullName: null,   // FQCN
-  shortName: null,  // name within the package
+  binaryName: null, // encoded name as written in .js
+  shortName: null,  // the last part of the class name identifier. "" if this is anonymous class
   linker: null,     // hyperlinks to this type shall be generated using this linker
   usage : function() {
-    return this.fullName+"#this";
+    return this.binaryName+"#this";
   },
   displayText : function() {
-    return this.shortName; // TODO: this is incorrect --- we just show the short name even for nested classes.
+    return this.shortName;
+  },
+  fullDisplayName : function() { // compute a human readable full name mainly for menus
+    return this.binaryName.replace(/\$/g,".");
   },
   // return 'class', 'interface', 'annotation', or 'enum' depending on what this is
   getType : function() {
@@ -331,16 +334,16 @@ var abstractBuilder = {
     for(var i=0;i<table.length;i++) {
       var t = object(typeTableEntry);
 
-      t.fullName = table[i][0];
+      t.binaryName = table[i][0];
       t.css = table[i][1];
 
-      // this is not a correct way to compute the short name, for nested classes
-      idx=t.fullName.lastIndexOf('.');
-      t.shortName=t.fullName.substring(idx+1);
+      idx=t.binaryName.lastIndexOf('.');
       if(idx<0)
         t.packageName="";
       else
-        t.packageName=t.fullName.substring(0,idx);
+        t.packageName=t.binaryName.substring(0,idx);
+
+      t.shortName=t.binaryName.after(".").after("$");
 
       // TODO: it'd be nice if the source view page can be loaded on its own.
       // the way it's done today requires package view to be loaded.
@@ -428,7 +431,7 @@ bookmark.makeSubtype = function(typeTable,descendants) {
   descendants.forEach(function(d) {
     b.items.push(function() {
       var t = typeTable[d];
-      var menuItem = new YAHOO.widget.MenuItem(t.fullName);
+      var menuItem = new YAHOO.widget.MenuItem(t.fullDisplayName());
       menuItem.cfg.setProperty("url",t.href);
       menuItem.addIcon("resource-files/"+t.getType()+"_public.gif");
       return menuItem;
@@ -454,7 +457,7 @@ bookmark.makeMethods = function(mark,caption,methodTable,list) {
   list.forEach(function(idx) {
     b.items.push(function() {
       var m = methodTable[idx];
-      var menuItem = new YAHOO.widget.MenuItem(m.owner.fullName);
+      var menuItem = new YAHOO.widget.MenuItem(m.owner.fullDisplayName());
       menuItem.cfg.setProperty("url",m.href);
       menuItem.addIcon("resource-files/"+m.owner.getType()+"_public.gif");
       return menuItem;

@@ -36,7 +36,8 @@ var linker = {
     return derive(this.prototype, {
       baseURL: baseURL, // the base URL of the javadoc
       type : function(t) {
-        return this.baseURL+t.fullName.replace(/\./g,"/")+".html";
+        // A.B.C$D$E => A/B/C.D.E.html
+        return "?"+this.baseURL+t.binaryName.replace(/\./g,"/").replace(/\$/g,".")+".html";
       },
       method : function(m) {
         // TODO: javadoc doesn't really use erasure format. Doh!
@@ -60,7 +61,16 @@ var linker = {
     return derive(this.prototype,{
       baseURL: baseURL, // the base URL of the sorcerer website
       calc : function(t,suffix) {
-        return "?"+this.baseURL+t.fullName.replace(/\./g,"/")+".js#"+suffix;
+        var n = t.binaryName;
+        var idx = n.indexOf('$');
+        if(idx<0)
+          return "?"+this.baseURL+n.replace(/\./g,"/")+".js#"+suffix;
+
+        var head = n.substring(0,idx);
+        var tail = n.substring(idx+1);
+
+        // A.B.C$D$E => A/B/C.js#~D-~E-suffix
+        return "?"+this.baseURL+head.replace(/\./g,"/")+".js#~"+tail.replace(/\$/g,"-~")+"-"+suffix;
       },
       type : function(t) {
         return this.calc(t,"this");

@@ -4,12 +4,15 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -52,12 +55,57 @@ public class JavaScriptStreamWriter extends PrintWriter {
     }
 
     private final SymbolTable<TypeElement> typeTable = new SymbolTable<TypeElement>() {
+        private Map<Element,Integer> localId = new HashMap<Element,Integer>();
+
+        private int getLocalId(Element e) {
+            Integer i = localId.get(e);
+            if(i==null) {
+                localId.put(e,1);
+                return 0;
+            }
+            localId.put(e,i+1);
+            return i;
+        }
+
         protected void writeItem(TypeElement e) {
             beginArray();
             sep();
-            string(e.getQualifiedName());
+            StringBuilder buf = new StringBuilder();
+            calcEncodedName(e,buf);
+            // string(e.getQualifiedName());
+            string(buf);
             writeModifiers(e);
             endArray();
+        }
+
+        private void calcEncodedName(Element e, StringBuilder buf) {
+            Element p = e.getEnclosingElement();
+            switch (e.getKind()) {
+            case PACKAGE:
+                buf.append(((PackageElement) e).getQualifiedName());
+                return;
+            case CLASS:
+            case ANNOTATION_TYPE:
+            case ENUM:
+            case INTERFACE:
+                calcEncodedName(p,buf);
+                if(buf.length()>0) {
+                    if(p.getKind()== ElementKind.PACKAGE)
+                        buf.append('.');
+                    else
+                        buf.append('$');
+                }
+                if(e.getSimpleName().length()==0)
+                    // anonymous class
+                    buf.append(getLocalId(p));
+                else
+                    buf.append(e.getSimpleName());
+                return;
+            default:
+                calcEncodedName(p,buf);
+                buf.append('$').append(getLocalId(p));
+                return;
+            }
         }
     };
     private final SymbolTable<ExecutableElement> methodTable = new SymbolTable<ExecutableElement>() {

@@ -3,8 +3,14 @@ setClassList("dummy",
     {
       name: "TestCode",
       kind: "class",
-      access: "protected",
+      access: "public",
       script: "dummy/TestCode.js"
+    },
+    {
+      name: "PrivateClass",
+      kind: "class",
+      access: "protected",
+      script: "dummy/PrivateClass.js"
     },
     {
       name: "Deprecated",

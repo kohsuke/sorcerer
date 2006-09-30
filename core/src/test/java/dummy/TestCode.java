@@ -38,10 +38,12 @@ public class TestCode {
     }
 
     public static void abc() {
+        class Bar {}
         main(new String[0]);
     }
 
     public static void main(String[] args) {
+        class Bar {}
         X x = new X();
         x.foo(3);
         x.foo(5L);
@@ -84,3 +86,58 @@ public class TestCode {
     @Documented
     @interface Foo {}
 }
+
+class PrivateClass {}
+
+/*
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+long tail
+v*/
