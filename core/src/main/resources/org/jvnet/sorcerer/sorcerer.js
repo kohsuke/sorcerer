@@ -283,7 +283,7 @@ var typeTableEntry = derive(tableEntry,{
 var methodTableEntry = derive(tableEntry,{
   kind: "method",
   usage : function() {
-    return this.owner.fullName+"#"+this.signature();
+    return this.owner.binaryName+"#"+this.signature();
   },
   displayText : function() {
     return this.name;
@@ -310,6 +310,11 @@ var variableTableEntry = derive(tableEntry,{
   kind: "field",
   displayText: function() {
     return this.name;
+  },
+  css: "fi",
+  owner: null,  // type table entry that owns this field
+  usage: function() {
+      return this.owner.binaryName+"#"+this.name;
   }
 });
 
@@ -324,6 +329,7 @@ function makeVariableEntry(parentDecl, childASTs) {
   var t = parentDecl; // find enclosing type table entry, to pick up the linker
   if(t.kind=="method")
     t=t.owner;
+  f.owner = t;
   f.href = t.linker.field(t,f.name);
 
   return f;
