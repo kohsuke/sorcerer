@@ -1,7 +1,11 @@
 other issues
 ------------
-- #this shouldn't be used like "#this-fieldName".
-- when you reload in IE, outline view shows the main page content
+- come up with a naming scheme for inner and local types.
+  what if we use encoded names, like binary name.
+
+  org.acme.Foo$Nested
+              ~~~~~~~ <- for nested type, simply its name.
+                         for local types, number that represents its uniqueness
 
 - local types can be only referenced from the same cu.
 - "usage search" index is often broken if source files fail to analyze
@@ -9,7 +13,6 @@ other issues
 - consider eliminating usage table for Object, String, and a few other very common types.
   index often just gets too large.
 - labels and break/continue
-- balanced parenthesis
 - block folding
 - when jumping to definition, move to the center screen
 - better handling for jumping to external source files
@@ -22,28 +25,3 @@ other issues
   - highlight the usage in the source view
 - current line number layout method doesn't work in Opera.
   define another class that does dumb-but-easy approach
-
-
-HTML in JS
-----------
-Pros:
-  - cross domain reference and linking
-
-Cons:
-  - opening a particular class from file explorer is no longer very easy
-
-
-Format:
-
- [ token stream ... ]
-
-   string means literal to be printed.
-   object means an intelligent marker.
-   certain markers can yield text (like reserved word markers.)
-   markers can have nested token stream to organize information in a hierarchy.
-
-Experiments:
-
-  - it's really crucial that we can override the prototype of those objects to make them intelligent.
-    -> Nope. But write 'new Foo(...)' to create a specific object type.
-  - check that '#anchor' navigation can be still made to work.
