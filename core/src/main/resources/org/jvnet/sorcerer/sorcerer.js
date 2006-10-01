@@ -520,3 +520,37 @@ bookmark.makeMethods = function(mark,caption,methodTable,list) {
 
   return b;
 }
+
+
+
+
+
+//============================ lazy init actions ============================
+// this code slowly executes additional actions 'in the background' by using timer.
+// this is to reduce the amount of work needed to be done initially, which causes
+// the lock up effect.
+
+var lazyInitManager = {
+  functions: [],  // code to be executed
+
+  // adds a new lazy init script
+  add: function(f) { this.functions.push(f); },
+
+  start : function() {
+    var idx=0; // next function to execute
+    var f = this.functions;
+
+    function step() {
+      var limit=idx+10;
+      var hardLimit = f.length
+      if(limit>hardLimit) limit=hardLimit;
+
+      for( ; idx<limit; idx++ )
+        f[idx]();
+
+      if(limit<hardLimit)
+        window.setTimeout(step,10);
+    }
+    window.setTimeout(step,100);
+  }
+};

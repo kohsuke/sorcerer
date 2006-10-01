@@ -111,7 +111,7 @@ var builder = makeFull(derive(abstractBuilder,{
       children(context);
       context.html.push("<span id=:"+rid+">"+R+"</span>");
 
-      context.aferDomAction.push(function() {
+      lazyInitManager.add(function() {
         var highlighter = function(lhs,rhs) {
           lhs.onmouseover = function() {
             lhs.className="highlighted-bracket";
@@ -243,8 +243,6 @@ function defineStructure(className,ast) {
     html: [], // HTML fragments to be added as innerHTML
     tags: [], // end tags to be inserted to .html when the tag closes
 
-    aferDomAction: [], // functions to be executed after DOM is built
-
     appendText : function(text) {
       this.html.push(text);
       return this;
@@ -296,12 +294,7 @@ function defineStructure(className,ast) {
 
   YAHOO.log("inserting HTML: "+className);
   var pre = document.getElementById("main");
-  // pre.appendChild(rootNode);
   pre.innerHTML = context.html.join("");
-
-  // this turns out to be very costly
-  // context.aferDomAction.forEach(function (c) { c(); });
-
 
   // build the line number table
   function pad(s,n) {
@@ -311,7 +304,6 @@ function defineStructure(className,ast) {
   }
 
   YAHOO.log("generating line number table");
-  // var lnt = document.getElementById("lineNumberTable");
   var lnt = [];
   for(var i=1;i<=context.lineNumber;i++) {
     var lineText = pad(String(i),4);
@@ -346,6 +338,8 @@ function defineStructure(className,ast) {
   window.top.outline.main.load(ast);
 
   YAHOO.log("complete");
+
+  lazyInitManager.start();
 }
 </script>
 <!-- menu handling -->
@@ -373,7 +367,9 @@ var menu;
 var menuSelector;
 var menuSelectorCanceller;
 var bookmarkMenu=null;
-var bookmarks = {}; // all bookmarks on the page keyed by ID.
+// all bookmarks on the page keyed by ID.
+// bookmark onclick JavaScript uses this to find the correct bookmark object
+var bookmarks = {};
 
 /*
   prepare context menu hook up for the given span element.
