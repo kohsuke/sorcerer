@@ -1,3 +1,10 @@
+show stoppers
+-------------
+- anonymous type constructor is not displayed correctly.
+- package local types in another compilation unit doesn't get proper IDs.
+- main page is slow to load. move most JavaScript to another frame.
+  (in place reloading is not very attractive because it renders the back button useless.)
+
 other issues
 ------------
 - come up with a naming scheme for inner and local types.
@@ -23,5 +30,3 @@ other issues
   - usage of private methods are always confined within a single CU.
     think about those cases and reduce the size of the usage index.
   - highlight the usage in the source view
-- current line number layout method doesn't work in Opera.
-  define another class that does dumb-but-easy approach
