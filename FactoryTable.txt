@@ -76,10 +76,10 @@ functions: bigger programing element
 .C  class declaration. C(typeTableIndex,[...typeRef]/*descendants*/,children)
 .D
 .E
-.F  field/enumconst reference. F(lhsType, refMods, name). Source text is just the field name.
-.G
+.F  field declaration:   F(children...)
+.G  field/enumconst reference. F(lhsType, refMods, name). Source text is just the field name.
 .H
-.I  marks class/method/field name in those declarations
+.I  marks class/method/field/variable name in those declarations
 .J
 .K
 .L  literal like '5' or "abc"
@@ -93,8 +93,8 @@ functions: bigger programing element
     surrounds the whole declaration as well as uses.
 .T  type reference (e.g., T(5) means 5th type in the table)
 .U
-.V  variable declaration (field, local var, etc.)   V(children...)
-.W  variable reference N(refMods, children). first child represents the variable name
+.V  local variable/method parameter declaration V(id,children)
+.W  variable reference W(refId).
 .X
 .Y
 .Z
@@ -108,6 +108,8 @@ typeRef := [fullName,css]
   css: css class list to be used for this package.
 
 fieldRef := [lhsType,simpleName,refMods]
+
+lvRef := [name,id]
 
 refMods = "<CSS style class list, separate by whitespace>"
   this format is aligned with CSS class names.
