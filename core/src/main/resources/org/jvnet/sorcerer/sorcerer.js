@@ -385,7 +385,7 @@ var abstractBuilder = {
         // TODO: it'd be nice if the source view page can be loaded on its own.
         // the way it's done today requires package view to be loaded.
         t.linker = window.top.packageView.main.linker.get(t.packageName);
-        YAHOO.log("linker for ["+t.packageName+"] is "+t.linker.name());
+        // YAHOO.log("linker for ["+t.packageName+"] is "+t.linker.name());
 
         t.href = t.linker.type(t);
 

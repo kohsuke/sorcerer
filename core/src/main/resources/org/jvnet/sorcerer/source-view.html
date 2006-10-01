@@ -234,14 +234,15 @@ function redirect(localTypeName,targetScript) {
 
 // invoked from AST JavaScript when loading is complete
 function defineStructure(className,ast) {
+  YAHOO.log("parsing AST: "+className);
   // use a copy of builder (this will receive symbol tables)
   var b=object(builder);
   var sourceBuilder = ast(b);
-  var pre = document.getElementById("main");
 
   // the context object to be passed around the dom builder functions
+  var rootNode = document.createElement("span");
   var context = {
-    node : pre,         // current node
+    node : rootNode,         // current node
     me : b,             // to access the builder
     currentDecl : null, // when we are building inside a method/class declaration,
                         // this field points to that declaration
@@ -291,7 +292,12 @@ function defineStructure(className,ast) {
     }
   };
   // build the main source code HTML
+  YAHOO.log("generating HTML: "+className);
   sourceBuilder(context);
+
+  YAHOO.log("inserting HTML: "+className);
+  var pre = document.getElementById("main");
+  pre.appendChild(rootNode);
 
 
   // build the line number table
@@ -301,6 +307,7 @@ function defineStructure(className,ast) {
     return s;
   }
 
+  YAHOO.log("generating line number table");
   var lnt = document.getElementById("lineNumberTable");
   for(var i=1;i<=context.lineNumber;i++) {
     var lineText = pad(String(i),4);
@@ -332,6 +339,8 @@ function defineStructure(className,ast) {
 
   // render outline
   window.top.outline.main.load(ast);
+
+  YAHOO.log("complete");
 }
 </script>
 <!-- menu handling -->
