@@ -490,6 +490,11 @@ public class ParsedSourceSet {
                         case ENUM_CONSTANT:
                             gen.add(new Tag.FieldRef(cu,srcPos,id,(VariableElement)e));
                             break;
+                        case PARAMETER:
+                        case EXCEPTION_PARAMETER:
+                        case LOCAL_VARIABLE:
+                            gen.add(new Tag.LocalVarRef(cu,srcPos,id,(VariableElement)e));
+                            break;
                         }
                     }
                 }
