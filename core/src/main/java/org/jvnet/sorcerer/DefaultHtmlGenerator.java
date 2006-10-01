@@ -185,9 +185,11 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
     public void writeBody(JavaScriptStreamWriter out) throws IOException {
         Root tree = buildTree();
         tree.collectSymbols(out);
+        out.resetList();
         out.writeSymbolTable();
 
         // write the body
+        out.println();
         out.resetList();
         out.print("return ");
         tree.write(out);

@@ -48,11 +48,8 @@ public class JavaScriptStreamWriter extends PrintWriter {
         }
         public void write(String functionName) {
             beginMethod(functionName);
-            beginList();
-            beginArray();
             for (E e : keySet())
                 writeItem(e);
-            endArray();
             endMethod();
         }
 
@@ -165,7 +162,10 @@ public class JavaScriptStreamWriter extends PrintWriter {
         }
 
         protected void writeItem(VariableElement ve) {
+            beginArray();
+            sep().string(ve.getSimpleName());
             sep().string(ids.get(ve));
+            endArray();
         }
     };
 

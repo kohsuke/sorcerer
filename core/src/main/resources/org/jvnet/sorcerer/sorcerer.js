@@ -20,6 +20,21 @@ Array.prototype.forEach = function(closure) {
     closure(this[i]);
 }
 
+Array.prototype.apply = function(closure) {
+  var r = [];
+  for(var i=0; i<this.length; i++)
+    r.push(closure(this[i]));
+  return r;
+}
+
+// convert arguments set to array
+function toArray(args) {
+  var r = [];
+  for(var i=0; i<args.length;i++)
+    r.push(args[i]);
+  return r;
+}
+
 String.prototype.startsWith = function(rhs) {
   var len = rhs.length;
   if(this.length<len)  return false;
@@ -305,8 +320,23 @@ var methodTableEntry = derive(tableEntry,{
   }
 });
 
+var localVariableTableEntry = derive(tableEntry,{
+  kind: "localVariable",
+  displayText: function() {
+    return this.name;
+  },
+  css: "lv",
+  usage: function() { // TODO: think about this more carefully.
+    return this.href;
+  },
+
+  // constructor
+  make : function(packedArray) {
+    return derive(localVariableTableEntry,{name:packedArray[0], href:'#'+packedArray[1]});
+  }
+});
 // currently variable decls/refs are not stored in *.js but we generate ones when we need them.
-var variableTableEntry = derive(tableEntry,{
+var fieldTableEntry = derive(tableEntry,{
   kind: "field",
   displayText: function() {
     return this.name;
@@ -318,8 +348,8 @@ var variableTableEntry = derive(tableEntry,{
   }
 });
 
-function makeVariableEntry(parentDecl, childASTs) {
-  var f = object(variableTableEntry);
+function makeFieldEntry(parentDecl, childASTs) {
+  var f = object(fieldTableEntry);
   for( var i=0; i<childASTs.length; i++) {
     if(childASTs[i].identifier) {
       f.name = childASTs[i].identifier;
@@ -336,52 +366,55 @@ function makeVariableEntry(parentDecl, childASTs) {
 }
 
 var abstractBuilder = {
-  typeTable: function(table) {
-    for(var i=0;i<table.length;i++) {
-      var t = object(typeTableEntry);
+  typeTable: function(/*...*/) {
+    this.types = toArray(arguments).apply(function(packedArray) {
+        var t = object(typeTableEntry);
 
-      t.binaryName = table[i][0];
-      t.css = table[i][1];
+        t.binaryName = packedArray[0];
+        t.css = packedArray[1];
 
-      idx=t.binaryName.lastIndexOf('.');
-      if(idx<0)
-        t.packageName="";
-      else
-        t.packageName=t.binaryName.substring(0,idx);
+        idx=t.binaryName.lastIndexOf('.');
+        if(idx<0)
+          t.packageName="";
+        else
+          t.packageName=t.binaryName.substring(0,idx);
 
-      t.shortName=t.binaryName.after(".").after("$");
+        t.shortName=t.binaryName.after(".").after("$");
 
-      // TODO: it'd be nice if the source view page can be loaded on its own.
-      // the way it's done today requires package view to be loaded.
-      t.linker = window.top.packageView.main.linker.get(t.packageName);
-      YAHOO.log("linker for ["+t.packageName+"] is "+t.linker.name());
+        // TODO: it'd be nice if the source view page can be loaded on its own.
+        // the way it's done today requires package view to be loaded.
+        t.linker = window.top.packageView.main.linker.get(t.packageName);
+        YAHOO.log("linker for ["+t.packageName+"] is "+t.linker.name());
 
-      t.href = t.linker.type(t);
+        t.href = t.linker.type(t);
 
-      table[i] = t;
-    }
-    // assign this to the table
-    this.types = table;
+        return t;
+    });
   },
-  methodTable: function(table) {
-    for(var i=0;i<table.length;i++) {
-      var e = table[i];
-      var m = object(methodTableEntry);
-      m.owner = this.types[e[0]];
-      m.name = e[1];
-      m.params = e[2];
-      for(var j=0;j<m.params.length;j++) {
-        if(typeof m.params[j] == "number")
-          m.params[j] = this.types[m.params[j]].fullName;
-      }
+  methodTable: function(/*...*/) {
+    var types=this.types;
+    this.methods = toArray(arguments).apply(function(e) {
+        var m = object(methodTableEntry);
+        m.owner = types[e[0]];
+        m.name = e[1];
+        m.params = e[2];
+        for(var j=0;j<m.params.length;j++) {
+          if(typeof m.params[j] == "number")
+            m.params[j] = types[m.params[j]].fullName;
+        }
 
-      m.css = e[3];
-      m.href = m.owner.linker.method(m);
-      // YAHOO.log("linker for ["+m.signature()+"] is "+m.owner.linker.name());
+        m.css = e[3];
+        m.href = m.owner.linker.method(m);
+        // YAHOO.log("linker for ["+m.signature()+"] is "+m.owner.linker.name());
 
-      table[i] = m;
-    }
-    this.methods = table;
+        return m;
+    });
+  },
+
+  localVariableTable: function(/*...*/) {
+    this.localVariables = toArray(arguments).apply(function(t) {
+      return localVariableTableEntry.make(t);
+    });
   },
 
   classDef : function(/*...*/) {

@@ -73,6 +73,7 @@ var builder = makeFull(derive(abstractBuilder,{
   N : noop,
   T : noop,
   G : noop,
+  W : noop,
   L : noop,
 
   reservedWord : function(name) {
@@ -144,9 +145,13 @@ var builder = makeFull(derive(abstractBuilder,{
     var argList = arguments;
     var children = this.$$(arguments);
     return function(context) {
-      var f = makeVariableEntry(context.currentDecl,argList);
+      var f = makeFieldEntry(context.currentDecl,argList);
       context.me.decl(context,f,"field",true,children);
     }
+  },
+
+  V : function(id,children) {// local variable declaration
+    return children;
   },
 
   I : function(text) { // identifier in method/class declaration

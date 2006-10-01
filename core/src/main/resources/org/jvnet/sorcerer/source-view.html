@@ -172,7 +172,7 @@ var builder = makeFull(derive(abstractBuilder,{
     var children = this.$$(arguments);
     return function(context) {
       var old = context.currentDecl;
-      context.currentDecl = makeVariableEntry(context.currentDecl,argList);
+      context.currentDecl = makeFieldEntry(context.currentDecl,argList);
       children(context);
       context.currentDecl = old;
     }
@@ -182,6 +182,23 @@ var builder = makeFull(derive(abstractBuilder,{
     return function(context) {
       var t = context.me.types[typeIdx];
       context.link(t.linker.field(t,name)).css(mods+" r",t.fullName+'#'+name).appendText(name).pop().pop();
+    }
+  },
+
+  V : function(n,children) {// variable declaration
+    return function(context) {
+      var old = context.currentDecl;
+      context.currentDecl = context.me.localVariables[n];
+      children(context);
+      context.currentDecl = old;
+    }
+  },
+
+  W : function(n) { // variable reference
+    return function(context) {
+      // TODO: reuse this similarity between other decls
+      var v = context.me.localVariables[n];
+      context.link(v.href).css(v.css+" r",v.usage()).appendText(v.name).pop().pop();
     }
   },
 

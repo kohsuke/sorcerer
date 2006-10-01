@@ -429,7 +429,6 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
         void write(JavaScriptStreamWriter w) {
             w.beginMethod("V");
             w.ref(var);
-            w.string(var.getSimpleName());
             writeChildren("$",w);
             w.endMethod();
         }
