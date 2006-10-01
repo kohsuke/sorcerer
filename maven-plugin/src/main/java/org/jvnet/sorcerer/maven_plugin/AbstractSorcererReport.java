@@ -22,15 +22,13 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
 import org.jvnet.sorcerer.Analyzer;
+import org.jvnet.sorcerer.Dependency;
 import org.jvnet.sorcerer.FrameSetGenerator;
-import org.jvnet.sorcerer.InternalLinkResolverFactory;
-import org.jvnet.sorcerer.JavadocLinkResolverFactory;
-import org.jvnet.sorcerer.LinkResolverFacade;
-import org.jvnet.sorcerer.LinkResolverFactory;
 import org.jvnet.sorcerer.ParsedSourceSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -197,14 +195,9 @@ public abstract class AbstractSorcererReport
         return canGenerate;
     }
 
-    private LinkResolverFactory createLinkResolverFactory() throws IOException {
-        List<LinkResolverFactory> list = new ArrayList<LinkResolverFactory>();
-        for (Javadoc j : javadocs) {
-            list.add(new JavadocLinkResolverFactory(j.href,j.packageList));
-        }
-        list.add(new InternalLinkResolverFactory());
-
-        return new LinkResolverFacade(list.toArray(new LinkResolverFactory[list.size()]));
+    private void addDependencies(List<Dependency> dependencies) throws IOException {
+        for (Javadoc j : javadocs)
+            dependencies.add(new Dependency.Javadoc(j.title,new URL(j.href),j.packageList));
     }
 
     protected void executeReport(Locale locale) throws MavenReportException {
@@ -228,7 +221,7 @@ public abstract class AbstractSorcererReport
                 a.setLocale(locale);
                 a.setTabWidth(tabWidth);
                 ParsedSourceSet pss = a.analyze(new Listener(getLog()));
-                pss.setLinkResolverFactory(createLinkResolverFactory());
+                addDependencies(pss.getDependencies());
 
                 // TODO: support i18n and use locale for HTML generation
                 FrameSetGenerator fsg = new FrameSetGenerator(pss);

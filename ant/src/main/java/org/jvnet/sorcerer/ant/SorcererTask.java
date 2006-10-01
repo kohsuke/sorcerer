@@ -5,17 +5,15 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.Path;
 import org.jvnet.sorcerer.Analyzer;
+import org.jvnet.sorcerer.Dependency;
 import org.jvnet.sorcerer.FrameSetGenerator;
-import org.jvnet.sorcerer.InternalLinkResolverFactory;
-import org.jvnet.sorcerer.JavadocLinkResolverFactory;
-import org.jvnet.sorcerer.LinkResolverFacade;
-import org.jvnet.sorcerer.LinkResolverFactory;
 import org.jvnet.sorcerer.ParsedSourceSet;
 import org.jvnet.sorcerer.util.CSSHandler;
 import org.jvnet.sorcerer.util.DiagnosticPrinter;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,7 +98,7 @@ public class SorcererTask extends MatchingTask {
 
             a.setTabWidth(tabWidth);
             ParsedSourceSet pss = a.analyze(new DiagnosticPrinter());
-            pss.setLinkResolverFactory(createLinkResolverFactory());
+            addDependencies(pss.getDependencies());
 
             CSSHandler css = createCSSHandler();
 
@@ -121,13 +119,12 @@ public class SorcererTask extends MatchingTask {
             return new CSSHandler.Default();
     }
 
-    private LinkResolverFactory createLinkResolverFactory() throws IOException {
-        List<LinkResolverFactory> list = new ArrayList<LinkResolverFactory>();
+    private void addDependencies(List<Dependency> dependencies) throws IOException {
         for (Javadoc j : javadocs) {
-            list.add(new JavadocLinkResolverFactory(j.getHref(),j.getPackageList()));
+            dependencies.add(new Dependency.Javadoc(
+                j.getTitle(),
+                new URL(j.getHref()),
+                j.getPackageList()));
         }
-        list.add(new InternalLinkResolverFactory());
-
-        return new LinkResolverFacade(list.toArray(new LinkResolverFactory[list.size()]));
     }
 }

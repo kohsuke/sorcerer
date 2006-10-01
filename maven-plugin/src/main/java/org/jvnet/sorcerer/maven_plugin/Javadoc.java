@@ -22,4 +22,11 @@ public final class Javadoc {
      * @parameter
      */
     protected File packageList;
+
+    /**
+     * Title of this project, like "commons-lang" or "JavaSE", etc.
+     *
+     * @parameter
+     */
+    protected String title;
 }

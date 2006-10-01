@@ -1,11 +1,9 @@
 package org.jvnet.sorcerer.cli;
 
 import org.jvnet.sorcerer.Analyzer;
+import org.jvnet.sorcerer.Dependency;
+import org.jvnet.sorcerer.Dependency.Javadoc;
 import org.jvnet.sorcerer.FrameSetGenerator;
-import org.jvnet.sorcerer.InternalLinkResolverFactory;
-import org.jvnet.sorcerer.JavadocLinkResolverFactory;
-import org.jvnet.sorcerer.LinkResolverFacade;
-import org.jvnet.sorcerer.LinkResolverFactory;
 import org.jvnet.sorcerer.ParsedSourceSet;
 import org.jvnet.sorcerer.util.CSSHandler;
 import org.jvnet.sorcerer.util.DiagnosticPrinter;
@@ -161,7 +159,7 @@ public class Main {
         }
 
         ParsedSourceSet pss = a.analyze(new DiagnosticPrinter());
-        pss.setLinkResolverFactory(createLinkResolverFactory());
+        addDependency(pss.getDependencies());
 
         CSSHandler css = createCSSHandler();
 
@@ -218,14 +216,10 @@ public class Main {
     }
 
 
-    private LinkResolverFactory createLinkResolverFactory() throws IOException {
-        List<LinkResolverFactory> list = new ArrayList<LinkResolverFactory>();
+    private void addDependency(List<Dependency> dependencies) throws IOException {
         for (String url : javadocs) {
-            list.add(new JavadocLinkResolverFactory(url));
+            dependencies.add(new Javadoc(url,new URL(url))); // TODO
         }
-        list.add(new InternalLinkResolverFactory());
-
-        return new LinkResolverFacade(list.toArray(new LinkResolverFactory[list.size()]));
     }
 
     /**
