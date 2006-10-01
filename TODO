@@ -29,3 +29,7 @@ other issues
   - usage of private methods are always confined within a single CU.
     think about those cases and reduce the size of the usage index.
   - highlight the usage in the source view
+
+Notes
+-----
+- DOM manipulation turns out to be expensive.
