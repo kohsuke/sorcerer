@@ -62,6 +62,14 @@ function iotaGen() {
 }
 var idGen = iotaGen(); // generate unique IDs for the system use
 
+// add script tag to DOM to load it
+function loadScript(href) {
+    head = document.getElementsByTagName("head")[0];
+    script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = href;
+    head.appendChild(script);
+}
 
 if(YAHOO.widget.MenuItem) {
   YAHOO.widget.MenuItem.prototype.addIcon = function(url) {
@@ -535,6 +543,8 @@ var lazyInitManager = {
 
   // adds a new lazy init script
   add: function(f) { this.functions.push(f); },
+
+  reset : function() { this.functions=[]; },
 
   start : function() {
     var idx=0; // next function to execute
