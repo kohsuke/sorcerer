@@ -543,9 +543,18 @@ public class ParsedSourceSet {
                 long sp = srcPos.getStartPosition(cu, nt.getIdentifier());
 
                 // marker for jumping to the definition
-                Element e = TreeUtil.getElement(nt);
+                ExecutableElement e = (ExecutableElement) TreeUtil.getElement(nt);
                 if(e!=null) {
-                    gen.add(new Tag.MethodRef(sp,ep,(ExecutableElement)e));
+                    TypeElement ownerType = (TypeElement) e.getEnclosingElement();
+                    if(ownerType.getSimpleName().length()==0) {
+                        // if this is the constructor for an anonymous class,
+                        // can't link to the constructor as it's synthetic
+                        scan(nt.getIdentifier());
+                    } else {
+                        // TODO: the identifier tree might contain type parameters, packaga names, etc.
+                        // we should visit those
+                        gen.add(new Tag.MethodRef(sp,ep,e));
+                    }
                 }
 
                 scan(nt.getEnclosingExpression());
