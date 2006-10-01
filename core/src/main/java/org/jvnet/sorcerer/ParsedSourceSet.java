@@ -420,6 +420,10 @@ public class ParsedSourceSet {
             public Void visitMethod(MethodTree mt, Void _) {
                 ExecutableElement e = (ExecutableElement) TreeUtil.getElement(mt);
                 if(e!=null) {
+                    if(e.getKind()==ElementKind.CONSTRUCTOR && e.getEnclosingElement().getSimpleName().length()==0)
+                        return _; // this is a synthesized constructor for an anonymous class
+                                  // TODO: I suspect we need some kind of uniform treatment for all synthesized methods 
+
                     // mark up the method name
                     Tree prev = mt.getReturnType();
                     String name = mt.getName().toString();
