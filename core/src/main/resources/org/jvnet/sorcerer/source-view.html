@@ -85,10 +85,8 @@ var builder = makeFull(derive(abstractBuilder,{
   I : function(text) { // identifier in method/class declaration
     var f = function(context) {
       var d = context.currentDecl;
-      context.link(d.href);
+      context.declLink(d.href);
 
-      if(d.href!=null)
-        context.node.setAttribute("id",d.href.after("#"));
       context.css(d.css+" d",d.usage())
           .appendText(d.displayText()).pop().pop();
     }
@@ -106,35 +104,29 @@ var builder = makeFull(derive(abstractBuilder,{
 
   parenthesis : function(L,R,children) {
     return function(context) { // TODO: scroll to the other bracket by clicking
-      var span = document.createElement("span");
-      context.push(span);
+      var lid=idGen();
+      var rid=idGen();
 
-      var open = document.createElement("span");
-      context.push(open);
-      context.appendText(L);
-      context.pop();
-
+      context.html.push("<span id=:"+lid+">"+L+"</span>");
       children(context);
+      context.html.push("<span id=:"+rid+">"+R+"</span>");
 
-      var closed = document.createElement("span");
-      context.push(closed);
-      context.appendText(R);
-      context.pop();
-
-      context.pop();
-
-      var highlighter = function(lhs,rhs) {
-        lhs.onmouseover = function() {
-          lhs.className="highlighted-bracket";
-          rhs.className="highlighted-bracket";
-        }
-        lhs.onmouseout = function() {
-          lhs.className="";
-          rhs.className="";
-        }
-      };
-      highlighter(open,closed);
-      highlighter(closed,open);
+      context.aferDomAction.push(function() {
+        var highlighter = function(lhs,rhs) {
+          lhs.onmouseover = function() {
+            lhs.className="highlighted-bracket";
+            rhs.className="highlighted-bracket";
+          }
+          lhs.onmouseout = function() {
+            lhs.className="";
+            rhs.className="";
+          }
+        };
+        var open = document.getElementById(":"+lid);
+        var closed = document.getElementById(":"+rid);
+        highlighter(open,closed);
+        highlighter(closed,open);
+      });
     }
   },
 
@@ -242,44 +234,51 @@ function defineStructure(className,ast) {
   // the context object to be passed around the dom builder functions
   var rootNode = document.createElement("span");
   var context = {
-    node : rootNode,         // current node
     me : b,             // to access the builder
     currentDecl : null, // when we are building inside a method/class declaration,
                         // this field points to that declaration
     lineNumber : 1,     // current line
     bookmarks: {},      // bookmark map. Map<lineNumber,Array<Bookmark>>
 
+    html: [], // HTML fragments to be added as innerHTML
+    tags: [], // end tags to be inserted to .html when the tag closes
+
+    aferDomAction: [], // functions to be executed after DOM is built
+
     appendText : function(text) {
-      this.node.appendChild(document.createTextNode(text));
+      this.html.push(text);
       return this;
     },
-    push : function(e) {
-      this.node.appendChild(e);
-      this.node = e;
-      return e;
-    },
     pop : function() {
-      this.node = this.node.parentNode;
+      this.html.push(this.tags.pop());
       return this;
     },
     // wrap by a CSS class
     //   usageKey : optional. usage search key like "java.lang.String#indexOf()"
     css : function(style,usageKey) {
-      var e = document.createElement("span");
-      e.setAttribute("class",style);
-      this.push(e);
-      if(usageKey!=null) {
-        e.parentNode.setAttribute("u",usageKey);
-        prepareMenu(e);
-      }
+      var frag = "<span class="+style;
+      if(usageKey!=null)
+        frag+=" u="+usageKey+">";
+      else
+        frag+=">";
+      this.html.push(frag);
+      this.tags.push("</span>");
       return this;
     },
     // wrap by anchor link
     link : function(href) {
-      e = document.createElement("a");
-      if(href!=null)
-        e.setAttribute("href",href);
-      this.push(e);
+      if(href!=null) {
+        this.html.push("<a href="+href+">");
+        this.tags.push("</a>");
+      }
+      return this;
+    },
+    // declaration and link at the same time
+    declLink : function(href) {
+      if(href!=null) {
+        this.html.push("<a href="+href+" id="+href.after("#")+">");
+        this.tags.push("</a>");
+      }
       return this;
     },
     addBookmark : function(b) {
@@ -297,7 +296,11 @@ function defineStructure(className,ast) {
 
   YAHOO.log("inserting HTML: "+className);
   var pre = document.getElementById("main");
-  pre.appendChild(rootNode);
+  // pre.appendChild(rootNode);
+  pre.innerHTML = context.html.join("");
+
+  // this turns out to be very costly
+  // context.aferDomAction.forEach(function (c) { c(); });
 
 
   // build the line number table
@@ -308,33 +311,35 @@ function defineStructure(className,ast) {
   }
 
   YAHOO.log("generating line number table");
-  var lnt = document.getElementById("lineNumberTable");
+  // var lnt = document.getElementById("lineNumberTable");
+  var lnt = [];
   for(var i=1;i<=context.lineNumber;i++) {
     var lineText = pad(String(i),4);
 
-    var bookmarks = context.bookmarks[i];
-    if(bookmarks) {
-      bookmarks.forEach(function(b) {
-        lnt.appendChild(b.buildAnchor());
+    var lineBookmarks = context.bookmarks[i];
+    if(lineBookmarks) {
+      lineBookmarks.forEach(function(b) {
+        window.bookmarks[b.id] = b;
+        lnt.push(b.buildAnchor());
       });
-      lineText = lineText.substring(bookmarks.length*2);
+      lineText = lineText.substring(lineBookmarks.length*2);
     }
 
-    var a = document.createElement("a");
-    a.setAttribute("name",i);
-    a.setAttribute("href",'#'+String(i));
-    a.appendChild(document.createTextNode(lineText+'\n'));
-    lnt.appendChild(a);
+    lnt.push("<a name="+i+" href=#"+i+">");
+    lnt.push(lineText);
+    lnt.push("\n</a>");
   }
+  document.getElementById("lineNumberTable").innerHTML = lnt.join("");
 
   // page rendering complete at this point. jump to the anchor
+  YAHOO.log("Checking hyperlink");
   var hash = window.location.hash;
   if(hash!="") {
     hash=hash.substring(1);
     var e = document.getElementById(hash);
-    var xy = YAHOO.util.Dom.getXY(e);
-    YAHOO.log("Scrolling to "+hash+" "+e+" "+xy[0]+"/"+xy[1]);
-    window.scroll(xy[0],xy[1]);
+    var y = YAHOO.util.Dom.getY(e);
+    YAHOO.log("Scrolling to "+hash+" "+e+" "+y);
+    window.scroll(0,y);
   }
 
   // render outline
@@ -368,6 +373,7 @@ var menu;
 var menuSelector;
 var menuSelectorCanceller;
 var bookmarkMenu=null;
+var bookmarks = {}; // all bookmarks on the page keyed by ID.
 
 /*
   prepare context menu hook up for the given span element.

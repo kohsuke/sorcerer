@@ -53,6 +53,16 @@ String.prototype.contains = function(s) {
   return this.indexOf(s)>=0;
 }
 
+// return a function that counts up.
+function iotaGen() {
+  var i=0;
+  return function() {
+    return i++;
+  }
+}
+var idGen = iotaGen(); // generate unique IDs for the system use
+
+
 if(YAHOO.widget.MenuItem) {
   YAHOO.widget.MenuItem.prototype.addIcon = function(url) {
     // the following kind of works, but it doesn't align with the menu text nicely
@@ -429,6 +439,7 @@ var abstractBuilder = {
 //============================ bookmarks ============================
 var bookmark = {}
 bookmark.prototype = {
+  id: null,      // unique ID assigned for each bookmark
   mark: "[]",    // bookmark char to be displayed. must be two chars wide
   caption: null, // menu caption
   items: [],     // array of menu item builders. Each is a function that returns menuItem.
@@ -450,13 +461,14 @@ bookmark.prototype = {
     bookmarkMenu.show();
   },
   buildAnchor: function() {
-    var a = document.createElement("a");
-    var text = document.createTextNode(this.mark);
-    a.appendChild(text);
-    var self = this;
-    a.onclick=function(){self.onclick(this);return false;}
-    a.setAttribute("href","#");
-    return a;
+    //var a = document.createElement("a");
+    //var text = document.createTextNode(this.mark);
+    //a.appendChild(text);
+    //var self = this;
+    //a.onclick=function(){self.onclick(this);return false;}
+    //a.setAttribute("href","#");
+    //return a;
+    return "<a href=# onclick='bookmarks["+this.id+"].onclick(this);return false;'>"+this.mark+"</a>"; 
   }
 };
 
@@ -467,6 +479,7 @@ bookmark.makeSubtype = function(typeTable,descendants) {
     caption: "Jump to subtypes"
   });
 
+  b.id = idGen();
   b.items = [];
   descendants.forEach(function(d) {
     b.items.push(function() {
@@ -493,6 +506,7 @@ bookmark.makeSubMethods = function(methodTable,list) {
 bookmark.makeMethods = function(mark,caption,methodTable,list) {
   var b = derive(bookmark.prototype,{ mark:mark, caption:caption });
 
+  b.id = idGen();
   b.items = [];
   list.forEach(function(idx) {
     b.items.push(function() {
