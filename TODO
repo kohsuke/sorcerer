@@ -1,6 +1,5 @@
 show stoppers
 -------------
-- anonymous type constructor is not displayed correctly.
 - package local types in another compilation unit doesn't get proper IDs.
 - main page is slow to load. move most JavaScript to another frame.
   (in place reloading is not very attractive because it renders the back button useless.)
