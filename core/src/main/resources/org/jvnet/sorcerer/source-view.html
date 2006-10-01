@@ -167,7 +167,7 @@ var builder = makeFull(derive(abstractBuilder,{
     }
   },
 
-  V : function(/*arguments*/) {// TODO: mark up and annotation
+  F : function(/*arguments*/) {// field declaration
     var argList = arguments;
     var children = this.$$(arguments);
     return function(context) {
@@ -178,7 +178,7 @@ var builder = makeFull(derive(abstractBuilder,{
     }
   },
 
-  F : function(typeIdx,mods,name) {// field reference
+  G : function(typeIdx,mods,name) {// field reference
     return function(context) {
       var t = context.me.types[typeIdx];
       context.link(t.linker.field(t,name)).css(mods+" r",t.fullName+'#'+name).appendText(name).pop().pop();

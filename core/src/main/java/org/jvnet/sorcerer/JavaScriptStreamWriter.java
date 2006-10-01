@@ -1,5 +1,7 @@
 package org.jvnet.sorcerer;
 
+import org.jvnet.sorcerer.util.BiDiMap;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -44,11 +46,14 @@ public class JavaScriptStreamWriter extends PrintWriter {
             if(v==null)     throw new IllegalStateException("No such symbol: "+e);
             return v;
         }
-        public void write() {
+        public void write(String functionName) {
+            beginMethod(functionName);
+            beginList();
             beginArray();
             for (E e : keySet())
                 writeItem(e);
             endArray();
+            endMethod();
         }
 
         protected abstract void writeItem(E e);
@@ -111,7 +116,6 @@ public class JavaScriptStreamWriter extends PrintWriter {
     private final SymbolTable<ExecutableElement> methodTable = new SymbolTable<ExecutableElement>() {
         protected void writeItem(ExecutableElement e) {
             beginArray();
-            sep();
             ref((TypeElement)e.getEnclosingElement());
             sep();
             if(e.getKind()== ElementKind.CONSTRUCTOR)
@@ -120,13 +124,12 @@ public class JavaScriptStreamWriter extends PrintWriter {
                 string(e.getSimpleName());
             beginArray();
             for (VariableElement v : e.getParameters()) {
-                sep();
                 TypeMirror vt = pss.getTypes().erasure(v.asType());
                 TypeElement ve = (TypeElement) pss.getTypes().asElement(vt);
                 if(ve!=null)
                     ref(ve);
                 else // such as primitive types, arrays, etc.
-                    string(vt.toString());
+                    sep().string(vt.toString());
             }
             endArray();
             writeModifiers(e);
@@ -142,6 +145,27 @@ public class JavaScriptStreamWriter extends PrintWriter {
                 if(ve!=null)
                     typeTable.add(ve);
             }
+        }
+    };
+
+    private final SymbolTable<VariableElement> localVariableTable = new SymbolTable<VariableElement>() {
+        private BiDiMap<VariableElement,String> ids = new BiDiMap<VariableElement,String>();
+
+        public void add(VariableElement ve) {
+            super.add(ve);
+            String id = new LocalVariableIdBuilder(pss).href(ve);
+
+            if(ids.containsValue(id)) {
+                int suffix=2;
+                while(ids.containsValue(id+suffix))
+                    suffix++;
+                id = id+suffix;
+            }
+            ids.put(ve,id);
+        }
+
+        protected void writeItem(VariableElement ve) {
+            sep().string(ids.get(ve));
         }
     };
 
@@ -252,14 +276,21 @@ public class JavaScriptStreamWriter extends PrintWriter {
      * Writes a method reference number.
      */
     public void ref(ExecutableElement e) {
-        print(methodTable.find(e));
+        sep().print(methodTable.find(e));
     }
 
     /**
      * Writes a type reference number.
      */
     public void ref(TypeElement e) {
-        print(typeTable.find(e));
+        sep().print(typeTable.find(e));
+    }
+
+    /**
+     * Writes a local variable reference number.
+     */
+    public void ref(VariableElement var) {
+        sep().print(localVariableTable.find(var));
     }
 
     /**
@@ -279,6 +310,11 @@ public class JavaScriptStreamWriter extends PrintWriter {
             ExecutableElement ee = (ExecutableElement) e;
             methodTable.add(ee);
             break;
+        case EXCEPTION_PARAMETER:
+        case LOCAL_VARIABLE:
+        case PARAMETER:
+            localVariableTable.add((VariableElement)e);
+            break;
         }
     }
 
@@ -286,15 +322,9 @@ public class JavaScriptStreamWriter extends PrintWriter {
      * Writes out the symbol table.
      */
     public void writeSymbolTable() {
-        print("typeTable(");
-        beginList();
-        typeTable.write();
-        print(");");
-
-        print("methodTable(");
-        beginList();
-        methodTable.write();
-        print(");");
+        typeTable.write("typeTable");
+        methodTable.write("methodTable");
+        localVariableTable.write("localVariableTable");
     }
 
     /**

@@ -387,7 +387,17 @@ public class ParsedSourceSet {
             public Void visitVariable(VariableTree vt, Void _) {
                 VariableElement e = (VariableElement) TreeUtil.getElement(vt);
                 if(e!=null) {
-                    gen.add(new Tag.VarDecl(cu,srcPos,vt,e));
+                    switch (e.getKind()) {
+                    case ENUM_CONSTANT:
+                    case FIELD:
+                        gen.add(new Tag.FieldDecl(cu,srcPos,vt,e));
+                        break;
+                    case EXCEPTION_PARAMETER:
+                    case LOCAL_VARIABLE:
+                    case PARAMETER:
+                        gen.add(new Tag.LocalVarDecl(cu,srcPos,vt,e));
+                        break;
+                    }
 
                     Token token;
                     if(e.getKind()!= ElementKind.ENUM_CONSTANT) {

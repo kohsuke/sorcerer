@@ -72,7 +72,7 @@ var builder = makeFull(derive(abstractBuilder,{
   nl : noop,
   N : noop,
   T : noop,
-  F : noop,
+  G : noop,
   L : noop,
 
   reservedWord : function(name) {
@@ -140,16 +140,12 @@ var builder = makeFull(derive(abstractBuilder,{
     }
   },
 
-  V : function(/*arguments*/) {// TODO: mark up and annotation
+  F : function(/*arguments*/) {// field declaration
     var argList = arguments;
     var children = this.$$(arguments);
     return function(context) {
-      if(context.node.kind=="method") {
-        children(context); // don't display local variables
-      } else {
-        var f = makeVariableEntry(context.currentDecl,argList);
-        context.me.decl(context,f,"field",true,children);
-      }
+      var f = makeVariableEntry(context.currentDecl,argList);
+      context.me.decl(context,f,"field",true,children);
     }
   },
 

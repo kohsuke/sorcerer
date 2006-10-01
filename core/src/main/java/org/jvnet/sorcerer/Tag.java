@@ -300,10 +300,10 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
         @Override
         void write(JavaScriptStreamWriter w) {
             w.beginMethod("C");
-            w.sep().ref(type);
+            w.ref(type);
             w.beginArray();
             for (ParsedType d : descendants)
-                w.sep().ref(d.element);
+                w.ref(d.element);
             w.endArray();
             writeChildren("$",w);
             w.endMethod();
@@ -342,32 +342,31 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
 
         void write(JavaScriptStreamWriter w) {
             assert firstChild.nextSibling==null; // there must be just one SourceText as a child (method name)
-            w.sep();
-            w.print("T(");
+            w.beginMethod("T");
             w.ref(type);
-            w.print(")");
+            w.endMethod();
         }
     }
 
     /**
-     * Field, variable declaration.
+     * Field declaration.
      */
-    public static final class VarDecl extends Tag {
+    public static final class FieldDecl extends Tag {
         private final VariableElement var;
 
-        public VarDecl(CompilationUnitTree cu, SourcePositions srcPos, VariableTree vt, VariableElement var) {
+        public FieldDecl(CompilationUnitTree cu, SourcePositions srcPos, VariableTree vt, VariableElement var) {
             super(cu,srcPos,vt);
             this.var = var;
         }
 
-        public VarDecl(LineMap lineMap, Token t, VariableElement var) {
+        public FieldDecl(LineMap lineMap, Token t, VariableElement var) {
             super(lineMap, t);
             this.var = var;
         }
 
         @Override
         void write(JavaScriptStreamWriter w) {
-            writeChildren("V",w);
+            writeChildren("F",w);
         }
     }
 
@@ -395,12 +394,71 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
 
         void write(JavaScriptStreamWriter w) {
             assert firstChild.nextSibling==null; // there must be just one SourceText as a child (method name)
-            w.beginMethod("F");
-            w.sep();
+            w.beginMethod("G");
             w.ref((TypeElement)decl.getEnclosingElement());
             w.writeModifiers(decl);
             w.sep();
             w.string(decl.getSimpleName());
+            w.endMethod();
+        }
+    }
+
+    /**
+     * Local variable/method parameter declaration.
+     */
+    public static final class LocalVarDecl extends Tag {
+        private final VariableElement var;
+
+        public LocalVarDecl(CompilationUnitTree cu, SourcePositions srcPos, VariableTree vt, VariableElement var) {
+            super(cu,srcPos,vt);
+            this.var = var;
+        }
+
+        public LocalVarDecl(LineMap lineMap, Token t, VariableElement var) {
+            super(lineMap, t);
+            this.var = var;
+        }
+
+
+        public void collectSymbols(JavaScriptStreamWriter w) {
+            super.collectSymbols(w);
+            w.collect(var);
+        }
+
+        @Override
+        void write(JavaScriptStreamWriter w) {
+            w.beginMethod("V");
+            w.ref(var);
+            w.string(var.getSimpleName());
+            writeChildren("$",w);
+            w.endMethod();
+        }
+    }
+
+    /**
+     * Local variable reference.
+     * This corresponds to the source code fragment of the local variable name.
+     */
+    public static final class LocalVarRef extends Tag {
+        /**
+         * The variable declaration being referenced.
+         */
+        private final VariableElement decl;
+
+        public LocalVarRef(CompilationUnitTree unitTree, SourcePositions srcPos, Tree r, VariableElement decl) {
+            super(unitTree, srcPos, r);
+            this.decl = decl;
+        }
+
+        public LocalVarRef(long sp, long ep, VariableElement decl) {
+            super(sp, ep);
+            this.decl = decl;
+        }
+
+        void write(JavaScriptStreamWriter w) {
+            assert firstChild.nextSibling==null; // there must be just one SourceText as a child (variable name)
+            w.beginMethod("W");
+            w.ref(decl);
             w.endMethod();
         }
     }
@@ -435,7 +493,7 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
         @Override
         void write(JavaScriptStreamWriter w) {
             w.beginMethod("M");
-            w.sep().ref(method);
+            w.ref(method);
             writeSet(w,overridden);
             writeSet(w,overriding);
             writeChildren("$",w);
@@ -445,7 +503,7 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
         private void writeSet(JavaScriptStreamWriter w, Set<Match> ms) {
             w.beginArray();
             for (Match m : ms)
-                w.sep().ref(m.method);
+                w.ref(m.method);
             w.endArray();
         }
     }
@@ -469,10 +527,9 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
 
         void write(JavaScriptStreamWriter w) {
             assert firstChild.nextSibling==null; // there must be just one SourceText as a child (method name)
-            w.sep();
-            w.print("N(");
+            w.beginMethod("N");
             w.ref(method);
-            w.print(")");
+            w.endMethod();
         }
     }
 
