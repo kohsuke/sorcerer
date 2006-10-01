@@ -496,7 +496,7 @@ YAHOO.widget.MenuModule.prototype.init = function(p_oElement, p_oConfig) {
 
     if(typeof p_oElement == "string") {
 
-        oElement = document.getElementById(p_oElement);
+        oElement = sourceView.document.getElementById(p_oElement);
 
     }
     else if(p_oElement.tagName) {
@@ -1213,7 +1213,7 @@ YAHOO.widget.MenuModule.prototype._createItemGroup = function(p_nIndex) {
 
         this._aItemGroups[p_nIndex] = [];
 
-        var oUL = document.createElement("ul");
+        var oUL = sourceView.document.createElement("ul");
 
         this._aListElements[p_nIndex] = oUL;
 
@@ -1314,11 +1314,11 @@ YAHOO.widget.MenuModule.prototype._getOffsetWidth = function() {
 
     this._oDom.setStyle(oClone, "width", "");
 
-    document.body.appendChild(oClone);
+    sourceView.document.body.appendChild(oClone);
 
     var sWidth = oClone.offsetWidth;
 
-    document.body.removeChild(oClone);
+    sourceView.document.body.removeChild(oClone);
 
     return sWidth;
 
@@ -1798,8 +1798,8 @@ YAHOO.widget.MenuModule.prototype.enforceConstraints =
         var x = pos[0];
         var y = pos[1];
 
-        var bod = document.getElementsByTagName('body')[0];
-        var htm = document.getElementsByTagName('html')[0];
+        var bod = sourceView.document.getElementsByTagName('body')[0];
+        var htm = sourceView.document.getElementsByTagName('html')[0];
 
         var bodyOverflow = Dom.getStyle(bod, "overflow");
         var htmOverflow = Dom.getStyle(htm, "overflow");
@@ -1810,8 +1810,8 @@ YAHOO.widget.MenuModule.prototype.enforceConstraints =
         var viewPortWidth = Dom.getClientWidth();
         var viewPortHeight = Dom.getClientHeight();
 
-        var scrollX = window.scrollX || document.body.scrollLeft;
-        var scrollY = window.scrollY || document.body.scrollTop;
+        var scrollX = sourceView.window.scrollX || sourceView.document.body.scrollLeft;
+        var scrollY = sourceView.window.scrollY || sourceView.document.body.scrollTop;
 
         var topConstraint = scrollY + 10;
         var leftConstraint = scrollX + 10;
@@ -1951,7 +1951,7 @@ YAHOO.widget.MenuModule.prototype.setItemGroupTitle =
             }
             else {
 
-                oTitle = document.createElement(this.GROUP_TITLE_TAG_NAME);
+                oTitle = sourceView.document.createElement(this.GROUP_TITLE_TAG_NAME);
 
                 oTitle.innerHTML = p_sGroupTitle;
 
@@ -2707,7 +2707,7 @@ YAHOO.widget.MenuModuleItem.prototype = {
 
                         sText = oText.nodeValue;
 
-                        oAnchor = document.createElement("a");
+                        oAnchor = sourceView.document.createElement("a");
 
                         oAnchor.setAttribute("href", sURL);
 
@@ -2891,11 +2891,11 @@ YAHOO.widget.MenuModuleItem.prototype = {
     */
     _createRootNodeStructure: function () {
 
-        this.element = document.createElement("li");
+        this.element = sourceView.document.createElement("li");
 
-        this._oText = document.createTextNode("");
+        this._oText = sourceView.document.createTextNode("");
 
-        this._oAnchor = document.createElement("a");
+        this._oAnchor = sourceView.document.createElement("a");
         this._oAnchor.appendChild(this._oText);
 
         this.cfg.refireEvent("url");
@@ -3037,7 +3037,7 @@ YAHOO.widget.MenuModuleItem.prototype = {
                     HTMLAnchorElement (&#60;A&#60;) node.
                 */
 
-                document.location = sURL;
+                sourceView.document.location = sURL;
 
             }
 
@@ -3155,7 +3155,7 @@ YAHOO.widget.MenuModuleItem.prototype = {
 
                 if(!this._oHelpTextEM) {
 
-                    this._oHelpTextEM = document.createElement("em");
+                    this._oHelpTextEM = sourceView.document.createElement("em");
 
                     oEl.insertBefore(this._oHelpTextEM, oImg);
 
@@ -3253,7 +3253,7 @@ YAHOO.widget.MenuModuleItem.prototype = {
 
             if(bEmphasis) {
 
-                oEM = document.createElement("em");
+                oEM = sourceView.document.createElement("em");
                 oEM.appendChild(oText);
 
                 oAnchor.appendChild(oEM);
@@ -3299,7 +3299,7 @@ YAHOO.widget.MenuModuleItem.prototype = {
 
             if(bStrongEmphasis) {
 
-                oStrong = document.createElement("strong");
+                oStrong = sourceView.document.createElement("strong");
                 oStrong.appendChild(oText);
 
                 oAnchor.appendChild(oStrong);
@@ -3428,7 +3428,7 @@ YAHOO.widget.MenuModuleItem.prototype = {
 
             if(oImg) {
 
-                oImg.src = document.images[(this.imageRoot + sImageSrc)].src;
+                oImg.src = sourceView.document.images[(this.imageRoot + sImageSrc)].src;
 
             }
 
@@ -3470,15 +3470,15 @@ YAHOO.widget.MenuModuleItem.prototype = {
 
                     var sPath = me.imageRoot + p_sPath;
 
-                    if(!document.images[sPath]) {
+                    if(!sourceView.document.images[sPath]) {
 
-                        var oImage = document.createElement("img");
+                        var oImage = sourceView.document.createElement("img");
                         oImage.src = sPath;
                         oImage.name = sPath;
                         oImage.id = sPath;
                         oImage.style.display = "none";
 
-                        document.body.appendChild(oImage);
+                        sourceView.document.body.appendChild(oImage);
 
                     }
 
@@ -3488,7 +3488,7 @@ YAHOO.widget.MenuModuleItem.prototype = {
                 preloadImage(this.SELECTED_SUBMENU_INDICATOR_IMAGE_PATH);
                 preloadImage(this.DISABLED_SUBMENU_INDICATOR_IMAGE_PATH);
 
-                oImg = document.createElement("img");
+                oImg = sourceView.document.createElement("img");
                 oImg.src = (this.imageRoot + this.SUBMENU_INDICATOR_IMAGE_PATH);
                 oImg.alt = this.COLLAPSED_SUBMENU_INDICATOR_ALT_TEXT;
 
@@ -4064,7 +4064,7 @@ YAHOO.widget.Menu.prototype.onDomResize = function(e, obj) {
 
             }
 
-            window.setTimeout(align, 0);
+            sourceView.window.setTimeout(align, 0);
 
         }
 
@@ -4505,15 +4505,15 @@ YAHOO.widget.MenuItem.prototype.configChecked =
 
                 var sPath = me.imageRoot + p_sPath;
 
-                if(!document.images[sPath]) {
+                if(!sourceView.document.images[sPath]) {
 
-                    var oImage = document.createElement("img");
+                    var oImage = sourceView.document.createElement("img");
                     oImage.src = sPath;
                     oImage.name = sPath;
                     oImage.id = sPath;
                     oImage.style.display = "none";
 
-                    document.body.appendChild(oImage);
+                    sourceView.document.body.appendChild(oImage);
 
                 }
 
@@ -4523,7 +4523,7 @@ YAHOO.widget.MenuItem.prototype.configChecked =
             preloadImage(this.SELECTED_CHECKED_IMAGE_PATH);
             preloadImage(this.DISABLED_CHECKED_IMAGE_PATH);
 
-            oImg = document.createElement("img");
+            oImg = sourceView.document.createElement("img");
             oImg.src = (this.imageRoot + this.CHECKED_IMAGE_PATH);
             oImg.alt = this.CHECKED_IMAGE_ALT_TEXT;
 
@@ -4602,7 +4602,7 @@ YAHOO.widget.MenuItem.prototype.configSelected =
             var sSrc = this.imageRoot + (bSelected ?
                 this.SELECTED_CHECKED_IMAGE_PATH : this.CHECKED_IMAGE_PATH);
 
-            this._checkImage.src = document.images[sSrc].src;
+            this._checkImage.src = sourceView.document.images[sSrc].src;
 
         }
 
@@ -4639,7 +4639,7 @@ YAHOO.widget.MenuItem.prototype.configDisabled =
 
             }
 
-            oImg.src = document.images[(this.imageRoot + sSrc)].src;
+            oImg.src = sourceView.document.images[(this.imageRoot + sSrc)].src;
             oImg.alt = sAlt;
 
         }

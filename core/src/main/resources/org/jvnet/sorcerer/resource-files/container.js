@@ -753,9 +753,9 @@ YAHOO.widget.Module.prototype = {
 		if (typeof el == "string") {
 			var elId = el;
 
-			el = document.getElementById(el);
+			el = sourceView.document.getElementById(el);
 			if (! el) {
-				el = document.createElement("DIV");
+				el = sourceView.document.createElement("DIV");
 				el.id = elId;
 			}
 		}
@@ -809,11 +809,11 @@ YAHOO.widget.Module.prototype = {
 
         if(this.browser != "opera") {
 
-            var resizeMonitor = document.getElementById("_yuiResizeMonitor");
+            var resizeMonitor = sourceView.document.getElementById("_yuiResizeMonitor");
     
             if (! resizeMonitor) {
     
-                resizeMonitor = document.createElement("iframe");
+                resizeMonitor = sourceView.document.createElement("iframe");
     
                 var bIE = (this.browser.indexOf("ie") === 0);
     
@@ -829,7 +829,7 @@ YAHOO.widget.Module.prototype = {
                 resizeMonitor.id = "_yuiResizeMonitor";
                 resizeMonitor.style.visibility = "hidden";
                 
-                document.body.appendChild(resizeMonitor);
+                sourceView.document.body.appendChild(resizeMonitor);
     
                 resizeMonitor.style.width = "10em";
                 resizeMonitor.style.height = "10em";
@@ -889,7 +889,7 @@ YAHOO.widget.Module.prototype = {
 	*/	
 	setHeader : function(headerContent) {
 		if (! this.header) {
-			this.header = document.createElement("DIV");
+			this.header = sourceView.document.createElement("DIV");
 			this.header.className = YAHOO.widget.Module.CSS_HEADER;
 		}
 		
@@ -910,7 +910,7 @@ YAHOO.widget.Module.prototype = {
 	*/	
 	appendToHeader : function(element) {
 		if (! this.header) {
-			this.header = document.createElement("DIV");
+			this.header = sourceView.document.createElement("DIV");
 			this.header.className = YAHOO.widget.Module.CSS_HEADER;
 		}
 		
@@ -926,7 +926,7 @@ YAHOO.widget.Module.prototype = {
 	*/		
 	setBody : function(bodyContent) {
 		if (! this.body) {
-			this.body = document.createElement("DIV");
+			this.body = sourceView.document.createElement("DIV");
 			this.body.className = YAHOO.widget.Module.CSS_BODY;
 		}
 
@@ -948,7 +948,7 @@ YAHOO.widget.Module.prototype = {
 	*/
 	appendToBody : function(element) {
 		if (! this.body) {
-			this.body = document.createElement("DIV");
+			this.body = sourceView.document.createElement("DIV");
 			this.body.className = YAHOO.widget.Module.CSS_BODY;
 		}
 
@@ -964,7 +964,7 @@ YAHOO.widget.Module.prototype = {
 	*/	
 	setFooter : function(footerContent) {
 		if (! this.footer) {
-			this.footer = document.createElement("DIV");
+			this.footer = sourceView.document.createElement("DIV");
 			this.footer.className = YAHOO.widget.Module.CSS_FOOTER;
 		}
 
@@ -985,7 +985,7 @@ YAHOO.widget.Module.prototype = {
 	*/
 	appendToFooter : function(element) {
 		if (! this.footer) {
-			this.footer = document.createElement("DIV");
+			this.footer = sourceView.document.createElement("DIV");
 			this.footer.className = YAHOO.widget.Module.CSS_FOOTER;
 		}
 
@@ -1011,7 +1011,7 @@ YAHOO.widget.Module.prototype = {
 		var me = this;
 		var appendTo = function(element) {
 			if (typeof element == "string") {
-				element = document.getElementById(element);
+				element = sourceView.document.getElementById(element);
 			}
 			
 			if (element) {
@@ -1563,7 +1563,7 @@ YAHOO.widget.Overlay.prototype.configIframe = function(type, args, obj) {
 
 		if (! isNaN(x) && ! isNaN(y)) {
 			if (! this.iframe) {
-				this.iframe = document.createElement("iframe");
+				this.iframe = sourceView.document.createElement("iframe");
 				if (this.isSecure) {
 					this.iframe.src = this.imageRoot + YAHOO.widget.Overlay.IFRAME_SRC;
 				}
@@ -1572,7 +1572,7 @@ YAHOO.widget.Overlay.prototype.configIframe = function(type, args, obj) {
 				if (parent) {
 					parent.appendChild(this.iframe);
 				} else {
-					document.body.appendChild(this.iframe);
+					sourceView.document.body.appendChild(this.iframe);
 				}
 
 				YAHOO.util.Dom.setStyle(this.iframe, "position", "absolute");
@@ -1642,7 +1642,7 @@ YAHOO.widget.Overlay.prototype.configContext = function(type, args, obj) {
 
 		if (contextEl) {
 			if (typeof contextEl == "string") {
-				this.cfg.setProperty("context", [document.getElementById(contextEl),elementMagnetCorner,contextMagnetCorner], true);
+				this.cfg.setProperty("context", [sourceView.document.getElementById(contextEl),elementMagnetCorner,contextMagnetCorner], true);
 			}
 			
 			if (elementMagnetCorner && contextMagnetCorner) {
@@ -1730,8 +1730,8 @@ YAHOO.widget.Overlay.prototype.enforceConstraints = function(type, args, obj) {
 	var viewPortWidth = YAHOO.util.Dom.getViewportWidth();
 	var viewPortHeight = YAHOO.util.Dom.getViewportHeight();
 
-	var scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
-	var scrollY = document.documentElement.scrollTop || document.body.scrollTop;
+	var scrollX = sourceView.document.documentElement.scrollLeft || sourceView.document.body.scrollLeft;
+	var scrollY = sourceView.document.documentElement.scrollTop || sourceView.document.body.scrollTop;
 
 	var topConstraint = scrollY + 10;
 	var leftConstraint = scrollX + 10;
@@ -1759,8 +1759,8 @@ YAHOO.widget.Overlay.prototype.enforceConstraints = function(type, args, obj) {
 * Centers the container in the viewport.
 */
 YAHOO.widget.Overlay.prototype.center = function() {
-	var scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
-	var scrollY = document.documentElement.scrollTop || document.body.scrollTop;
+	var scrollX = sourceView.document.documentElement.scrollLeft || sourceView.document.body.scrollLeft;
+	var scrollY = sourceView.document.documentElement.scrollTop || sourceView.document.body.scrollTop;
 
 	var viewPortWidth = YAHOO.util.Dom.getClientWidth();
 	var viewPortHeight = YAHOO.util.Dom.getClientHeight();
@@ -2139,7 +2139,7 @@ YAHOO.util.KeyListener = function(attachTo, keyData, handler, event) {
 	this.disabledEvent = new YAHOO.util.CustomEvent("disabled");
 
 	if (typeof attachTo == 'string') {
-		attachTo = document.getElementById(attachTo);
+		attachTo = sourceView.document.getElementById(attachTo);
 	}
 
 	if (typeof handler == 'function') {
@@ -2282,7 +2282,7 @@ YAHOO.widget.Tooltip.CSS_TOOLTIP = "tt";
 * @param {object}	userConfig	The configuration object literal containing the configuration that should be set for this Tooltip. See configuration documentation for more details.
 */
 YAHOO.widget.Tooltip.prototype.init = function(el, userConfig) {
-	if (document.readyState && document.readyState != "complete") {
+	if (sourceView.document.readyState && sourceView.document.readyState != "complete") {
 		var deferredInit = function() {
 			this.init(el, userConfig);
 		};
@@ -2321,7 +2321,7 @@ YAHOO.widget.Tooltip.prototype.initDefaultConfig = function() {
 	this.cfg.addProperty("hidedelay",			{ value:250, handler:this.configHideDelay, validator:this.cfg.checkNumber } );
 
 	this.cfg.addProperty("text",				{ handler:this.configText, suppressEvent:true } );
-	this.cfg.addProperty("container",			{ value:document.body, handler:this.configContainer } );
+	this.cfg.addProperty("container",			{ value:sourceView.document.body, handler:this.configContainer } );
 };
 
 // BEGIN BUILT-IN PROPERTY EVENT HANDLERS //
@@ -2342,7 +2342,7 @@ YAHOO.widget.Tooltip.prototype.configText = function(type, args, obj) {
 YAHOO.widget.Tooltip.prototype.configContainer = function(type, args, obj) {
 	var container = args[0];
 	if (typeof container == 'string') {
-		this.cfg.setProperty("container", document.getElementById(container), true);
+		this.cfg.setProperty("container", sourceView.document.getElementById(container), true);
 	}
 };
 
@@ -2356,7 +2356,7 @@ YAHOO.widget.Tooltip.prototype.configContext = function(type, args, obj) {
 		// Normalize parameter into an array
 		if (! (context instanceof Array)) {
 			if (typeof context == "string") {
-				this.cfg.setProperty("context", [document.getElementById(context)], true);
+				this.cfg.setProperty("context", [sourceView.document.getElementById(context)], true);
 			} else { // Assuming this is an element
 				this.cfg.setProperty("context", [context], true);
 			}
@@ -2673,7 +2673,7 @@ YAHOO.widget.Panel.prototype.configClose = function(type, args, obj) {
 
 	if (val) {
 		if (! this.close) {
-			this.close = document.createElement("DIV");
+			this.close = sourceView.document.createElement("DIV");
 			YAHOO.util.Dom.addClass(this.close, "close");
 
 			if (this.isSecure) {
@@ -2727,7 +2727,7 @@ YAHOO.widget.Panel.prototype.configUnderlay = function(type, args, obj) {
 			YAHOO.util.Dom.addClass(this.element, "shadow");
 
 			if (! this.underlay) { // create if not already in DOM
-				this.underlay = document.createElement("DIV");
+				this.underlay = sourceView.document.createElement("DIV");
 				this.underlay.className = "underlay";
 				this.underlay.innerHTML = "&nbsp;";
 				this.element.appendChild(this.underlay);
@@ -2818,7 +2818,7 @@ YAHOO.widget.Panel.prototype.buildWrapper = function() {
 
 	YAHOO.util.Dom.addClass(this.innerElement, YAHOO.widget.Panel.CSS_PANEL);
 
-	var wrapper = document.createElement("DIV");
+	var wrapper = sourceView.document.createElement("DIV");
 	wrapper.className = YAHOO.widget.Panel.CSS_PANEL_CONTAINER;
 	wrapper.id = elementClone.id + "_c";
 	
@@ -2900,8 +2900,8 @@ YAHOO.widget.Panel.prototype.registerDragDrop = function() {
 				var viewPortWidth = YAHOO.util.Dom.getViewportWidth();
 				var viewPortHeight = YAHOO.util.Dom.getViewportHeight();
 
-				var scrollX = window.scrollX || document.documentElement.scrollLeft;
-				var scrollY = window.scrollY || document.documentElement.scrollTop;
+				var scrollX = sourceView.window.scrollX || sourceView.document.documentElement.scrollLeft;
+				var scrollY = sourceView.window.scrollY || sourceView.document.documentElement.scrollTop;
 
 				var topConstraint = scrollY + 10;
 				var leftConstraint = scrollX + 10;
@@ -2953,7 +2953,7 @@ YAHOO.widget.Panel.prototype.registerDragDrop = function() {
 */
 YAHOO.widget.Panel.prototype.buildMask = function() {
 	if (! this.mask) {
-		this.mask = document.createElement("DIV");
+		this.mask = sourceView.document.createElement("DIV");
 		this.mask.id = this.id + "_mask";
 		this.mask.className = "mask";
 		this.mask.innerHTML = "&nbsp;";
@@ -2962,11 +2962,11 @@ YAHOO.widget.Panel.prototype.buildMask = function() {
 			YAHOO.util.Event.stopEvent(e);
 		};
 
-		var firstChild = document.body.firstChild;
+		var firstChild = sourceView.document.body.firstChild;
 		if (firstChild)	{
-			document.body.insertBefore(this.mask, document.body.firstChild);
+			sourceView.document.body.insertBefore(this.mask, sourceView.document.body.firstChild);
 		} else {
-			document.body.appendChild(this.mask);
+			sourceView.document.body.appendChild(this.mask);
 		}
 	}
 };
@@ -2978,7 +2978,7 @@ YAHOO.widget.Panel.prototype.hideMask = function() {
 	if (this.cfg.getProperty("modal") && this.mask) {
 		this.mask.style.display = "none";
 		this.hideMaskEvent.fire();
-		YAHOO.util.Dom.removeClass(document.body, "masked");
+		YAHOO.util.Dom.removeClass(sourceView.document.body, "masked");
 	}
 };
 
@@ -2987,7 +2987,7 @@ YAHOO.widget.Panel.prototype.hideMask = function() {
 */
 YAHOO.widget.Panel.prototype.showMask = function() {
 	if (this.cfg.getProperty("modal") && this.mask) {
-		YAHOO.util.Dom.addClass(document.body, "masked");
+		YAHOO.util.Dom.addClass(sourceView.document.body, "masked");
 		this.sizeMask();
 		this.mask.style.display = "block";
 		this.showMaskEvent.fire();
@@ -3270,13 +3270,13 @@ YAHOO.widget.Dialog.prototype.configButtons = function(type, args, obj) {
 	var buttons = args[0];
 	if (buttons != "none") {
 		this.buttonSpan = null;
-		this.buttonSpan = document.createElement("SPAN");
+		this.buttonSpan = sourceView.document.createElement("SPAN");
 		this.buttonSpan.className = "button-group";
 
 		for (var b=0;b<buttons.length;b++) {
 			var button = buttons[b];
 
-			var htmlButton = document.createElement("BUTTON");
+			var htmlButton = sourceView.document.createElement("BUTTON");
 			htmlButton.setAttribute("type", "button");
 
 			if (button.isDefault) {
@@ -3284,7 +3284,7 @@ YAHOO.widget.Dialog.prototype.configButtons = function(type, args, obj) {
 				this.defaultHtmlButton = htmlButton;
 			}
 
-			htmlButton.appendChild(document.createTextNode(button.text));
+			htmlButton.appendChild(sourceView.document.createTextNode(button.text));
 			YAHOO.util.Event.addListener(htmlButton, "click", button.handler, this, true);
 
 			this.buttonSpan.appendChild(htmlButton);		

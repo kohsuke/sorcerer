@@ -6,13 +6,13 @@
 
   <!-- stock JavaScript from YUI -->
   <link type='text/css' rel='stylesheet' href='menu/menu.css' />
-  <script type='text/javascript' src='resource-files/yahoo.js'></script>
+  <!--script type='text/javascript' src='resource-files/yahoo.js'></script>
   <script type='text/javascript' src='resource-files/dom.js'></script>
   <script type='text/javascript' src='resource-files/event.js'></script>
   <script type='text/javascript' src='resource-files/container.js'></script>
-  <script type='text/javascript' src='resource-files/logger.js'></script>
+  <script type='text/javascript' src='resource-files/logger.js'></script-->
   <link type='text/css' rel='stylesheet' href='resource-files/logger.css' />
-  <script type='text/javascript' src='menu/menu.js'></script>
+  <!--script type='text/javascript' src='menu/menu.js'></script-->
 <!-- HTML generator -->
 <script type="text/javascript">
 // import source view scripts
@@ -20,6 +20,7 @@ var sourceView = window.top.sourceView;
 sourceView.document = document;
 sourceView.window = window;
 
+var YAHOO = window.top.YAHOO;
 
 // invoked from AST JavaScript when loading is complete
 </script>
@@ -39,7 +40,7 @@ var bookmarks = {};
 /*
   prepare context menu hook up for the given span element.
 */
-function prepareMenu(span) {
+sourceView.prepareMenu = function(span) {
   span.onmouseover=function() {
     var xy = YAHOO.util.Dom.getXY(this);
     xy[0] += this.offsetWidth;
@@ -56,7 +57,7 @@ window.onload = function() {
   try {
     // TODO: how to selectively enable debugging?
     // log reader for debugging
-    new YAHOO.widget.LogReader();
+    new YAHOO.widget.LogReader(document.getElementById("yui-log"));
   } catch(e) {
     // in the production environment 
   }
@@ -122,8 +123,8 @@ window.onload = function() {
   document.onclick=function(e) {
     if(YAHOO.util.Event.getTarget(e,false)!=menuSelector)
       menu.hide();
-    if(bookmarkMenu!=null)
-      bookmarkMenu.hide();
+    if(sourceView.bookmarkMenu!=null)
+      sourceView.bookmarkMenu.hide();
   }
 
   // menu selector control
@@ -150,11 +151,10 @@ window.onload = function() {
 }
 </script>
 </head>
-<body>
-<div style='position:relative;'>
-  <!-- the '>' floating tip -->
-  <div id="menuSelector"></div>
+<body><div id="yui-log"></div
+><div style='position:relative;'>
   <pre id=main style='padding-left:3em'></pre>
+  <div id="menuSelector"><!-- the '>' floating tip --></div>
   <pre id=lineNumberTable style='position:absolute; left:0; top:0;'></pre>
 </div>
 </body>

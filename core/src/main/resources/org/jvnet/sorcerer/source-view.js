@@ -1,8 +1,5 @@
 // script used in the source-view.html, but loaded in another frame to reduce the start-up time
 
-var sourceView = {}; // the module definition
-
-
 // HTML generator
 sourceView.builder = makeFull(derive(abstractBuilder,{
   reservedWord : function(name) {
@@ -304,6 +301,11 @@ sourceView.defineStructure = function(className,ast) {
   // render outline
   sourceView.window.top.outline.main.load(ast);
 
+  // hook up menus
+  var spans = sourceView.document.getElementsByTagName("span");
+  for( var i=spans.length-1; i>=0; i--)
+    sourceView.prepareMenu(spans[i]);
+
   YAHOO.log("complete");
 
   lazyInitManager.start();
@@ -354,6 +356,6 @@ sourceView.makeFuture = function(action,timeout) {
   };
 }
 
-YAHOO.log = function(sMsg, sCategory, sSource) {
-  sourceView.window.YAHOO.log(sMsg,sCategory,sSource);
-}
+//YAHOO.log = function(sMsg, sCategory, sSource) {
+//  sourceView.window.YAHOO.log(sMsg,sCategory,sSource);
+//}

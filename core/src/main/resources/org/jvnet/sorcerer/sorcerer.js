@@ -452,21 +452,24 @@ bookmark.prototype = {
   caption: null, // menu caption
   items: [],     // array of menu item builders. Each is a function that returns menuItem.
   onclick: function(anchor) {
-    if(bookmarkMenu!=null)
-      bookmarkMenu.destroy();
-    bookmarkMenu = new YAHOO.widget.Menu("bookmarkmenu");
+      try {
+    YAHOO.log("Showing bookmark menu");
+    if(sourceView.bookmarkMenu!=null)
+      sourceView.bookmarkMenu.destroy();
+    sourceView.bookmarkMenu = new YAHOO.widget.Menu(sourceView.document.getElementById("bookmarkmenu"));
 
     // Add caption
     var captionItem = new YAHOO.widget.MenuItem(this.caption);
     captionItem.cfg.setProperty("disabled",true);
-    bookmarkMenu.addItem(captionItem);
+    sourceView.bookmarkMenu.addItem(captionItem);
 
     // Add items to the main menu
-    this.items.forEach(function(item){bookmarkMenu.addItem(item())});
+    this.items.forEach(function(item){sourceView.bookmarkMenu.addItem(item())});
 
-    bookmarkMenu.render(document.body);
-    bookmarkMenu.cfg.setProperty("context", [anchor, "tl", "bl"]);
-    bookmarkMenu.show();
+    sourceView.bookmarkMenu.render(document.body);
+    sourceView.bookmarkMenu.cfg.setProperty("context", [anchor, "tl", "bl"]);
+    sourceView.bookmarkMenu.show();
+          } catch(e) { window.alert(e); }
   },
   buildAnchor: function() {
     //var a = document.createElement("a");
