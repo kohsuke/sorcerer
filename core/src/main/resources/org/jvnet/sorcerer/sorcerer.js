@@ -360,7 +360,8 @@ function makeFieldEntry(parentDecl, childASTs) {
   if(t.kind=="method")
     t=t.owner;
   f.owner = t;
-  f.href = t.linker.field(t,f.name);
+  if(t.linker)
+    f.href = t.linker.field(t,f.name);
 
   return f;
 }
