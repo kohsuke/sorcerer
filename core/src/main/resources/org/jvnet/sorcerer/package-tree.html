@@ -253,7 +253,6 @@ var linker = {
       var cnode = new YAHOO.widget.TextNode(c, node, false);
       cnode.onLabelClick = function(me) {
         try {
-          top.YAHOO.log("navigation initiated from package-tree");
           top.main.location="source-view.html?"+me.data.script;
           // TODO: the following is clever in the sense that it doesn't reload the source view page,
           // but it renders the back button useless. is there anyway to fix this?

@@ -134,7 +134,7 @@ public class FrameSetGenerator extends AbstractWriter {
 
             PrintWriter w = new PrintWriter(openDefault(outDir,
                 ((PackageElement)pkg).getQualifiedName().toString().replace('.','/')+'/'+ct.getSimpleName()+".js"));
-            w.println("sourceView.redirect('"+ct.getSimpleName()+"','"+primaryName +".js');");
+            w.println("redirect('"+ct.getSimpleName()+"','"+primaryName +".js');");
             w.close();
         }
 

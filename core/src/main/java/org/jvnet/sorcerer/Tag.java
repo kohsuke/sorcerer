@@ -240,14 +240,6 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
                     break;
                 case '\t':
                     throw new IllegalStateException(); // should be eliminated by now by tab expansion
-
-                // HTML escape
-                case '<':
-                    buf.append("&lt;");
-                    break;
-                case '&':
-                    buf.append("&amp;");
-                    break;
                 default:
                     buf.append(ch);
                 }

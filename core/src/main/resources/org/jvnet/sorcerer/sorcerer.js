@@ -62,14 +62,6 @@ function iotaGen() {
 }
 var idGen = iotaGen(); // generate unique IDs for the system use
 
-// add script tag to DOM to load it
-function loadScript(href) {
-    head = document.getElementsByTagName("head")[0];
-    script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = href;
-    head.appendChild(script);
-}
 
 if(YAHOO.widget.MenuItem) {
   YAHOO.widget.MenuItem.prototype.addIcon = function(url) {
@@ -452,24 +444,21 @@ bookmark.prototype = {
   caption: null, // menu caption
   items: [],     // array of menu item builders. Each is a function that returns menuItem.
   onclick: function(anchor) {
-      try {
-    YAHOO.log("Showing bookmark menu");
-    if(sourceView.bookmarkMenu!=null)
-      sourceView.bookmarkMenu.destroy();
-    sourceView.bookmarkMenu = new YAHOO.widget.Menu(sourceView.document.getElementById("bookmarkmenu"));
+    if(bookmarkMenu!=null)
+      bookmarkMenu.destroy();
+    bookmarkMenu = new YAHOO.widget.Menu("bookmarkmenu");
 
     // Add caption
     var captionItem = new YAHOO.widget.MenuItem(this.caption);
     captionItem.cfg.setProperty("disabled",true);
-    sourceView.bookmarkMenu.addItem(captionItem);
+    bookmarkMenu.addItem(captionItem);
 
     // Add items to the main menu
-    this.items.forEach(function(item){sourceView.bookmarkMenu.addItem(item())});
+    this.items.forEach(function(item){bookmarkMenu.addItem(item())});
 
-    sourceView.bookmarkMenu.render(document.body);
-    sourceView.bookmarkMenu.cfg.setProperty("context", [anchor, "tl", "bl"]);
-    sourceView.bookmarkMenu.show();
-          } catch(e) { window.alert(e); }
+    bookmarkMenu.render(document.body);
+    bookmarkMenu.cfg.setProperty("context", [anchor, "tl", "bl"]);
+    bookmarkMenu.show();
   },
   buildAnchor: function() {
     //var a = document.createElement("a");
@@ -546,8 +535,6 @@ var lazyInitManager = {
 
   // adds a new lazy init script
   add: function(f) { this.functions.push(f); },
-
-  reset : function() { this.functions=[]; },
 
   start : function() {
     var idx=0; // next function to execute

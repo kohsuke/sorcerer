@@ -311,7 +311,7 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
      * Writes the preamble.
      */
     protected void writeHeader(JavaScriptStreamWriter out) {
-        out.println("sourceView.defineStructure(");
+        out.println("defineStructure(");
         out.string(TreeUtil.getPrimaryTypeName(compUnit));
         out.print(',');
         out.print("function(factory){with(factory) { ");
