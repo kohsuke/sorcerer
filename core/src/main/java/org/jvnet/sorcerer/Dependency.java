@@ -33,12 +33,10 @@ public abstract class Dependency implements JsonWriter.Writable {
     }
 
     public void write(JsonWriter w) {
-        w.startObject();
         w.property("name",name);
         w.property("baseURL",baseUrl);
         w.propertyUnquoted("linker",getLinker());
         w.property("packages",packageNames);
-        w.endObject();
     }
 
     abstract String getLinker();
