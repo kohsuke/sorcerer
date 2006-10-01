@@ -221,11 +221,11 @@ sourceView.defineStructure = function(className,ast) {
     // wrap by a CSS class
     //   usageKey : optional. usage search key like "java.lang.String#indexOf()"
     css : function(style,usageKey) {
-      var frag = "<span class="+style;
+      var frag = "<span class='"+style;
       if(usageKey!=null)
-        frag+=" u="+usageKey+">";
+        frag+="' u='"+usageKey+"'>";
       else
-        frag+=">";
+        frag+="'>";
       this.html.push(frag);
       this.tags.push("</span>");
       return this;
@@ -233,7 +233,7 @@ sourceView.defineStructure = function(className,ast) {
     // wrap by anchor link
     link : function(href) {
       if(href!=null) {
-        this.html.push("<a href="+href+">");
+        this.html.push("<a href='"+href+"'>");
         this.tags.push("</a>");
       }
       return this;
@@ -241,7 +241,7 @@ sourceView.defineStructure = function(className,ast) {
     // declaration and link at the same time
     declLink : function(href) {
       if(href!=null) {
-        this.html.push("<a href="+href+" id="+href.after("#")+">");
+        this.html.push("<a href='"+href+"' id='"+href.after("#")+"'>");
         this.tags.push("</a>");
       }
       return this;
