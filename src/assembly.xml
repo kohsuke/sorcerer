@@ -25,7 +25,7 @@
   </fileSets>
   <files>
     <file>
-      <source>cli/target/sorcerer-cli-${version}-uberjar.jar</source>
+      <source>uberjar/target/sorcerer-uberjar-${version}-uberjar.jar</source>
       <destName>sorcerer.jar</destName>
     </file>
   </files>
