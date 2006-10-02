@@ -409,7 +409,9 @@ public class ParsedSourceSet {
                         // for the enum constant put the anchor around vt
                         token = gen.findTokenAfter(vt, false, vt.getName().toString());
                     }
-                    gen.add(new Tag.DeclName(lineMap,token));
+                    // TODO: handle declarations like "String abc[]"
+                    if(token!=null)
+                        gen.add(new Tag.DeclName(lineMap,token));
                 }
                 return super.visitVariable(vt,_);
             }
