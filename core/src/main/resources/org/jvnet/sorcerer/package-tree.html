@@ -37,7 +37,7 @@ var linker = {
       baseURL: baseURL, // the base URL of the javadoc
       type : function(t) {
         // A.B.C$D$E => A/B/C.D.E.html
-        return "?"+this.baseURL+t.binaryName.replace(/\./g,"/").replace(/\$/g,".")+".html";
+        return this.baseURL+t.binaryName.replace(/\./g,"/").replace(/\$/g,".")+".html";
       },
       method : function(m) {
         // TODO: javadoc doesn't really use erasure format. Doh!
