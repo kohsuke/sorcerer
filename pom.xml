@@ -52,6 +52,7 @@
     <module>maven-plugin</module>
     <module>cli</module>
     <module>ant</module>
+    <module>uberjar</module>
   </modules>
   <reporting>
     <plugins>

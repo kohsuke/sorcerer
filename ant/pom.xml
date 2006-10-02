@@ -8,17 +8,18 @@
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>sorcerer-ant</artifactId>
   <name>Sorcerer Ant task</name>
-  <version>0.5-SNAPSHOT</version>
+  
   <dependencies>
     <dependency>
       <groupId>org.jvnet.sorcerer</groupId>
       <artifactId>sorcerer-core</artifactId>
-      <version>0.5-SNAPSHOT</version>
+      <version>${pom.version}</version>
     </dependency>
     <dependency>
       <groupId>ant</groupId>
       <artifactId>ant</artifactId>
       <version>1.6</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 </project>

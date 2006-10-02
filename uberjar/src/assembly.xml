@@ -15,6 +15,9 @@
       <outputDirectory>/</outputDirectory>
       <unpack>true</unpack>
       <scope>runtime</scope>
+      <excludes>
+        <exclude>ant:ant</exclude>
+      </excludes>
     </dependencySet>
   </dependencySets>
 </assembly>
