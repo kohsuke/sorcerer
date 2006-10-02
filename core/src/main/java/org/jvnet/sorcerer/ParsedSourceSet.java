@@ -21,7 +21,16 @@ import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
+import org.jvnet.sorcerer.Tag.ClassDecl;
 import org.jvnet.sorcerer.Tag.DeclName;
+import org.jvnet.sorcerer.Tag.FieldDecl;
+import org.jvnet.sorcerer.Tag.FieldRef;
+import org.jvnet.sorcerer.Tag.Literal;
+import org.jvnet.sorcerer.Tag.LocalVarDecl;
+import org.jvnet.sorcerer.Tag.LocalVarRef;
+import org.jvnet.sorcerer.Tag.MethodDecl;
+import org.jvnet.sorcerer.Tag.MethodRef;
+import org.jvnet.sorcerer.Tag.TypeRef;
 import org.jvnet.sorcerer.impl.JavaLexer;
 import org.jvnet.sorcerer.impl.JavaTokenTypes;
 import org.jvnet.sorcerer.util.CharSequenceReader;
@@ -377,7 +386,7 @@ public class ParsedSourceSet {
              * literal string, int, etc. Null.
              */
             public Void visitLiteral(LiteralTree lit, Void _) {
-                gen.add(new Tag.Literal(cu,srcPos,lit));
+                gen.add(new Literal(cu,srcPos,lit));
                 return super.visitLiteral(lit, _);
             }
 
@@ -390,12 +399,12 @@ public class ParsedSourceSet {
                     switch (e.getKind()) {
                     case ENUM_CONSTANT:
                     case FIELD:
-                        gen.add(new Tag.FieldDecl(cu,srcPos,vt));
+                        gen.add(new FieldDecl(cu,srcPos,vt));
                         break;
                     case EXCEPTION_PARAMETER:
                     case LOCAL_VARIABLE:
                     case PARAMETER:
-                        gen.add(new Tag.LocalVarDecl(cu,srcPos,vt,e));
+                        gen.add(new LocalVarDecl(cu,srcPos,vt,e));
                         break;
                     }
 
@@ -411,7 +420,7 @@ public class ParsedSourceSet {
                     }
                     // TODO: handle declarations like "String abc[]"
                     if(token!=null)
-                        gen.add(new Tag.DeclName(lineMap,token));
+                        gen.add(new DeclName(lineMap,token));
                 }
                 return super.visitVariable(vt,_);
             }
@@ -436,11 +445,11 @@ public class ParsedSourceSet {
                         token = gen.findTokenAfter(mt,false,name);
 
                     if(token!=null)
-                        gen.add(new Tag.DeclName(lineMap,token));
+                        gen.add(new DeclName(lineMap,token));
 
                     ParsedType pt = getParsedType((TypeElement) e.getEnclosingElement());
 
-                    gen.add(new Tag.MethodDecl(cu, srcPos, mt, e,
+                    gen.add(new MethodDecl(cu, srcPos, mt, e,
                         pt.findOverriddenMethods(elements, e),
                         pt.findOverridingMethods(elements, e)
                         ));
@@ -466,7 +475,7 @@ public class ParsedSourceSet {
 
                     List<ParsedType> descendants = getParsedType(e).descendants;
 
-                    gen.add(new Tag.ClassDecl(cu, srcPos, ct, e, descendants));
+                    gen.add(new ClassDecl(cu, srcPos, ct, e, descendants));
 
                     if(e.getNestingKind()== NestingKind.ANONYMOUS) {
                         // don't visit the extends and implements clause as
@@ -490,16 +499,16 @@ public class ParsedSourceSet {
                         case CLASS:
                         case ENUM:
                         case INTERFACE:
-                            gen.add(new Tag.TypeRef(cu,srcPos,id,(TypeElement)e));
+                            gen.add(new TypeRef(cu,srcPos,id,(TypeElement)e));
                             break;
                         case FIELD: // such as objects imported by static import.
                         case ENUM_CONSTANT:
-                            gen.add(new Tag.FieldRef(cu,srcPos,id,(VariableElement)e));
+                            gen.add(new FieldRef(cu,srcPos,id,(VariableElement)e));
                             break;
                         case PARAMETER:
                         case EXCEPTION_PARAMETER:
                         case LOCAL_VARIABLE:
-                            gen.add(new Tag.LocalVarRef(cu,srcPos,id,(VariableElement)e));
+                            gen.add(new LocalVarRef(cu,srcPos,id,(VariableElement)e));
                             break;
                         }
                     }
@@ -524,7 +533,7 @@ public class ParsedSourceSet {
                         switch(e.getKind()) {
                         case FIELD:
                         case ENUM_CONSTANT:
-                            gen.add(new Tag.FieldRef(sp,ep,(VariableElement)e));
+                            gen.add(new FieldRef(sp,ep,(VariableElement)e));
                             break;
 
                         // these show up in the import statement
@@ -532,7 +541,7 @@ public class ParsedSourceSet {
                         case CLASS:
                         case ENUM:
                         case INTERFACE:
-                            gen.add(new Tag.TypeRef(sp,ep,(TypeElement)e));
+                            gen.add(new TypeRef(sp,ep,(TypeElement)e));
                             break;
                         }
                     }
@@ -549,9 +558,10 @@ public class ParsedSourceSet {
                 long sp = srcPos.getStartPosition(cu, nt.getIdentifier());
 
                 // marker for jumping to the definition
-                ExecutableElement e = (ExecutableElement) TreeUtil.getElement(nt);
-                if(e!=null) {
-                    TypeElement ownerType = (TypeElement) e.getEnclosingElement();
+                Element e = TreeUtil.getElement(nt);
+                if(e instanceof ExecutableElement) {// this check is needed in case the source code contains errors
+                    ExecutableElement ee = (ExecutableElement) e;
+                    TypeElement ownerType = (TypeElement) ee.getEnclosingElement();
                     if(ownerType.getSimpleName().length()==0) {
                         // if this is the constructor for an anonymous class,
                         // can't link to the constructor as it's synthetic
@@ -559,7 +569,7 @@ public class ParsedSourceSet {
                     } else {
                         // TODO: the identifier tree might contain type parameters, packaga names, etc.
                         // we should visit those
-                        gen.add(new Tag.MethodRef(sp,ep,e));
+                        gen.add(new MethodRef(sp,ep,ee));
                     }
                 }
 
@@ -579,13 +589,14 @@ public class ParsedSourceSet {
              */
             public Void visitMethodInvocation(MethodInvocationTree mi, Void _) {
                 ExpressionTree ms = mi.getMethodSelect(); // PRIMARY.methodName portion
-                ExecutableElement e = (ExecutableElement) TreeUtil.getElement(mi);
-                if(e!=null) {
-                    Name methodName = e.getSimpleName();
+                Element e = TreeUtil.getElement(mi);
+                if (e instanceof ExecutableElement) {// this check is needed in case the source code contains errors 
+                    ExecutableElement ee = (ExecutableElement) e;
+                    Name methodName = ee.getSimpleName();
                     long ep = srcPos.getEndPosition(cu, ms);
                     if(ep>=0) {
                         // marker for the method name (and jump to definition)
-                        gen.add(new Tag.MethodRef(ep-methodName.length(),ep,e));
+                        gen.add(new MethodRef(ep-methodName.length(),ep,ee));
                     }
                 }
 
