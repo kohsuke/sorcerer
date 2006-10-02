@@ -195,66 +195,6 @@ public class DefaultAstGenerator extends AstGenerator {
         tree.write(out);
     }
 
-    ///**
-    // * Just write sthe body annotated source code without a surrounding
-    // * &lt;body> tag. This method can be invoked directly if the caller
-    // * wants to embed the generated HTML into a bigger HTML document.
-    // */
-    //public void writeBody(PrintWriter out) throws IOException {
-    //    Reader in = new StringReader(sourceFile);
-    //    Collections.sort(tags);
-    //
-    //    char[] buf = new char[256];
-    //
-    //    MarkerStack opened = new MarkerStack();
-    //    MarkerScanner upcoming = new MarkerScanner();
-    //
-    //    long curPos = 0;    // chars from input that are written so far
-    //
-    //    writeNewLine(out);
-    //
-    //    OUTER:
-    //    while(true) {
-    //        // determine the next marker position
-    //        Marker lhs = opened.peek();
-    //        Marker rhs = upcoming.peek();
-    //
-    //        long nextPos = Math.min(getPos(lhs,false),getPos(rhs,true));
-    //
-    //        // read until nextPos
-    //        while(curPos<nextPos) {
-    //            int sz = in.read(buf,0, (int)Math.min(nextPos-curPos,buf.length));
-    //            if(sz<0)    break OUTER; // all streams read
-    //            writeSourceCode(out, buf, sz);
-    //            curPos += sz;
-    //        }
-    //
-    //        if(getPos(lhs,false)==nextPos) {
-    //            lhs.writeEnd(out);
-    //            opened.pop();
-    //        } else {
-    //            rhs.writeStart(out);
-    //            opened.push(rhs);
-    //            upcoming.pop();
-    //        }
-    //    }
-    //
-    //    while(upcoming.peek()!=null) {
-    //        Marker m = upcoming.pop();
-    //        m.writeStart(out);
-    //        opened.push(m);
-    //    }
-    //
-    //    while(opened.peek()!=null) {
-    //        opened.pop().writeEnd(out);
-    //    }
-    //
-    //    writeEOL(out);
-    //
-    //    in.close();
-    //    // don't close out
-    //}
-
     /**
      * Writes the bytes from the source code.
      *
@@ -316,38 +256,6 @@ public class DefaultAstGenerator extends AstGenerator {
         out.print(',');
         out.print("function(factory){with(factory) { ");
         out.i().nl();
-
-        //out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">");
-        //out.println("<html><head>");
-        //if(css==null)
-        //    css = relativeLinkToTop+"style.css";
-        //writeCssTag(out, css);
-        //writeCssTag(out,relativeLinkToTop+"menu/menu.css");
-        //
-        //writeScriptTag(out,"resource-files/yahoo.js");
-        //writeScriptTag(out,"resource-files/dom.js");
-        //writeScriptTag(out,"resource-files/event.js");
-        //writeScriptTag(out,"resource-files/container_core.js");
-        //writeScriptTag(out,"menu/menu.js");
-        //writeScriptTag(out,"behavior.js");
-        //writeScriptTag(out,"sorcerer.js");
-        //out.println("</head>");
-        //
-        //writeBodyTag(out);
-        //out.println("<div style='position:relative;'>");
-        //
-        //// IE6 aligns the absolute positioned box to the first box, so use this dummy div to make it align to
-        //// the proper palce
-        //out.print("<div style='height:0px; overflow:hidden'></div>");
-        //out.print("<pre id=main style='padding-left:3em'>");
-    }
-
-    private void writeCssTag(PrintWriter out, String name) {
-        out.println("<link type='text/css' rel='stylesheet' href='"+name +"' />");
-    }
-
-    private void writeScriptTag(PrintWriter out, String name) {
-        out.println("<script type='text/javascript' src='"+relativeLinkToTop+name+"'></script>");
     }
 
     /**
