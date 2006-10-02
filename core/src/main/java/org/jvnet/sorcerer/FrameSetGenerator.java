@@ -103,7 +103,7 @@ public class FrameSetGenerator extends AbstractWriter {
             if(parent!=null)    // null if outDir was "."
                 parent.mkdirs();
 
-            FrameHtmlGenerator gen = new FrameHtmlGenerator(pss,cu);
+            DefaultHtmlGenerator gen = new DefaultHtmlGenerator(pss,cu);
             gen.setCss(css.href(cu));
             gen.write(out);
         }
