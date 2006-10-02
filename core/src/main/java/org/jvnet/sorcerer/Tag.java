@@ -360,16 +360,12 @@ public abstract class Tag implements Iterable<Tag>, Comparable<Tag> {
      * Field declaration.
      */
     public static final class FieldDecl extends Tag {
-        private final VariableElement var;
-
-        public FieldDecl(CompilationUnitTree cu, SourcePositions srcPos, VariableTree vt, VariableElement var) {
+        public FieldDecl(CompilationUnitTree cu, SourcePositions srcPos, VariableTree vt) {
             super(cu,srcPos,vt);
-            this.var = var;
         }
 
-        public FieldDecl(LineMap lineMap, Token t, VariableElement var) {
+        public FieldDecl(LineMap lineMap, Token t) {
             super(lineMap, t);
-            this.var = var;
         }
 
         @Override

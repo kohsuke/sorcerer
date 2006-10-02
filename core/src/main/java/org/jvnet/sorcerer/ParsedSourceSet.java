@@ -390,7 +390,7 @@ public class ParsedSourceSet {
                     switch (e.getKind()) {
                     case ENUM_CONSTANT:
                     case FIELD:
-                        gen.add(new Tag.FieldDecl(cu,srcPos,vt,e));
+                        gen.add(new Tag.FieldDecl(cu,srcPos,vt));
                         break;
                     case EXCEPTION_PARAMETER:
                     case LOCAL_VARIABLE:
