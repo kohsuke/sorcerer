@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @author Kohsuke Kawaguchi
  */
-public class HtmlGenerator {
+public class AstGenerator {
 
     protected final List<Tag> tags = new ArrayList<Tag>();
 
@@ -36,7 +36,7 @@ public class HtmlGenerator {
     protected final CompilationUnitTree compUnit;
 
 
-    protected HtmlGenerator(ParsedSourceSet pss, CompilationUnitTree cu) throws IOException {
+    protected AstGenerator(ParsedSourceSet pss, CompilationUnitTree cu) throws IOException {
         this.pss = pss;
         this.compUnit = cu;
         sourceFile = cu.getSourceFile().getCharContent(true);
@@ -44,7 +44,7 @@ public class HtmlGenerator {
         //long ep = pss.getSourcePositions().getEndPosition(cu, cu);
         //totalLines = cu.getLineMap().getLineNumber(ep);
 
-        // fill in the HtmlGenerator
+        // fill in the AstGenerator
         pss.configure(cu,this);
     }
 

@@ -23,11 +23,11 @@ import java.util.StringTokenizer;
  * <p>
  * Certain aspects of the HTML generation is customizable via properties
  * of this class. To make a drastic change, you can also choose to
- * derive directly from {@link HtmlGenerator}.
+ * derive directly from {@link AstGenerator}.
  *
  * @author Kohsuke Kawaguchi
  */
-public class DefaultHtmlGenerator extends HtmlGenerator {
+public class DefaultAstGenerator extends AstGenerator {
     /**
      * Current line number being written.
      */
@@ -49,7 +49,7 @@ public class DefaultHtmlGenerator extends HtmlGenerator {
      */
     protected final String relativeLinkToTop;
 
-    public DefaultHtmlGenerator(ParsedSourceSet pss, CompilationUnitTree cu) throws IOException {
+    public DefaultAstGenerator(ParsedSourceSet pss, CompilationUnitTree cu) throws IOException {
         super(pss, cu);
 
         StringBuilder b = new StringBuilder();

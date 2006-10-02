@@ -317,11 +317,11 @@ public class ParsedSourceSet {
     }
 
     /**
-     * Invoked by {@link HtmlGenerator}'s constructor to complete the initialization.
+     * Invoked by {@link AstGenerator}'s constructor to complete the initialization.
      * <p>
      * This is where the actual annotation of the source code happens.
      */
-    protected void configure(final CompilationUnitTree cu, final HtmlGenerator gen) throws IOException {
+    protected void configure(final CompilationUnitTree cu, final AstGenerator gen) throws IOException {
         final LineMap lineMap = cu.getLineMap();
 
         // add lexical markers
