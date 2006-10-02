@@ -8,7 +8,6 @@ import org.jvnet.sorcerer.Analyzer;
 import org.jvnet.sorcerer.Dependency;
 import org.jvnet.sorcerer.FrameSetGenerator;
 import org.jvnet.sorcerer.ParsedSourceSet;
-import org.jvnet.sorcerer.util.CSSHandler;
 import org.jvnet.sorcerer.util.DiagnosticPrinter;
 
 import java.io.File;
@@ -29,7 +28,6 @@ public class SorcererTask extends MatchingTask {
     private File dir;
     private File destDir;
     private String encoding;
-    private File css;
     private String windowTitle;
     private int tabWidth = 8;
 
@@ -53,10 +51,6 @@ public class SorcererTask extends MatchingTask {
 
     public void setDestdir(File destDir) {
         this.destDir = destDir;
-    }
-
-    public void setCss(File css) {
-        this.css = css;
     }
 
     public void setEncoding(String encoding) {
@@ -100,23 +94,13 @@ public class SorcererTask extends MatchingTask {
             ParsedSourceSet pss = a.analyze(new DiagnosticPrinter());
             addDependencies(pss.getDependencies());
 
-            CSSHandler css = createCSSHandler();
-
             FrameSetGenerator fsg = new FrameSetGenerator(pss);
             if(windowTitle!=null)
                 fsg.setTitle(windowTitle);
-            fsg.generateAll(destDir,css);
-            css.copy(destDir);
+            fsg.generateAll(destDir);
         } catch (IOException e) {
             throw new BuildException(e);
         }
-    }
-
-    private CSSHandler createCSSHandler() {
-        if(css!=null)
-            return new CSSHandler.User(css);
-        else
-            return new CSSHandler.Default();
     }
 
     private void addDependencies(List<Dependency> dependencies) throws IOException {

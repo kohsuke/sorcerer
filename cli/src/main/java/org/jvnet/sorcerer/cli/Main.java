@@ -5,7 +5,6 @@ import org.jvnet.sorcerer.Dependency;
 import org.jvnet.sorcerer.Dependency.Javadoc;
 import org.jvnet.sorcerer.FrameSetGenerator;
 import org.jvnet.sorcerer.ParsedSourceSet;
-import org.jvnet.sorcerer.util.CSSHandler;
 import org.jvnet.sorcerer.util.DiagnosticPrinter;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
@@ -122,13 +121,6 @@ public class Main {
         p.printUsage(out);
     }
 
-    private CSSHandler createCSSHandler() {
-        if(userCss!=null)
-            return new CSSHandler.User(userCss);
-        else
-            return new CSSHandler.Default();
-    }
-
     private void run() throws IOException, CmdLineException {
         if(debug)
             System.setProperty("sorcerer.debug","true");
@@ -161,10 +153,7 @@ public class Main {
         ParsedSourceSet pss = a.analyze(new DiagnosticPrinter());
         addDependency(pss.getDependencies());
 
-        CSSHandler css = createCSSHandler();
-
-        new FrameSetGenerator(pss).generateAll(outDir,css);
-        css.copy(outDir);
+        new FrameSetGenerator(pss).generateAll(outDir);
     }
 
     /**

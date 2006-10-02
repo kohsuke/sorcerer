@@ -4,7 +4,6 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.util.TreePath;
-import org.jvnet.sorcerer.util.AbstractResourceResolver;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;
 import org.jvnet.sorcerer.util.TreeUtil;
@@ -46,6 +45,7 @@ import java.util.TreeMap;
 public class FrameSetGenerator extends AbstractWriter {
 
     private String title = "Sorcerer report";
+
     /**
      * Reference to the unnamed package.
      */
@@ -74,23 +74,6 @@ public class FrameSetGenerator extends AbstractWriter {
      * Generates all the HTML files into the given directory.
      */
     public void generateAll(File outDir) throws IOException {
-        generateAll(outDir,null);
-    }
-
-    /**
-     * Generates all the HTML files into the given directory.
-     *
-     * @param css
-     *      If specified, path to CSS will computed by using this resolver
-     */
-    public void generateAll(File outDir, ResourceResolver css) throws IOException {
-        if(css==null) {
-            css = new AbstractResourceResolver() {
-                public String href(CompilationUnitTree compUnit) {
-                    return getRelativePathToTop(compUnit)+"style.css";
-                }
-            };
-        }
 
         for (CompilationUnitTree cu : pss.getCompilationUnits()) {
             ExpressionTree packageName = cu.getPackageName();
@@ -103,8 +86,7 @@ public class FrameSetGenerator extends AbstractWriter {
             if(parent!=null)    // null if outDir was "."
                 parent.mkdirs();
 
-            DefaultAstGenerator gen = new DefaultAstGenerator(pss,cu);
-            gen.setCss(css.href(cu));
+            AstGenerator gen = new AstGenerator(pss,cu);
             gen.write(out);
         }
 
@@ -188,11 +170,15 @@ public class FrameSetGenerator extends AbstractWriter {
 
 
     public void generateIndex(PrintWriter w) throws IOException {
-        BufferedReader r = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("index.html")));
+        generateWithMacro("index.html", w, "title", title);
+    }
+
+    private void generateWithMacro(String resourceName, PrintWriter w, String key, String value) throws IOException {
+        BufferedReader r = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(resourceName)));
         String line;
 
         while((line=r.readLine())!=null) {
-            line = line.replaceAll("\\$\\{title\\}",title);
+            line = line.replaceAll("\\$\\{"+ key +"\\}", value);
             w.println(line);
         }
 
