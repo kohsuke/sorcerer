@@ -2,6 +2,7 @@ package org.jvnet.sorcerer;
 
 import com.sun.source.util.JavacTask;
 import com.sun.tools.javac.api.JavacTool;
+import org.jvnet.sorcerer.IprParser.Library;
 import org.jvnet.sorcerer.util.TabExpandingFileManager;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -91,6 +92,11 @@ public class Analyzer {
                 pp.moduleDir = module.getParentFile();
                 parser.parse(module, pp);
             }
+
+            for (File source : pp.sources)
+                addSourceFolder(source);
+            for (Library library : pp.libraries)
+                library.addTo(this);
         } catch (ParserConfigurationException e) {
             throw new IOException(e);
         } catch (SAXException e) {
