@@ -3,6 +3,7 @@ package org.jvnet.sorcerer;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.SourcePositions;
+import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 
 /**
@@ -21,6 +22,12 @@ final class SourcePositionsWrapper implements SourcePositions {
         long pos = this.pos.getStartPosition(file, tree);
         if(pos==-1 && tree instanceof JCVariableDecl) {
             return ((JCVariableDecl)tree).pos;
+        }
+        if(pos==-1 && tree instanceof JCMethodDecl) {
+            // a bug in the constructor start position detection
+            JCMethodDecl mt = (JCMethodDecl) tree;
+            if(mt.restype==null)
+                return mt.pos;
         }
         return pos;
     }

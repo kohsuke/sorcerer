@@ -437,7 +437,11 @@ public class ParsedSourceSet {
 
                     // mark up the method name
                     Tree prev = mt.getReturnType();
-                    String name = mt.getName().toString();
+                    String name;
+                    if(e.getKind()== ElementKind.CONSTRUCTOR)
+                        name = e.getEnclosingElement().getSimpleName().toString();
+                    else // constructor returns <init> from getName(), so we need the above code
+                        name = mt.getName().toString();
                     Token token;
                     if(prev!=null)
                         token = gen.findTokenAfter(prev, true, name);
