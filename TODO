@@ -3,6 +3,9 @@ show stoppers
 - package local types in another compilation unit doesn't get proper IDs.
 - main page is slow to load. move most JavaScript to another frame.
   (in place reloading is not very attractive because it renders the back button useless.)
+- jump to a line number doesn't work correctly from findUsage
+- if there's only one hit in the find usage, jump right away
+- outline method list doesn't have parameter type names.
 
 other issues
 ------------
