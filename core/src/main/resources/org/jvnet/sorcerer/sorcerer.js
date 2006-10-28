@@ -411,7 +411,7 @@ var abstractBuilder = {
         m.params = e[2];
         for(var j=0;j<m.params.length;j++) {
           if(typeof m.params[j] == "number")
-            m.params[j] = types[m.params[j]].fullName;
+            m.params[j] = types[m.params[j]].fullDisplayName();
         }
 
         m.css = e[3];
