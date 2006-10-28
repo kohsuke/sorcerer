@@ -465,10 +465,13 @@ public class ParsedSourceSet {
                 TypeElement e = (TypeElement) TreeUtil.getElement(ct);
                 if(e!=null) {
                     // put the marker on the class name portion.
-                    Token token;
+                    Token token=null;
                     if(ct.getModifiers()!=null)
                         token = gen.findTokenAfter(ct.getModifiers(), true, ct.getSimpleName().toString());
-                    else
+                        // on enum class, like "public enum En {ABC,DEF}", the above returns null somehow.
+                        // so go with the plan B if it's not found.
+                        // TODO: report to javac team
+                    if(token==null)
                         token = gen.findTokenAfter(ct, false, ct.getSimpleName().toString());
                     if(token!=null)
                         gen.add(new DeclName(lineMap, token));
