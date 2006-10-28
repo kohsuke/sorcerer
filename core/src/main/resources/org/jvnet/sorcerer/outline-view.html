@@ -109,7 +109,7 @@ var builder = makeFull(derive(abstractBuilder,{
     child.children = [];
     child.kind = kind;
     child.local = context.isLocal;
-    child.name = decl.displayText();
+    child.name = decl.outlineTitle();
     child.href = decl.href;
     // access is filled later
 
@@ -156,10 +156,7 @@ var builder = makeFull(derive(abstractBuilder,{
 
   I : function(text) { // identifier in method/class declaration
     var f= function(context) {
-        if(!context.node.afterName) {
-          context.node.name=text;
-          context.node.afterName=true;
-        }
+      context.node.afterName=true;
     }
     f.identifier = text;
     return f;

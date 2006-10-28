@@ -277,7 +277,8 @@ var tableEntry = {
   css:  null,   // CSS classes to be used for referencing this method
   href : null,  // link to the definition of this method
   usage : function(){},  // computes the "find usage" index key.
-  displayText : function() {} // computes the text to be displayed
+  displayText : function() {}, // computes the text to be displayed in the source view
+  outlineTitle : function() { return this.displayText(); } // compute the text to be displayed in the outline view
 };
 
 var typeTableEntry = derive(tableEntry,{
@@ -312,6 +313,15 @@ var methodTableEntry = derive(tableEntry,{
   },
   displayText : function() {
     return this.name;
+  },
+  outlineTitle : function() {
+    var s = this.name+'(';
+    for(var i=0; i<this.params.length; i++) {
+      if(i!=0) s+=',';
+      s+=this.params[i].after('.');
+    }
+    s+=')';
+    return s;
   },
 
   owner: null, // reference to owner type
