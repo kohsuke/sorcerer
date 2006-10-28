@@ -131,6 +131,16 @@ public class Main {
             File file = new File(f);
             if(!file.exists())
                 throw new CmdLineException("No such file nor directory exists: "+file);
+
+            if(file.getName().equals(".classpath")) {
+                a.parseDotClassPath(file.getAbsoluteFile().getParentFile());
+                continue;
+            }
+            if(file.getName().endsWith(".ipr")) {
+                a.parseIpr(file);
+                continue;
+            }
+
             if(file.isDirectory()) {
                 if(auto)
                     autoScan(file,a);
@@ -159,15 +169,27 @@ public class Main {
     /**
      * Automatically scan the directories and look for source files.
      */
-    private void autoScan(File f,Analyzer a) {
+    private void autoScan(File f,Analyzer a) throws IOException {
         String name = f.getName();
 
         if(IGNORABLE.contains(name))
             return; //
 
+        File eclipseProject = new File(f, ".classpath");
+        if(eclipseProject.exists()) {
+            a.parseDotClassPath(f);
+            return;
+        }
+
         if(f.isDirectory()) {
             File[] files = f.listFiles();
             if(files!=null) {
+                for (File file : files) {
+                    if(file.getName().endsWith(".ipr")) {
+                        a.parseIpr(file);
+                        return;
+                    }
+                }
                 for (File file : files)
                     autoScan(file,a);
             }

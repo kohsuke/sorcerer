@@ -3,6 +3,9 @@ package org.jvnet.sorcerer;
 import com.sun.source.util.JavacTask;
 import com.sun.tools.javac.api.JavacTool;
 import org.jvnet.sorcerer.util.TabExpandingFileManager;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.DiagnosticListener;
@@ -11,6 +14,9 @@ import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -61,6 +67,84 @@ public class Analyzer {
      */
     public void addClasspath(File f) {
         classpath.add(f);
+    }
+
+    /**
+     * Reads a <tt>*.ipr</tt> from IntelliJ IDEA and
+     * sets up classpath and source directories.
+     *
+     * @param iprFile
+     *      The .ipr file to be parsed.
+     * @throws IOException
+     *      If the parsing of the file fails for some reasons.
+     */
+    public void parseIpr(File iprFile) throws IOException {
+        try {
+            iprFile = iprFile.getAbsoluteFile();
+
+            IprParser pp = new IprParser(iprFile.getParentFile());
+            SAXParser parser = createXMLReader();
+
+            parser.parse(iprFile,pp);
+
+            for (File module : pp.modules) {
+                pp.moduleDir = module.getParentFile();
+                parser.parse(module, pp);
+            }
+        } catch (ParserConfigurationException e) {
+            throw new IOException(e);
+        } catch (SAXException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Reads a <tt>.classpath</tt> file from Eclipse and 
+     * sets up classpath and source directories.
+     *
+     * @param dir
+     *      The directory that contains <tt>.classpath</tt>.
+     * @throws IOException
+     *      If the parsing of the file fails for some reasons. 
+     */
+    public void parseDotClassPath(File dir) throws IOException {
+        // all entries in .classpath are relative to this directory.
+        final File baseDir = dir.getAbsoluteFile();
+
+        try {
+            createXMLReader().parse(new File(dir,".classpath"),
+                new DefaultHandler() {
+                    public void startElement(String uri,String localName,String qname, Attributes atts) {
+                        if( !localName.equals("classpathentry") )
+                            return; // unknown
+
+                        String kind = atts.getValue("kind");
+                        if(kind.equals("src"))
+                            addSourceFolder(absolutize(atts.getValue("path")));
+                        if(kind.equals("lib"))
+                            addClasspath(absolutize(atts.getValue("path")));
+                    }
+
+                    private File absolutize( String path ) {
+                        path = path.replace('/',File.separatorChar);
+                        File child = new File(path);
+                        if(child.isAbsolute())
+                            return child;
+                        else
+                            return new File(baseDir,path);
+                    }
+                });
+        } catch (SAXException e) {
+            throw new IOException(e);
+        } catch (ParserConfigurationException e) {
+            throw new IOException(e);
+        }
+    }
+
+    private SAXParser createXMLReader() throws SAXException, ParserConfigurationException {
+        SAXParserFactory spf =SAXParserFactory.newInstance();
+        spf.setNamespaceAware(true);
+        return spf.newSAXParser();
     }
 
     /**
