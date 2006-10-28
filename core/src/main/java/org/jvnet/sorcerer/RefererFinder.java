@@ -4,6 +4,7 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import org.jvnet.sorcerer.util.TreeUtil;
@@ -25,18 +26,20 @@ final class RefererFinder extends TreePathScanner<Void,Void> {
      *      keys are the fields and methods defined on the given type.
      *      values are all the tree nodes where it's actually referenced.
      */
-    static Map<Element,Set<TreePath>> find(ParsedType t) {
-        RefererFinder finder = new RefererFinder(t.element);
+    static Map<Element,Set<TreePath>> find(ParsedType t, SourcePositions pos) {
+        RefererFinder finder = new RefererFinder(t.element,pos);
         for (CompilationUnitTree cu : t.getReferers())
             finder.scan(cu,null);
         return finder.result;
     }
 
+    private final SourcePositions pos;
     private final TypeElement type;
     private final Map<Element,Set<TreePath>> result = new HashMap<Element,Set<TreePath>>();
 
-    private RefererFinder(TypeElement type) {
+    private RefererFinder(TypeElement type,SourcePositions pos) {
         this.type = type;
+        this.pos = pos;
     }
 
     protected void candidate(Element e) {
@@ -64,10 +67,15 @@ final class RefererFinder extends TreePathScanner<Void,Void> {
     }
 
     private void add(Element e) {
+        TreePath p = getCurrentPath();
+        long pos = this.pos.getStartPosition(p.getCompilationUnit(), p.getLeaf());
+        if(pos==-1)
+            return;
+        
         Set<TreePath> trees = result.get(e);
         if(trees==null)
             result.put(e,trees=new HashSet<TreePath>());
-        trees.add(getCurrentPath());
+        trees.add(p);
     }
 
 

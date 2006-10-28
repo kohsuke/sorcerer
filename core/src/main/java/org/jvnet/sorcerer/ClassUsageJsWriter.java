@@ -28,7 +28,7 @@ public class ClassUsageJsWriter extends AbstractWriter {
         pw.println("setClassUsage('"+type.element.getQualifiedName()+"',");
         JsonWriter w = new JsonWriter(pw);
         w.startObject();
-        for (Entry<Element, Set<TreePath>> e : type.findReferers().entrySet()) {
+        for (Entry<Element, Set<TreePath>> e : type.findReferers(pss.getSourcePositions()).entrySet()) {
             w.key(getKeyName(type,e.getKey()));
             NodePkgInfo root = new NodePkgInfo("");
 

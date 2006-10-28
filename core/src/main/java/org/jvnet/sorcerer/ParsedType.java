@@ -2,6 +2,7 @@ package org.jvnet.sorcerer;
 
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
 import org.jvnet.sorcerer.util.TreeUtil;
 
@@ -316,8 +317,8 @@ public final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement>
      * This involves a non-trivial computation, but it does use
      * index so it's faster than scanning the whole source tree.
      */
-    public Map<Element,Set<TreePath>> findReferers() {
-        return RefererFinder.find(this);
+    public Map<Element,Set<TreePath>> findReferers(SourcePositions pos) {
+        return RefererFinder.find(this,pos);
     }
 
 
