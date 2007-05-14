@@ -3,6 +3,7 @@ package org.jvnet.sorcerer;
 import com.sun.source.util.JavacTask;
 import com.sun.tools.javac.api.JavacTool;
 import org.jvnet.sorcerer.IprParser.Library;
+import org.jvnet.sorcerer.util.IOException2;
 import org.jvnet.sorcerer.util.TabExpandingFileManager;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -98,9 +99,9 @@ public class Analyzer {
             for (Library library : pp.libraries)
                 library.addTo(this);
         } catch (ParserConfigurationException e) {
-            throw new IOException(e);
+            throw new IOException2(e);
         } catch (SAXException e) {
-            throw new IOException(e);
+            throw new IOException2(e);
         }
     }
 
@@ -141,9 +142,9 @@ public class Analyzer {
                     }
                 });
         } catch (SAXException e) {
-            throw new IOException(e);
+            throw new IOException2(e);
         } catch (ParserConfigurationException e) {
-            throw new IOException(e);
+            throw new IOException2(e);
         }
     }
 
