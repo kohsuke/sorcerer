@@ -2,7 +2,7 @@
 #
 # create a distribution package
 cd target/checkout
-mvn -o clean package
+mvn -o clean install
 pushd uberjar
 mvn -o assembly:assembly
 popd
