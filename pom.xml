@@ -53,6 +53,7 @@
     <module>maven-plugin</module>
     <module>cli</module>
     <module>ant</module>
+    <module>stapler</module>
     <module>uberjar</module>
   </modules>
   <reporting>
