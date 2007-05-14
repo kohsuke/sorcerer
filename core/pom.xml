@@ -39,11 +39,9 @@
   </build>
   <dependencies>
     <dependency>
-      <groupId>sun.jdk</groupId>
-      <artifactId>tools</artifactId>
-      <version>1.6.0</version>
-      <scope>system</scope>
-      <systemPath>${java.home}/../lib/tools.jar</systemPath>
+      <groupId>org.jvnet.sorcerer</groupId>
+      <artifactId>sorcerer-javac</artifactId>
+      <version>${version}</version>
     </dependency>
     <dependency>
       <groupId>antlr</groupId>
