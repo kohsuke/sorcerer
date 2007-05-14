@@ -23,16 +23,18 @@ import java.util.Map;
 public class Sorcerer {
     private final FrameSetGenerator fsg;
     private final long timestamp;
+    private final long expiration;
 
     private final Map<String,Generator> generators = new HashMap<String, Generator>();
 
     public Sorcerer(final ParsedSourceSet pss) throws IOException {
-        this(pss,new Date().getTime());
+        this(pss,new Date().getTime(),0);
     }
 
-    public Sorcerer(final ParsedSourceSet pss, long timestamp) throws IOException {
+    public Sorcerer(final ParsedSourceSet pss, long timestamp, long expiration) throws IOException {
         this.fsg = new FrameSetGenerator(pss);
         this.timestamp = timestamp;
+        this.expiration = expiration;
 
         for (final CompilationUnitTree cu : pss.getCompilationUnits()) {
             generators.put(new AstGenerator(pss,cu).getRelativePath(),
@@ -98,7 +100,7 @@ public class Sorcerer {
             return;
         }
 
-        if(req.checkIfModified(timestamp,rsp))
+        if(req.checkIfModified(timestamp,rsp,expiration))
             return;
 
         g.doDynamic(req,rsp);
