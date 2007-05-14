@@ -8,5 +8,5 @@ public class Foo {
     Foo(Foo z) {}
     int x;
     Foo y;
-    Foo test(Foo f) { return f; }
+    Foo test(Foo f) { System.out.println(char.class); return f; }
 }
