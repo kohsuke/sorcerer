@@ -2,7 +2,6 @@ package org.jvnet.sorcerer;
 
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.ExpressionTree;
 import com.sun.source.util.TreePath;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;
@@ -15,7 +14,6 @@ import javax.lang.model.element.TypeElement;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -76,18 +74,8 @@ public class FrameSetGenerator extends AbstractWriter {
     public void generateAll(File outDir) throws IOException {
 
         for (CompilationUnitTree cu : pss.getCompilationUnits()) {
-            ExpressionTree packageName = cu.getPackageName();
-            String pkg = packageName==null?"":packageName.toString().replace('.','/')+'/';
-
-            String name = TreeUtil.getPrimaryTypeName(cu);
-
-            File out = new File(outDir, pkg + name+".js");
-            File parent = out.getParentFile();
-            if(parent!=null)    // null if outDir was "."
-                parent.mkdirs();
-
             AstGenerator gen = new AstGenerator(pss,cu);
-            gen.write(out);
+            gen.write(outDir);
         }
 
         generateIndex(new PrintWriter(open(outDir,"index.html")));
@@ -142,32 +130,15 @@ public class FrameSetGenerator extends AbstractWriter {
             }
         }
 
-        // other resources from core
+        // resource files
         System.out.println("Generating static resource files");
-        copyResource(outDir, "sorcerer.js");
-        copyResource(outDir, "style.css");
-
-        new File(outDir,"menu").mkdir();
-        copyResource(outDir, "menu/menu.css");
-        copyResource(outDir, "menu/rightarrow.gif");
-        copyResource(outDir, "menu/menu.js");
-
-
         // frameset specific resources
         for (String res : RESOURCES) {
             File o = new File(outDir, res);
             o.getParentFile().mkdirs();
-            InputStream in = Analyzer.class.getResourceAsStream(res);
-            if(in==null)
-                throw new Error("Resource "+res+" not found");
-            IOUtil.copy(in,o);
+            IOUtil.copy(res,o);
         }
     }
-
-    private void copyResource(File outDir, String resourceName) throws IOException {
-        IOUtil.copy(resourceName,new File(outDir,resourceName));
-    }
-
 
     public void generateIndex(PrintWriter w) throws IOException {
         generateWithMacro("index.html", w, "title", title);
@@ -298,12 +269,15 @@ public class FrameSetGenerator extends AbstractWriter {
 
 
 
-
-
-    private static final List<String> RESOURCES = new ArrayList<String>();
+    public static final List<String> RESOURCES = new ArrayList<String>();
 
     static {
-        RESOURCES.addAll(Arrays.asList( new String[]{
+        RESOURCES.addAll(Arrays.asList(
+            "sorcerer.js",
+            "style.css",
+            "menu/menu.css",
+            "menu/rightarrow.gif",
+            "menu/menu.js",            
             "package-tree.html",
             "package-toolbar.html",
             "package-container.html",
@@ -334,7 +308,7 @@ public class FrameSetGenerator extends AbstractWriter {
             "resource-files/tree/vline.gif",
             "resource-files/tree/treeview.js",
             "resource-files/tree/license.txt"
-        }));
+        ));
 
         for(String name : new String[]{"lm","lp","tm","tp"}) {
             for( String folder : new String[]{"noicon"}) {

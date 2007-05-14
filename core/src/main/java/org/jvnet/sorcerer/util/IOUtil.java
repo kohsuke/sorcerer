@@ -24,8 +24,16 @@ public final class IOUtil {
         copy(i,output);
     }
 
+    public static void copy(String resourceName, OutputStream output) throws IOException {
+        InputStream i = Analyzer.class.getResourceAsStream(resourceName);
+        copy(i,output);
+    }
+
     public static void copy(InputStream i, File output) throws IOException {
-        OutputStream o = new FileOutputStream(output);
+        copy(i, new FileOutputStream(output));
+    }
+
+    public static void copy(InputStream i, OutputStream o) throws IOException {
         byte[] buf = new byte[4096];
 
         int len;

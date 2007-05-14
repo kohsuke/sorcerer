@@ -3,6 +3,7 @@ package org.jvnet.sorcerer;
 import antlr.Token;
 import antlr.TokenStreamException;
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LineMap;
 import com.sun.source.tree.Tree;
 import org.jvnet.sorcerer.Tag.Root;
@@ -30,7 +31,7 @@ import java.util.StringTokenizer;
  *
  * @author Kohsuke Kawaguchi
  */
-final class AstGenerator {
+public final class AstGenerator {
 
     protected final List<Tag> tags = new ArrayList<Tag>();
 
@@ -59,7 +60,7 @@ final class AstGenerator {
      */
     protected final String relativeLinkToTop;
 
-    AstGenerator(ParsedSourceSet pss, CompilationUnitTree cu) throws IOException {
+    public AstGenerator(ParsedSourceSet pss, CompilationUnitTree cu) throws IOException {
         this.pss = pss;
         this.compUnit = cu;
         sourceFile = cu.getSourceFile().getCharContent(true);
@@ -103,14 +104,42 @@ final class AstGenerator {
     public void write(OutputStream os) throws IOException {
         // TODO: think about encoding.
         Writer w = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
+        write(w);
+    }
+
+    /**
+     * Writes the complete structure java script.
+     *
+     * @param w
+     *      The writer to receive JavaScript.
+     */
+    public void write(Writer w) throws IOException {
         write(new JavaScriptStreamWriter(w,pss));
         w.flush();
     }
 
     /**
+     * Gets the relative path name inside the output directory where
+     * the AST JavaScript should be written.
+     */
+    public String getRelativePath() {
+        ExpressionTree packageName = compUnit.getPackageName();
+        String pkg = packageName==null?"":packageName.toString().replace('.','/')+'/';
+
+        String name = TreeUtil.getPrimaryTypeName(compUnit);
+
+        return pkg + name+".js";
+    }
+
+    /**
      * Writes the complete structure java script.
      */
-    public void write(File out) throws IOException {
+    public void write(File outDir) throws IOException {
+        File out = new File(outDir, getRelativePath());
+        File parent = out.getParentFile();
+        if(parent!=null)    // null if outDir was "."
+            parent.mkdirs();
+
         FileOutputStream os = new FileOutputStream(out);
         try {
             write(os);
