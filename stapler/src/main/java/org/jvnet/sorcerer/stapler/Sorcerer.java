@@ -58,6 +58,12 @@ public class Sorcerer {
             }
         });
 
+        generators.put("project-usage.js",new JavaScriptGenerator() {
+            void doDynamic(StaplerRequest request, StaplerResponse rsp) throws IOException {
+                fsg.generateProjectUsageJs(open(rsp));
+            }
+        });
+
         generators.put("package-list",new Generator() {
             String getContentType(String restOfPath) {
                 return "text/plain;charset=UTF-8";
