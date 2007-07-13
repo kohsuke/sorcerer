@@ -123,7 +123,7 @@ public class FrameSetGenerator extends AbstractWriter {
                 if(pt.isInvalid())
                     continue;
 
-                File out = new File(outDir, pt.element.getQualifiedName().toString().replace('.','/')+"-usage.js");
+                File out = new File(outDir, cujw.getRelativePath(pt));
                 out.getParentFile().mkdirs();
 
                 cujw.write(pt,new PrintWriter(out));

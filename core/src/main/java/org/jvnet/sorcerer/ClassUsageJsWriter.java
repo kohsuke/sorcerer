@@ -24,6 +24,13 @@ public class ClassUsageJsWriter extends AbstractWriter {
         super(pss);
     }
 
+    /**
+     * Determines where to generate the usage file.
+     */
+    public String getRelativePath(ParsedType type) {
+        return type.element.getQualifiedName().toString().replace('.','/')+"-usage.js";
+    }
+
     public void write(ParsedType type, PrintWriter pw) {
         pw.println("setClassUsage('"+type.element.getQualifiedName()+"',");
         JsonWriter w = new JsonWriter(pw);
