@@ -72,4 +72,11 @@
       <url>file:${path-to-m2-repo.java.net}</url>
     </repository>
   </distributionManagement>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8</version>
+    </dependency>
+  </dependencies>
 </project>
