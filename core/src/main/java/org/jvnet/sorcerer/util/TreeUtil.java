@@ -88,8 +88,12 @@ public class TreeUtil {
      */
     public static Element getElement(Tree t) {
         Element r = getElement((JCTree) t);
-        if(r!=null && r.asType()!=null && r.asType().getKind().isPrimitive())
-            return null;    // TypeElement for primitives aren't really functioning, so avoid returning it.
+
+        // the following two lines causes primitive fields and variables to be ignored.
+        // so commented out.
+        
+        //if(r!=null && r.asType()!=null && r.asType().getKind().isPrimitive())
+        //    return null;    // TypeElement for primitives aren't really functioning, so avoid returning it.
         return r;
     }
 
