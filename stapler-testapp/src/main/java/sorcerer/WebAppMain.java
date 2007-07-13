@@ -16,7 +16,7 @@ public class WebAppMain implements ServletContextListener {
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         try {
             Analyzer a = new Analyzer();
-            a.addSourceFolder(new File("src/main/java"));
+            a.addSourceFolder(new File("src/main/java/demo"));
 
             Sorcerer app = new Sorcerer(a.analyze());
 
