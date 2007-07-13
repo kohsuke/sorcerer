@@ -25,4 +25,8 @@ public class AnalysisException extends RuntimeException {
     public List<Diagnostic<? extends JavaFileObject>> getDiagnostics() {
         return diagnostics;
     }
+
+    public String getMessage() {
+        return diagnostics.toString();
+    }
 }
