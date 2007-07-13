@@ -18,7 +18,12 @@
     <dependency>
       <groupId>org.kohsuke.stapler</groupId>
       <artifactId>stapler</artifactId>
-      <version>1.31</version>
+      <version>1.37</version>
+    </dependency>
+    <dependency><!-- needs to be declared explicitly until we switch to 1.38 -->
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+      <version>1.6</version>
     </dependency>
   </dependencies>
 </project>
