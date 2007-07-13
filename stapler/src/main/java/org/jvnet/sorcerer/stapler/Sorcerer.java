@@ -2,8 +2,10 @@ package org.jvnet.sorcerer.stapler;
 
 import com.sun.source.tree.CompilationUnitTree;
 import org.jvnet.sorcerer.AstGenerator;
+import org.jvnet.sorcerer.ClassUsageJsWriter;
 import org.jvnet.sorcerer.FrameSetGenerator;
 import org.jvnet.sorcerer.ParsedSourceSet;
+import org.jvnet.sorcerer.ParsedType;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -41,6 +43,17 @@ public class Sorcerer {
                 new JavaScriptGenerator() {
                     void doDynamic(StaplerRequest request, StaplerResponse rsp) throws IOException {
                         new AstGenerator(pss,cu).write(rsp.getWriter());
+                    }
+                }
+            );
+        }
+
+        for( final ParsedType pt : pss.getParsedTypes() ) {
+            final ClassUsageJsWriter cujw = new ClassUsageJsWriter(pss);
+            generators.put(cujw.getRelativePath(pt),
+                new JavaScriptGenerator() {
+                    void doDynamic(StaplerRequest request, StaplerResponse rsp) throws IOException {
+                        cujw.write(pt,rsp.getWriter());
                     }
                 }
             );
