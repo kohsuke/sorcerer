@@ -54,6 +54,7 @@
     <module>cli</module>
     <module>ant</module>
     <module>stapler</module>
+    <module>stapler-testapp</module>
     <module>uberjar</module>
   </modules>
   <reporting>
