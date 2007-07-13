@@ -94,6 +94,8 @@ public class Sorcerer {
 
     public void doDynamic(StaplerRequest req, StaplerResponse rsp) throws IOException {
         String path = req.getRestOfPath();
+        if(path.length()>0) path=path.substring(1); // trim off the leading '/'
+        
         Generator g = generators.get(path);
         if(g==null) {
             rsp.sendError(HttpServletResponse.SC_NOT_FOUND);
