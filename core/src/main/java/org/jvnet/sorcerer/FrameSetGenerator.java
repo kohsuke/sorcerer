@@ -102,8 +102,12 @@ public class FrameSetGenerator extends AbstractWriter {
             if(ct.getSimpleName().toString().equals(primaryName))
                 continue; // a primary type
 
+            String prefix = ((PackageElement)pkg).getQualifiedName().toString().replace('.','/')+'/';
+            if (prefix.equals("/")) { // default package
+                prefix = "";
+            }
             PrintWriter w = new PrintWriter(openDefault(outDir,
-                ((PackageElement)pkg).getQualifiedName().toString().replace('.','/')+'/'+ct.getSimpleName()+".js"));
+                prefix+ct.getSimpleName()+".js"));
             w.println("redirect('"+ct.getSimpleName()+"','"+primaryName +".js');");
             w.close();
         }
@@ -124,6 +128,7 @@ public class FrameSetGenerator extends AbstractWriter {
                     continue;
 
                 File out = new File(outDir, cujw.getRelativePath(pt));
+                assert out.getParentFile() != null : out;
                 out.getParentFile().mkdirs();
 
                 cujw.write(pt,new PrintWriter(out));
