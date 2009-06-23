@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Arrays;
 
 /**
  * Entry point to the system.
@@ -232,7 +233,13 @@ public class Analyzer {
 
         fileManager.setLocation( StandardLocation.CLASS_PATH, classpath );
 
-        List<String> options = Collections.emptyList();
+        // annotation processing appears to cause the source files to be reparsed
+        // (even though I couldn't find exactly where it's done), which causes
+        // Tree symbols created by the original JavacTask.parse() call to be thrown away,
+        // which breaks later processing.
+        // So for now, don't perform annotation processing
+        List<String> options = Arrays.asList("-proc:none");
+
         Iterable<? extends JavaFileObject> files = fileManager.getJavaFileObjectsFromFiles(sourceFiles);
         CompilationTask task = javac.getTask(null, fileManager, errorListener, options, null, files);
         return (JavacTask)task;

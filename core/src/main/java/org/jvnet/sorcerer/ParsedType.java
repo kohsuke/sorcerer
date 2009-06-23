@@ -4,6 +4,7 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.TreePath;
+import com.sun.tools.javac.code.Symbol.CompletionFailure;
 import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
@@ -21,6 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * {@link TypeElement} with information for cross-referencing.
@@ -58,7 +61,15 @@ public final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement>
     public ParsedType(ParsedSourceSet pss, TypeElement element) {
         pss.parsedTypes.put(element,this);
         this.element = element;
-
+/*
+        // let javac completes the symbol, which may discover errors and render this symbol invalid,
+        // but javac will be able to recover from that error in the 2nd go.
+        try {
+            element.getSuperclass();
+        } catch (CompletionFailure e) {
+            LOGGER.log(Level.FINE, "Symbol completion failed", e);
+        }
+*/
         TypeMirror sc = element.getSuperclass();
         switch(sc.getKind()) {
         case NONE:
@@ -330,4 +341,6 @@ public final class ParsedType extends ClosedHashMultiMap<Name,ExecutableElement>
 
     private static final ParsedType[] EMPTY_ARRAY = new ParsedType[0];
     private static final CompilationUnitTree[] EMPTY_CUT_ARRAY = new CompilationUnitTree[0];
+
+    private static final Logger LOGGER = Logger.getLogger(ParsedType.class.getName());
 }

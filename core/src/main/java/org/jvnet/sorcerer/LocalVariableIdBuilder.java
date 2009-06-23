@@ -45,7 +45,7 @@ final class LocalVariableIdBuilder extends AbstractElementVisitor6<StringBuilder
     public StringBuilder visitType(TypeElement t, Void _) {
         ClassTree ct = trees.getTree(t);
         if(ct ==null)
-            return null;    // not a part of compiled source files
+            return new StringBuilder();    // not a part of compiled source files. return a bogus value
 
         switch(t.getNestingKind()) {
         case ANONYMOUS:
