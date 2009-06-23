@@ -38,6 +38,7 @@ import java.util.Locale;
  * @role org.apache.maven.reporting.MavenReport
  * @role-hint sorcerer
  * @instantiation-strategy per-lookup
+ * @requiresDependencyResolution compile
  */
 public class SorcererReport
     extends AbstractSorcererReport {
