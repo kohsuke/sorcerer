@@ -26,6 +26,7 @@ import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.ArrayList;
 
 /**
  * Creates an html-based, cross referenced version of Java source code
@@ -124,6 +125,12 @@ public class SorcererReport
     }
 
     protected List<String> getClasspathElements() throws DependencyResolutionRequiredException {
-        return project.getCompileClasspathElements();
+        if(!isAggregator())
+            return project.getCompileClasspathElements();
+
+        List<String> r = new ArrayList<String>();
+        for (MavenProject p : reactorProjects)
+            r.addAll(p.getCompileClasspathElements());
+        return r;
     }
 }

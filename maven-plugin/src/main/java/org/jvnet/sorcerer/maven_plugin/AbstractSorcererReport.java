@@ -105,12 +105,11 @@ public abstract class AbstractSorcererReport
     private Javadoc[] javadocs;
 
     /**
-     * Whether to build an aggregated report at the root, or build individual reports.
-     *
-     * @parameter expression="${aggregate}" default-value="false"
+     * Is this an aggregator mojo that handles all the submodules at once?
      */
-    protected boolean aggregate;
-
+    protected boolean isAggregator() {
+        return false;
+    }
 
     /**
      * Compiles the list of directories which contain source files that will be included in the JXR report generation.
@@ -189,7 +188,7 @@ public abstract class AbstractSorcererReport
     protected boolean canGenerateReport(List sourceDirs) {
         boolean canGenerate = !sourceDirs.isEmpty();
 
-        if (aggregate && !project.isExecutionRoot()) {
+        if (isAggregator() && !project.isExecutionRoot()) {
             canGenerate = false;
         }
         return canGenerate;
@@ -201,6 +200,9 @@ public abstract class AbstractSorcererReport
     }
 
     protected void executeReport(Locale locale) throws MavenReportException {
+        if(isAggregator() && !project.isExecutionRoot())
+            return;
+
         List<String> sourceDirs = constructSourceDirs();
         if (canGenerateReport(sourceDirs)) {
             // init some attributes -- TODO (javadoc)
@@ -242,11 +244,9 @@ public abstract class AbstractSorcererReport
      */
     protected List<String> constructSourceDirs() {
         List<String> sourceDirs = new ArrayList<String>(getSourceRoots());
-        if (aggregate) {
+        if (isAggregator()) {
             for (MavenProject project : reactorProjects) {
-                if ("java".equals(project.getArtifact().getArtifactHandler().getLanguage())) {
-                    sourceDirs.addAll(getSourceRoots(project));
-                }
+                sourceDirs.addAll(getSourceRoots(project));
             }
         }
 
