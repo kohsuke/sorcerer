@@ -66,7 +66,7 @@ var builder = makeFull(derive(abstractBuilder,{
   },
 
   nl : function(context) {
-    context.appendText('\n');
+    context.appendText('\r\n');
     context.lineNumber++;
   },
 
@@ -289,12 +289,14 @@ function defineStructure(className,ast) {
     }
   };
   // build the main source code HTML
+  context.appendText("<pre>");
   YAHOO.log("generating HTML: "+className);
   sourceBuilder(context);
+    context.appendText("</pre>");
 
   YAHOO.log("inserting HTML: "+className);
-  var pre = document.getElementById("main");
-  pre.innerHTML = context.html.join("");
+  var main = document.getElementById("main");
+  main.innerHTML = context.html.join("");
 
   // build the line number table
   function pad(s,n) {
@@ -496,7 +498,11 @@ window.onload = function() {
 <div style='position:relative;'>
   <!-- the '>' floating tip -->
   <div id="menuSelector"></div>
-  <pre id=main style='padding-left:3em'></pre>
+  <!--
+    making "main" a PRE by itself causes http://stud3.tuwien.ac.at/~e0226430/innerHtmlQuirk.html (reported as http://connect.microsoft.com/IE/feedback/ViewFeedback.aspx?FeedbackID=411691) in IE,
+    so we need an indirection.
+  -->
+  <div id=main style='padding-left:3em'></div>
   <pre id=lineNumberTable style='position:absolute; left:0; top:0;'></pre>
 </div>
 </body>
