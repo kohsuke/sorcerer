@@ -2,13 +2,13 @@
   <parent>
     <artifactId>sorcerer</artifactId>
     <groupId>org.jvnet.sorcerer</groupId>
-    <version>0.8-SNAPSHOT</version>
+    <version>0.8</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jvnet.sorcerer</groupId>
   <artifactId>sorcerer-core</artifactId>
   <name>Sorcerer Core</name>
-  <version>0.8-SNAPSHOT</version>
+  <version>0.8</version>
   <build>
     <resources>
       <resource>
