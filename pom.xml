@@ -79,6 +79,12 @@
       <url>java-net:/maven2-repository/trunk/repository/</url>
     </repository>
   </distributionManagement>
+  <repositories>
+    <repository>
+      <id>m.g.o-public</id>
+      <url>http://maven.glassfish.org/content/groups/public/</url>
+    </repository>
+  </repositories>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
