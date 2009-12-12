@@ -1,6 +1,7 @@
 package org.jvnet.sorcerer;
 
 import org.jvnet.sorcerer.util.BiDiMap;
+import org.jvnet.sorcerer.util.TreeUtil;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -16,6 +17,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+
+import com.sun.source.tree.CompilationUnitTree;
 
 /**
  * {@link PrintWriter} extended for writing JavaScript in sorcerer.
@@ -172,6 +175,35 @@ public class JavaScriptStreamWriter extends PrintWriter {
     public JavaScriptStreamWriter(Writer out, ParsedSourceSet pss) {
         super(out);
         this.pss=pss;
+    }
+
+    public void writeHeader(CompilationUnitTree compUnit)
+    {
+        println("defineStructure(");
+        string(TreeUtil.getPrimaryTypeName(compUnit));
+        print(',');
+        print("function(factory){with(factory) { ");
+        i().nl();
+    }
+
+    public void writeFooter() {
+        o().nl().print(";}});");
+    }
+
+    public void writeBody(Tag.Root tree) {
+
+        JSSWTagTableVisitor tagTableVisitor = new JSSWTagTableVisitor(this);
+        tagTableVisitor.visit(tree);
+
+        resetList();
+        writeSymbolTable();
+
+        // write the body
+        println();
+        resetList();
+        print("return ");
+        JSSWTagOutputVisitor tagOutputVisitor = new JSSWTagOutputVisitor(this);
+        tagOutputVisitor.visit(tree);
     }
 
     public JavaScriptStreamWriter i() {

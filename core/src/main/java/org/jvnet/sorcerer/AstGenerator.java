@@ -31,7 +31,7 @@ import java.util.StringTokenizer;
  *
  * @author Kohsuke Kawaguchi
  */
-public final class AstGenerator {
+public class AstGenerator {
 
     protected final List<Tag> tags = new ArrayList<Tag>();
 
@@ -90,9 +90,10 @@ public final class AstGenerator {
      *      The writer to receive JavaScript. This writer must be closed by the caller.
      */
     public void write(JavaScriptStreamWriter out) throws IOException {
-        writeHeader(out);
-        writeBody(out);
-        writeFooter(out);
+        out.writeHeader(compUnit);
+        Root tree = buildTree();
+        out.writeBody(tree);
+        out.writeFooter();
     }
 
     /**
@@ -213,24 +214,6 @@ public final class AstGenerator {
     }
 
     /**
-     * Just write sthe body annotated source code without a surrounding
-     * &lt;body> tag. This method can be invoked directly if the caller
-     * wants to embed the generated HTML into a bigger HTML document.
-     */
-    public void writeBody(JavaScriptStreamWriter out) throws IOException {
-        Root tree = buildTree();
-        tree.collectSymbols(out);
-        out.resetList();
-        out.writeSymbolTable();
-
-        // write the body
-        out.println();
-        out.resetList();
-        out.print("return ");
-        tree.write(out);
-    }
-
-    /**
      * Writes the bytes from the source code.
      *
      * <p>
@@ -283,17 +266,6 @@ public final class AstGenerator {
     }
 
     /**
-     * Writes the preamble.
-     */
-    protected void writeHeader(JavaScriptStreamWriter out) {
-        out.println("defineStructure(");
-        out.string(TreeUtil.getPrimaryTypeName(compUnit));
-        out.print(',');
-        out.print("function(factory){with(factory) { ");
-        out.i().nl();
-    }
-
-    /**
      * Writes the start tag of BODY.
      *
      * <p>
@@ -304,12 +276,7 @@ public final class AstGenerator {
         out.println("<body>");
     }
 
-    /**
-     * Writes the footer.
-     */
-    protected void writeFooter(JavaScriptStreamWriter out) {
-        out.o().nl().print(";}});");
-    }
+
 
     /*package*/ boolean add(Tag o) {
         if(o.ep==-1)    return false;   // synthetic

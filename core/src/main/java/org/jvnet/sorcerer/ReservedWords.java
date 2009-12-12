@@ -7,8 +7,8 @@ import java.util.Set;
 /**
  * @author Kohsuke Kawaguchi
  */
-class ReservedWords {
-    static final Map<String,String> TOKENMAP = new HashMap<String,String>();
+public class ReservedWords {
+    public static final Map<String,String> TOKENMAP = new HashMap<String,String>();
     static final Set<String> LIST = TOKENMAP.keySet();
 
     static {
