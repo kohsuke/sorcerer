@@ -65,6 +65,13 @@ public class Sorcerer {
             }
         });
 
+        generators.put("index.html",new Generator() {
+            // so that self redirections from inside sorcerer JavaScript would produce better URLs.
+            void doDynamic(StaplerRequest request, StaplerResponse rsp) throws IOException {
+                rsp.sendRedirect(".?"+request.getQueryString());
+            }
+        });
+
         generators.put("package-list.js",new JavaScriptGenerator() {
             void doDynamic(StaplerRequest request, StaplerResponse rsp) throws IOException {
                 fsg.generatePackageListJs(open(rsp));

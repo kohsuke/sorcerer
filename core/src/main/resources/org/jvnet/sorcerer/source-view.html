@@ -19,6 +19,11 @@
 <!-- HTML generator -->
 <script type="text/javascript">
 
+if (window.top==window) {
+    // put ourselves back in a frame
+    window.location.replace("index.html?source-view.html"+window.location.search);
+}
+
 var builder = makeFull(derive(abstractBuilder,{
   reservedWord : function(name) {
     return function(context) {
