@@ -11,6 +11,12 @@
   
   <dependencies>
     <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.4</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.jvnet.sorcerer</groupId>
       <artifactId>sorcerer-core</artifactId>
       <version>${version}</version>
@@ -18,12 +24,7 @@
     <dependency>
       <groupId>org.kohsuke.stapler</groupId>
       <artifactId>stapler</artifactId>
-      <version>1.37</version>
-    </dependency>
-    <dependency><!-- needs to be declared explicitly until we switch to 1.38 -->
-      <groupId>commons-beanutils</groupId>
-      <artifactId>commons-beanutils</artifactId>
-      <version>1.6</version>
+      <version>1.110</version>
     </dependency>
   </dependencies>
 </project>
