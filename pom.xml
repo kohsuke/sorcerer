@@ -65,6 +65,7 @@
     <module>stapler</module>
     <module>stapler-testapp</module>
     <module>uberjar</module>
+    <module>gwt</module>
   </modules>
   <reporting>
     <plugins>
