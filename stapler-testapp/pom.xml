@@ -26,6 +26,10 @@
         <artifactId>maven-jetty-plugin</artifactId>
         <version>6.1.2rc2</version>
       </plugin>
+      <plugin>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>maven-sorcerer-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
   
