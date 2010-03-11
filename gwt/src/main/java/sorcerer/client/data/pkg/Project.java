@@ -7,8 +7,8 @@ import com.google.gwt.core.client.JavaScriptObject;
  *
  * @author Kohsuke Kawaguchi
  */
-public final class PackageList extends JavaScriptObject {
-    protected PackageList() {}
+public final class Project extends JavaScriptObject {
+    protected Project() {}
 
     public native String name() /*-{ return this.name; }-*/;
     public native Package packages() /*-{ return this.packages; }-*/;

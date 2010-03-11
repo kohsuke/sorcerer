@@ -8,8 +8,8 @@ import sorcerer.client.js.JsArray;
  *
  * @author Kohsuke Kawaguchi
  */
-public class PackageListLoader {
-    private final JsArray<PackageList> projects = JsArray.create();
+public class ProjectLoader {
+    private final JsArray<Project> projects = JsArray.create();
     private final JsArray<Listener> listeners = JsArray.create();
 
     public void load(String baseURL) {
@@ -23,21 +23,21 @@ public class PackageListLoader {
     /**
      * Loaded JavaScript will invoke this method.
      */
-    static void define(PackageList pkg) {
+    static void define(Project pkg) {
         INSTANCE._define(pkg);
     }
 
-    private void _define(PackageList pkg) {
+    private void _define(Project pkg) {
         // TODO: version conflict resolution and duplicate reduction.
         projects.push(pkg);
         for (int i=0; i<listeners.length(); i++)
             listeners.get(i).onChange();
     }
 
-    public static PackageListLoader INSTANCE = new PackageListLoader();
+    public static ProjectLoader INSTANCE = new ProjectLoader();
 
     public native static void export() /*-{
-        $wnd.setProject = $entry(@sorcerer.client.data.pkg.PackageListLoader::define(Lsorcerer/client/data/pkg/PackageList;));
+        $wnd.setProject = $entry(@sorcerer.client.data.pkg.ProjectLoader::define(Lsorcerer/client/data/pkg/Project;));
     }-*/;
 
     static {
