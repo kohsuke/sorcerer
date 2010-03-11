@@ -29,6 +29,7 @@
       <plugin>
         <groupId>${project.groupId}</groupId>
         <artifactId>maven-sorcerer-plugin</artifactId>
+        <version>${project.version}</version>
       </plugin>
     </plugins>
   </build>

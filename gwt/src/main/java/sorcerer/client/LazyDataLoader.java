@@ -30,9 +30,6 @@ import java.util.List;
  * @author Kohsuke Kawaguchi
  */
 public abstract class LazyDataLoader<K,V> {
-    private final Document doc = Document.get();
-    private final Element head = doc.getElementsByTagName("head").getItem(0);
-
     private HashMap<K,V> loaded = new HashMap<K,V>();
     private HashMap<K, List<Callback<V>>> callbacks = new HashMap<K, List<Callback<V>>>();
 
@@ -49,7 +46,7 @@ public abstract class LazyDataLoader<K,V> {
                 // first time we request this. initiate a load
                 l = new ArrayList<Callback<V>>();
                 callbacks.put(key,l);
-                head.appendChild(doc.createScriptElement(href(key)));
+                ScriptLoader.load(href(key));
             }
             l.add(callback);
         }
