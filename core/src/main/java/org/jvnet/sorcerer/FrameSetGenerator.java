@@ -211,10 +211,14 @@ public class FrameSetGenerator extends AbstractWriter {
                 if(ct ==null)   continue;   // not a part of the compilation unit
                 TreePath tp = pss.getTreePathByClass(ct);
 
+                String sourceName = tp.getCompilationUnit().getSourceFile().getName();
+                sourceName = sourceName.substring(sourceName.lastIndexOf('/')+1);
+                sourceName = sourceName.substring(sourceName.lastIndexOf('\\')+1);
+
                 jw.startObject();
                 jw.property("name",t.getSimpleName());
                 jw.property("kind",getKindString(t.getKind()));
-                jw.property("source", tp.getCompilationUnit().getSourceFile().getName());
+                jw.property("file", sourceName);
                 jw.property("line", pss.getPositionOf(tp).line);
                 jw.property("access",getAccessLevel(t));
                 jw.endObject();
