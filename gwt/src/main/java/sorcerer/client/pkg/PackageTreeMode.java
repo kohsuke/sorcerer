@@ -15,13 +15,9 @@ public enum PackageTreeMode {
             buildTree(p.rootPackage(),tree,parent);
         }
 
-        private void buildTree(Package pkg, Tree tree, TreeNode parent) {
-            if(pkg.isLeaf()) {
-                TreeNode n = new TreeNode(pkg.fullDisplayName());
-                n.setIcon("resource-files/package.gif");
-                n.setIsFolder(true);
-                tree.add(n,parent);
-            }
+        private void buildTree(final Package pkg, final Tree tree, TreeNode parent) {
+            if(pkg.isLeaf())
+                tree.add(new PackageTreeNode(pkg, tree),parent);
             for (Package c : pkg.children().iterable())
                 buildTree(c,tree,parent);
         }
@@ -38,4 +34,5 @@ public enum PackageTreeMode {
      * Builds the package list into a tree structure and add them under the given parent node.
      */
     public abstract void load(Project p, Tree tree, TreeNode parent);
+
 }

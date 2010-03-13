@@ -6,7 +6,6 @@ import com.smartgwt.client.types.Overflow;
 import com.smartgwt.client.types.VisibilityMode;
 import com.smartgwt.client.util.Page;
 import com.smartgwt.client.widgets.Canvas;
-import com.smartgwt.client.widgets.HTMLPane;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
 import com.smartgwt.client.widgets.events.ClickHandler;
@@ -19,17 +18,19 @@ import sorcerer.client.data.SourceFileLoader;
 import sorcerer.client.data.pkg.ClassListLoader;
 import sorcerer.client.data.pkg.ProjectLoader;
 import sorcerer.client.pkg.PackageTreeWidget;
-import sorcerer.client.source.SourceBuilder;
+import sorcerer.client.sourceview.SourceViewWidget;
 
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class Application implements EntryPoint {
-    private HTMLPane mainCanvas;
+    private SourceViewWidget mainCanvas;
+    private static Application INSTANCE;
     
     public void onModuleLoad() {
-        Page.setAppImgDir("");
+        INSTANCE = this;
+        Page.setAppImgDir("resource-files/");
 
         HLayout h = new HLayout();
         h.setWidth100();
@@ -45,10 +46,7 @@ public class Application implements EntryPoint {
             public void onClick(ClickEvent clickEvent) {
                 SourceFileLoader.INSTANCE.retrieve("Tab",new Callback<AST>() {
                     public void call(AST value) {
-                        SourceBuilder b = new SourceBuilder();
-                        value.accept(b);
-                        String html = b.toHTML();
-                        mainCanvas.setContents(html);
+                        mainCanvas.load(value);
                     }
                 });
             }
@@ -92,7 +90,7 @@ public class Application implements EntryPoint {
         SectionStackSection pkg = new SectionStackSection("Source code");
         pkg.setExpanded(true);
         pkg.setShowHeader(false);
-        pkg.addItem(mainCanvas=new HTMLPane());
+        pkg.addItem(mainCanvas=new SourceViewWidget());
 
         SectionStackSection search = new SectionStackSection("Search Result");
         search.setExpanded(false);
@@ -125,8 +123,12 @@ public class Application implements EntryPoint {
         }
     }
 
-    public Canvas getMainCanvas() {
+    public SourceViewWidget getSourceView() {
         return mainCanvas;
+    }
+
+    public static Application get() {
+        return INSTANCE;
     }
 
     //    public void onModuleLoad() {

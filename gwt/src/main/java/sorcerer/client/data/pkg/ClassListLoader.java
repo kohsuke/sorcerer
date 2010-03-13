@@ -4,21 +4,26 @@ import sorcerer.client.LazyDataLoader;
 import sorcerer.client.js.JsArray;
 
 /**
- * Loads ClassList array by a package name.
+ * Loads contents of <tt>class-list.js</tt>, which is a {@link Klass} array by a package name.
+ *
+ * <p>
+ * Key is a fully-qualified package name.
  *
  * @author Kohsuke Kawaguchi
  */
-public class ClassListLoader extends LazyDataLoader<String, JsArray<ClassList>> {
+public class ClassListLoader extends LazyDataLoader<String, JsArray<Klass>> {
     @Override
     protected String href(String key) {
-        return key+"/class-list.js";
+        return "data/"+key.replace('.','/')+"/class-list.js";
     }
 
     /**
      * Loaded JavaScript will invoke this method.
      */
-    public static void define(String fileName, JsArray<ClassList> ast) {
-        INSTANCE.onLoaded(fileName,ast);
+    public static void define(String packageName, JsArray<Klass> ast) {
+        for (Klass k : ast.iterable())
+            k.packageName(packageName);
+        INSTANCE.onLoaded(packageName,ast);
     }
 
     public static ClassListLoader INSTANCE = new ClassListLoader();
