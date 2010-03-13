@@ -11,6 +11,6 @@ public final class Project extends JavaScriptObject {
     protected Project() {}
 
     public native String name() /*-{ return this.name; }-*/;
-    public native Package packages() /*-{ return this.packages; }-*/;
+    public native Package rootPackage() /*-{ return this.packages; }-*/;
     // TODO: linker support
 }

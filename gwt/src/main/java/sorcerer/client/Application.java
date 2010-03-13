@@ -1,13 +1,11 @@
 package sorcerer.client;
 
 import com.google.gwt.core.client.EntryPoint;
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.smartgwt.client.types.Overflow;
 import com.smartgwt.client.types.VisibilityMode;
+import com.smartgwt.client.util.Page;
 import com.smartgwt.client.widgets.Canvas;
-import com.smartgwt.client.widgets.HTMLFlow;
 import com.smartgwt.client.widgets.HTMLPane;
 import com.smartgwt.client.widgets.IButton;
 import com.smartgwt.client.widgets.events.ClickEvent;
@@ -18,6 +16,9 @@ import com.smartgwt.client.widgets.layout.SectionStackSection;
 import sorcerer.client.LazyDataLoader.Callback;
 import sorcerer.client.data.AST;
 import sorcerer.client.data.SourceFileLoader;
+import sorcerer.client.data.pkg.ClassListLoader;
+import sorcerer.client.data.pkg.ProjectLoader;
+import sorcerer.client.pkg.PackageTreeWidget;
 import sorcerer.client.source.SourceBuilder;
 
 
@@ -28,31 +29,13 @@ public class Application implements EntryPoint {
     private HTMLPane mainCanvas;
     
     public void onModuleLoad() {
-        SectionStackSection pkg = new SectionStackSection("Package");
-        pkg.setExpanded(true);
-        pkg.setCanCollapse(true);
-        pkg.addItem(new HelpCanvas("help1"));
-
-        SectionStackSection outline = new SectionStackSection("Outline");
-        outline.setExpanded(true);
-        outline.setCanCollapse(true);
-        outline.addItem(new HelpCanvas("help2"));
-
-        SectionStack left = new SectionStack();
-        left.setVisibilityMode(VisibilityMode.MULTIPLE);
-        left.setHeight100();
-        left.setWidth(200);
-        left.addSection(pkg);
-        left.addSection(outline);
-        left.setShowResizeBar(true);
+        Page.setAppImgDir("");
 
         HLayout h = new HLayout();
         h.setWidth100();
         h.setHeight100();
 
-
-
-        h.addMember(left);
+        h.addMember(createLeft());
         h.addMember(createRightPane());
 
         RootPanel.get().add(h);
@@ -73,7 +56,32 @@ public class Application implements EntryPoint {
         mainCanvas.addChild(b);
 
         SourceFileLoader.export();
+        ProjectLoader.export();
+        ClassListLoader.export();
+
+        ProjectLoader.INSTANCE.load("data");
         loadTestData();
+    }
+
+    private SectionStack createLeft() {
+        SectionStackSection pkg = new SectionStackSection("Package");
+        pkg.setExpanded(true);
+        pkg.setCanCollapse(true);
+        pkg.addItem(new PackageTreeWidget());
+
+        SectionStackSection outline = new SectionStackSection("Outline");
+        outline.setExpanded(true);
+        outline.setCanCollapse(true);
+        outline.addItem(new HelpCanvas("help2"));
+
+        SectionStack left = new SectionStack();
+        left.setVisibilityMode(VisibilityMode.MULTIPLE);
+        left.setHeight100();
+        left.setWidth(200);
+        left.addSection(pkg);
+        left.addSection(outline);
+        left.setShowResizeBar(true);
+        return left;
     }
 
     private static native void loadTestData() /*-{
@@ -81,7 +89,7 @@ public class Application implements EntryPoint {
     }-*/;
 
     private SectionStack createRightPane() {
-        SectionStackSection pkg = new SectionStackSection("Package");
+        SectionStackSection pkg = new SectionStackSection("Source code");
         pkg.setExpanded(true);
         pkg.setShowHeader(false);
         pkg.addItem(mainCanvas=new HTMLPane());

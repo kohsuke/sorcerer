@@ -2,6 +2,8 @@ package sorcerer.client.js;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
+import java.util.Iterator;
+
 /**
  * JavaScript array.
  *
@@ -14,6 +16,27 @@ public class JsArray<T> extends JavaScriptObject {
     
     public static <T> JsArray<T> create() {
         return (JsArray<T>)createArray();
+    }
+
+    public final Iterable<T> iterable() {
+        return new Iterable<T>() {
+            public Iterator<T> iterator() {
+                return new Iterator<T>() {
+                    int index = 0;
+                    public boolean hasNext() {
+                        return index<length();
+                    }
+
+                    public T next() {
+                        return get(index++);
+                    }
+
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
     }
 
     public final native T get(int index) /*-{
