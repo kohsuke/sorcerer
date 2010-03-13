@@ -18,13 +18,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.UUID;
 
 /**
  * Generates AST JavaScript file from a compilation unit.
@@ -45,23 +45,15 @@ public class AstGenerator {
     protected final CompilationUnitTree compUnit;
 
     /**
-     * Current line number being written.
-     */
-    protected int lineNumber = 0;
-
-    /**
-     * SP x tabWidth.
-     */
-    private String tab;
-
-    /**
      * Relative link to the top of the output directory,
      * like "../../".
      */
     protected final String relativeLinkToTop;
+    private final UUID projectId;
 
-    public AstGenerator(ParsedSourceSet pss, CompilationUnitTree cu) throws IOException {
+    public AstGenerator(ParsedSourceSet pss, UUID projectId, CompilationUnitTree cu) throws IOException {
         this.pss = pss;
+        this.projectId = projectId;
         this.compUnit = cu;
         sourceFile = cu.getSourceFile().getCharContent(true);
 
@@ -70,11 +62,6 @@ public class AstGenerator {
 
         // fill in the AstGenerator
         pss.configure(cu,this);
-
-        StringBuilder b = new StringBuilder();
-        for( int i=0; i<pss.getTabWidth(); i++ )
-            b.append(' ');
-        tab = b.toString();
 
         String pkgName = TreeUtil.getPackageName(cu);
         StringBuilder buf = new StringBuilder();
@@ -90,7 +77,7 @@ public class AstGenerator {
      *      The writer to receive JavaScript. This writer must be closed by the caller.
      */
     public void write(JavaScriptStreamWriter out) throws IOException {
-        out.writeHeader(compUnit);
+        out.writeHeader(getRelativePath(),projectId);
         Root tree = buildTree();
         out.writeBody(tree);
         out.writeFooter();
@@ -211,71 +198,6 @@ public class AstGenerator {
 
         return root;
     }
-
-    /**
-     * Writes the bytes from the source code.
-     *
-     * <p>
-     * This is a chance to perform escaping and other things like TAB->SP conversion.
-     */
-    protected void writeSourceCode(PrintWriter out, char[] buf, int sz) {
-        for( int i=0; i<sz; i++ ) {
-            char ch = buf[i];
-            switch(ch) {
-            case '<':
-                out.write("&lt;");
-                break;
-            case '>':
-                out.write("&gt;");
-                break;
-            case '&':
-                out.write("&amp;");
-                break;
-            case '\r':
-                // skip the CR. When we write LF, we use the right platform default line-end format.
-                // this allows the generated files to be easily checked into SVN, for example.
-                break;
-            case '\n':
-                writeEOL(out);
-                writeNewLine(out);
-                break;
-            case '\t':
-                out.write(tab);
-                break;
-            default:
-                out.write(ch);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Writes the end of the line.
-     */
-    protected void writeEOL(PrintWriter out) {
-        out.println();
-    }
-
-    /**
-     * Writes the start of a new line.
-     */
-    protected void writeNewLine(PrintWriter out) {
-        lineNumber++;
-        // line number is written in a separate table
-    }
-
-    /**
-     * Writes the start tag of BODY.
-     *
-     * <p>
-     * This can be overridden to add attribtues to BODY tag,
-     * or generate additional prolog before the code part starts.
-     */
-    protected void writeBodyTag(PrintWriter out) {
-        out.println("<body>");
-    }
-
-
 
     /*package*/ boolean add(Tag o) {
         if(o.ep==-1)    return false;   // synthetic

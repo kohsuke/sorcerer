@@ -5,10 +5,7 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TreePath;
 import org.jvnet.sorcerer.util.IOUtil;
 import org.jvnet.sorcerer.util.JsonWriter;
-import org.jvnet.sorcerer.util.TreeUtil;
 
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import java.io.BufferedReader;
@@ -24,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.UUID;
 
 /**
  * HTML generator that produces sorcerer report in
@@ -48,6 +46,8 @@ public class FrameSetGenerator extends AbstractWriter {
      * Reference to the unnamed package.
      */
     private final PackageElement unnamed;
+
+    private final UUID id = UUID.randomUUID();
 
     public FrameSetGenerator(ParsedSourceSet pss) {
         super(pss);
@@ -74,7 +74,7 @@ public class FrameSetGenerator extends AbstractWriter {
     public void generateAll(File outDir) throws IOException {
 
         for (CompilationUnitTree cu : pss.getCompilationUnits()) {
-            AstGenerator gen = new AstGenerator(pss,cu);
+            AstGenerator gen = new AstGenerator(pss,id,cu);
             gen.write(outDir);
         }
 
@@ -148,6 +148,7 @@ public class FrameSetGenerator extends AbstractWriter {
         try {
             w.println("setProject(");
             JsonWriter jw = new JsonWriter(w);
+            jw.object(id.toString());
             jw.startArray();
             {// write self
                 jw.startObject();
@@ -183,6 +184,7 @@ public class FrameSetGenerator extends AbstractWriter {
         try {
             w.printf("setClassList(\"%s\",",p.getQualifiedName());
             JsonWriter jw = new JsonWriter(w);
+            jw.object(id.toString());
             jw.startArray();
             for (TypeElement t : pss.getClassElements(p)) {
                 ClassTree ct = pss.getTrees().getTree(t);
