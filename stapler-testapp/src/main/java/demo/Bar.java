@@ -5,3 +5,5 @@ package demo;
  */
 public class Bar extends Foo {
 }
+
+class Zot {}

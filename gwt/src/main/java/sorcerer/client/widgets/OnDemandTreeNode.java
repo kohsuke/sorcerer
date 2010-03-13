@@ -49,4 +49,8 @@ public abstract class OnDemandTreeNode extends TreeNode {
      * Called to load children of this node.
      */
     protected abstract void load();
+
+    public boolean isLoaded() {
+        return loaded;
+    }
 }

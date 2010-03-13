@@ -38,7 +38,20 @@ class PackageTreeNode extends OnDemandTreeNode implements NodeClickHandler {
         tree.openFolder(this);
     }
 
+    public void close() {
+        tree.closeFolder(this);
+    }
+
+    public void toggle() {
+        if (isOpen()) close(); else open();
+    }
+
     public void onNodeClick(NodeClickEvent event) {
-        loadOnDemand();
+        if (isLoaded()) toggle();
+        else            loadOnDemand();
+    }
+
+    public boolean isOpen() {
+        return tree.isOpen(this);
     }
 }
