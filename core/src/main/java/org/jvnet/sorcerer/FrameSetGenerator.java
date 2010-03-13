@@ -89,28 +89,6 @@ public class FrameSetGenerator extends AbstractWriter {
             generateClassListJs(p,new PrintWriter(openDefault(dir,"class-list.js")));
         }
 
-        // generate redireciton files for classes that live inside another class's compilation unit
-        for(TypeElement e : pss.getClassElements()) {
-            Element pkg = e.getEnclosingElement();
-            if(pkg.getKind()!=ElementKind.PACKAGE)
-                continue;
-            ClassTree ct = pss.getTrees().getTree(e);
-            if(ct==null)    continue;
-
-            String primaryName = TreeUtil.getPrimaryTypeName(pss.getCompilationUnitOf(ct));
-            if(ct.getSimpleName().toString().equals(primaryName))
-                continue; // a primary type
-
-            String prefix = ((PackageElement)pkg).getQualifiedName().toString().replace('.','/')+'/';
-            if (prefix.equals("/")) { // default package
-                prefix = "";
-            }
-            PrintWriter w = new PrintWriter(openDefault(outDir,
-                prefix+ct.getSimpleName()+".js"));
-            w.println("redirect('"+ct.getSimpleName()+"','"+primaryName +".js');");
-            w.close();
-        }
-
         System.out.println("Generating usage index");
         {// "find usage" index
             generateProjectUsageJs(new PrintWriter(openDefault(outDir,"project-usage.js")));

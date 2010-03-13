@@ -127,8 +127,7 @@ public class AstGenerator {
         ExpressionTree packageName = compUnit.getPackageName();
         String pkg = packageName==null?"":packageName.toString().replace('.','/')+'/';
 
-        String name = TreeUtil.getPrimaryTypeName(compUnit);
-
+        String name = new File(compUnit.getSourceFile().getName()).getName();
         return pkg + name+".js";
     }
 
