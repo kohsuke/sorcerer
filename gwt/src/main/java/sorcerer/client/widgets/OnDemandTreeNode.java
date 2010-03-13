@@ -30,7 +30,7 @@ public abstract class OnDemandTreeNode extends TreeNode {
         setIsFolder(true);
     }
     
-    /*package*/ void loadOnDemand() {
+    protected void loadOnDemand() {
         if (!loaded) {
             load();
             setAttribute("isFolder",(Boolean)null);

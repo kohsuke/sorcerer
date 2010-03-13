@@ -6,6 +6,8 @@ import com.smartgwt.client.widgets.tree.events.FolderOpenedEvent;
 import com.smartgwt.client.widgets.tree.events.FolderOpenedHandler;
 import com.smartgwt.client.widgets.tree.events.LeafClickEvent;
 import com.smartgwt.client.widgets.tree.events.LeafClickHandler;
+import com.smartgwt.client.widgets.tree.events.NodeClickEvent;
+import com.smartgwt.client.widgets.tree.events.NodeClickHandler;
 
 /**
  * {@link TreeGrid} that loads nodes on demand.
@@ -29,6 +31,14 @@ public class OnDemandTreeGrid extends TreeGrid {
                 TreeNode l = event.getLeaf();
                 if (l instanceof LeafClickHandler)
                     ((LeafClickHandler)l).onLeafClick(event);
+            }
+        });
+
+        addNodeClickHandler(new NodeClickHandler() {
+            public void onNodeClick(NodeClickEvent event) {
+                TreeNode n = event.getNode();
+                if (n instanceof NodeClickHandler)
+                    ((NodeClickHandler)n).onNodeClick(event);
             }
         });
     }

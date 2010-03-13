@@ -2,6 +2,8 @@ package sorcerer.client.pkg;
 
 import com.smartgwt.client.widgets.tree.Tree;
 import com.smartgwt.client.widgets.tree.TreeNode;
+import com.smartgwt.client.widgets.tree.events.NodeClickEvent;
+import com.smartgwt.client.widgets.tree.events.NodeClickHandler;
 import sorcerer.client.LazyDataLoader.Callback;
 import sorcerer.client.data.pkg.*;
 import sorcerer.client.data.pkg.Package;
@@ -11,7 +13,7 @@ import sorcerer.client.widgets.OnDemandTreeNode;
 /**
  * {@link TreeNode} for packages.
  */
-class PackageTreeNode extends OnDemandTreeNode {
+class PackageTreeNode extends OnDemandTreeNode implements NodeClickHandler {
     private final sorcerer.client.data.pkg.Package pkg;
     private final Tree tree;
 
@@ -34,5 +36,9 @@ class PackageTreeNode extends OnDemandTreeNode {
 
     public void open() {
         tree.openFolder(this);
+    }
+
+    public void onNodeClick(NodeClickEvent event) {
+        loadOnDemand();
     }
 }
