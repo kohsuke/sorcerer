@@ -191,6 +191,14 @@ public class ParsedSourceSet {
         return treePathByClass;
     }
 
+    public TreePath getTreePathByClass(ClassTree ct) {
+        return treePathByClass.get(ct);
+    }
+
+    public CompilationUnitTree getCompilationUnitOf(ClassTree ct) {
+        return getTreePathByClass(ct).getCompilationUnit();
+    }
+
     /**
      * Gets the javadoc/sorcerer locations of dependencies.
      */
@@ -278,6 +286,15 @@ public class ParsedSourceSet {
      */
     public SourcePositions getSourcePositions() {
         return srcPos;
+    }
+
+    public Pos getPositionOf(TreePath p) {
+        return getPositionOf(p.getCompilationUnit(),p.getLeaf());
+    }
+
+    public Pos getPositionOf(CompilationUnitTree cu, Tree t) {
+        long pos = getSourcePositions().getStartPosition(cu, t);
+        return new Pos(cu,pos);
     }
 
     /**

@@ -55,7 +55,7 @@ final class LocalVariableIdBuilder extends AbstractElementVisitor6<StringBuilder
             return combine(getEnclosingTypeOrPackage(t).accept(this,null)).append(name);
         case TOP_LEVEL:
             // check if this class is the 'primary type' of the compilation unit
-            CompilationUnitTree owner = pss.getTreePathByClass().get(ct).getCompilationUnit();
+            CompilationUnitTree owner = pss.getCompilationUnitOf(ct);
             String primaryTypeName = TreeUtil.getPrimaryTypeName(owner);
             String simpleName = ct.getSimpleName().toString();
 

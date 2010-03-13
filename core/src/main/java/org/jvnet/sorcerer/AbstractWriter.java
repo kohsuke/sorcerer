@@ -58,8 +58,7 @@ abstract class AbstractWriter {
      */
     protected void writeOutlineNodeProperties(JsonWriter jw, Element e, CompilationUnitTree cu, Tree t) {
         writeOutlineNodeProperties(jw,e);
-        long startPos = pss.getSourcePositions().getStartPosition(cu, t);
-        jw.property("line",cu.getLineMap().getLineNumber(startPos));
+        jw.property("line",pss.getPositionOf(cu,t).line);
     }
 
     private static final Modifier[] MODS = new Modifier[] {Modifier.PUBLIC, Modifier.PROTECTED, Modifier.PRIVATE};

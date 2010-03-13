@@ -96,9 +96,8 @@ public class FrameSetGenerator extends AbstractWriter {
                 continue;
             ClassTree ct = pss.getTrees().getTree(e);
             if(ct==null)    continue;
-            TreePath treePath = pss.getTreePathByClass().get(ct);
 
-            String primaryName = TreeUtil.getPrimaryTypeName(treePath.getCompilationUnit());
+            String primaryName = TreeUtil.getPrimaryTypeName(pss.getCompilationUnitOf(ct));
             if(ct.getSimpleName().toString().equals(primaryName))
                 continue; // a primary type
 
@@ -208,12 +207,15 @@ public class FrameSetGenerator extends AbstractWriter {
             JsonWriter jw = new JsonWriter(w);
             jw.startArray();
             for (TypeElement t : pss.getClassElements(p)) {
-                if(pss.getTrees().getTree(t)==null)
-                    continue;   // not a part of the compilation unit
+                ClassTree ct = pss.getTrees().getTree(t);
+                if(ct ==null)   continue;   // not a part of the compilation unit
+                TreePath tp = pss.getTreePathByClass(ct);
+
                 jw.startObject();
                 jw.property("name",t.getSimpleName());
                 jw.property("kind",getKindString(t.getKind()));
-                jw.property("script",t.getQualifiedName().toString().replace('.','/')+".js");
+                jw.property("source", tp.getCompilationUnit().getSourceFile().getName());
+                jw.property("line", pss.getPositionOf(tp).line);
                 jw.property("access",getAccessLevel(t));
                 jw.endObject();
             }

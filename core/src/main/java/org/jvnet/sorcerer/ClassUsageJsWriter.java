@@ -224,8 +224,7 @@ public class ClassUsageJsWriter extends AbstractWriter {
                 w.startArray();
                 for (TreePath p : leaves) {
                     // TODO: what shall we write here?
-                    long pos = pss.getSourcePositions().getStartPosition(p.getCompilationUnit(), p.getLeaf());
-                    w.object((int)p.getCompilationUnit().getLineMap().getLineNumber(pos));
+                    w.object((int)pss.getPositionOf(p).line);
                 }
                 w.endArray();
             }
