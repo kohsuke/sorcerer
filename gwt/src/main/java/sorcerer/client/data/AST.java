@@ -1,6 +1,7 @@
 package sorcerer.client.data;
 
 import sorcerer.client.js.JsFunction;
+import sorcerer.client.outline.OutlineTreeWidget;
 import sorcerer.client.sourceview.SourceViewWidget;
 
 /**
@@ -14,13 +15,14 @@ public final class AST extends JsFunction {
     /**
      * Accepts a visitor and calls its corresponding methods.
      */
-    public void accept(ASTVisitor visitor) {
+    public <T extends ASTVisitor> T accept(T visitor) {
         // wrap the visitor into the form suitable for 'f' of with(f) {...} call
         Parser p = Parser.create(visitor);
         // this evaluates the encoded function, which returns a new function tree
         JsFunction f = this.invoke(p);
         // and this actually fires off events to the visitor.
         f.invoke();
+        return visitor;
     }
 
     /**
@@ -28,5 +30,6 @@ public final class AST extends JsFunction {
      */
     public void show() {
         SourceViewWidget.get().load(this);
+        OutlineTreeWidget.get().load(this);
     }
 }

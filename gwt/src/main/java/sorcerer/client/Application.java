@@ -12,6 +12,7 @@ import com.smartgwt.client.widgets.layout.SectionStackSection;
 import sorcerer.client.data.SourceFileLoader;
 import sorcerer.client.data.pkg.ClassListLoader;
 import sorcerer.client.data.pkg.ProjectLoader;
+import sorcerer.client.outline.OutlineTreeWidget;
 import sorcerer.client.pkg.PackageTreeWidget;
 import sorcerer.client.sourceview.SourceViewWidget;
 
@@ -22,7 +23,8 @@ import sorcerer.client.sourceview.SourceViewWidget;
 public class Application implements EntryPoint {
     private SourceViewWidget mainCanvas;
     private static Application INSTANCE;
-    
+    private OutlineTreeWidget outline;
+
     public void onModuleLoad() {
         INSTANCE = this;
         Page.setAppImgDir("resource-files/");
@@ -52,7 +54,7 @@ public class Application implements EntryPoint {
         SectionStackSection outline = new SectionStackSection("Outline");
         outline.setExpanded(true);
         outline.setCanCollapse(true);
-        outline.addItem(new HelpCanvas("help2"));
+        outline.addItem(this.outline=new OutlineTreeWidget());
 
         SectionStack left = new SectionStack();
         left.setVisibilityMode(VisibilityMode.MULTIPLE);
@@ -105,6 +107,10 @@ public class Application implements EntryPoint {
         return mainCanvas;
     }
 
+    public OutlineTreeWidget getOutlineView() {
+        return outline;
+    }
+    
     public static Application get() {
         return INSTANCE;
     }

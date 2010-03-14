@@ -13,8 +13,7 @@ import sorcerer.client.source.SourceBuilder;
  */
 public class SourceViewWidget extends HTMLPane {
     public void load(AST ast) {
-        SourceBuilder b = new SourceBuilder();
-        ast.accept(b);
+        SourceBuilder b = ast.accept(new SourceBuilder());
         String html = b.toHTML();
 
         JsArray<String> lnt = JsArray.create();
