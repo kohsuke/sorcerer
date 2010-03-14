@@ -36,7 +36,7 @@ public class SourceBuilder extends ASTVisitor {
 
     private final Map<Integer/*line number*/,JsArray<Bookmark>> bookmarks = new HashMap<Integer, JsArray<Bookmark>>();
 
-    private TableItem currentDecl; // TODO: what's the proper type?
+    private TableItem currentDecl;
 
     /**
      * ID generator.
@@ -45,6 +45,10 @@ public class SourceBuilder extends ASTVisitor {
 
     public SourceBuilder() {
         html.push("<pre>");
+    }
+
+    public int getLineNumber() {
+        return lineNumber;
     }
 
     /*

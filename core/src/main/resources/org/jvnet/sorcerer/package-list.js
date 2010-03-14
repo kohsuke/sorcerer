@@ -16,7 +16,7 @@ setProject(
           "children":[
             {
               "name":"b",
-              "leaf":"true",
+              "leaf":"true"
             }
           ]
         }
