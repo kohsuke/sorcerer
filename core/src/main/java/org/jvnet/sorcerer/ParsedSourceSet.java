@@ -21,6 +21,7 @@ import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
+import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import org.jvnet.sorcerer.Tag.ClassDecl;
 import org.jvnet.sorcerer.Tag.DeclName;
 import org.jvnet.sorcerer.Tag.FieldDecl;
@@ -448,9 +449,8 @@ public class ParsedSourceSet {
             public Void visitMethod(MethodTree mt, Void _) {
                 ExecutableElement e = (ExecutableElement) TreeUtil.getElement(mt);
                 if(e!=null) {
-                    if(e.getKind()==ElementKind.CONSTRUCTOR && e.getEnclosingElement().getSimpleName().length()==0)
-                        return _; // this is a synthesized constructor for an anonymous class
-                                  // TODO: I suspect we need some kind of uniform treatment for all synthesized methods 
+                    if (((MethodSymbol)e).isSynthetic())
+                        return _; // this is a synthesized constructor 
 
                     // mark up the method name
                     Tree prev = mt.getReturnType();

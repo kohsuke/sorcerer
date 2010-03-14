@@ -1238,6 +1238,10 @@ public abstract class Symbol implements Element {
             return (flags() & VARARGS) != 0;
         }
 
+        public boolean isSynthetic() {
+            return (flags() & (SYNTHETIC|GENERATEDCONSTR|ANONCONSTR)) != 0;
+        }
+
         public <R, P> R accept(ElementVisitor<R, P> v, P p) {
             return v.visitExecutable(this, p);
         }
