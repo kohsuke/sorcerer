@@ -43,21 +43,8 @@ public final class Project extends JavaScriptObject {
     /**
      * Called after the project information is loaded to enrich the data structure.
      */
-    /*package*/ void init() {
-        // figure out where this project is loaded from
-        NodeList<Element> scripts = Document.get().getElementsByTagName("script");
-        for (int i=0; i<scripts.getLength(); i++) {
-            ScriptElement s = ScriptElement.as(scripts.getItem(i));
-            String src = s.getSrc();
-            if (!src.endsWith("/package-list.js"))   continue;
-
-            System.out.println(s.getSrc());
-            System.out.println(s.getText());
-            if (s.getText().contains(id())) {
-                baseURL(src.substring(0,src.lastIndexOf('/')));
-            }
-        }
-
+    /*package*/ void init(String baseURL) {
+        baseURL(baseURL);
         initPackages();
         rootPackage().init(this,"");
     }

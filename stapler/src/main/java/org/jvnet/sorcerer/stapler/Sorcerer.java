@@ -39,10 +39,10 @@ public class Sorcerer {
         this.expiration = expiration;
 
         for (final CompilationUnitTree cu : pss.getCompilationUnits()) {
-            generators.put(new AstGenerator(pss,cu).getRelativePath(),
+            generators.put(new AstGenerator(pss,fsg.id,cu).getRelativePath(),
                 new JavaScriptGenerator() {
                     void doDynamic(StaplerRequest request, StaplerResponse rsp) throws IOException {
-                        new AstGenerator(pss,cu).write(rsp.getWriter());
+                        new AstGenerator(pss,fsg.id,cu).write(rsp.getWriter());
                     }
                 }
             );

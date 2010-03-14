@@ -16,8 +16,21 @@ public class ProjectLoader implements Iterable<Project> {
     private final Map<String,Project> projects = new HashMap<String, Project>();
     private final JsArray<Listener> listeners = JsArray.create();
 
+    /**
+     * Loading package-list.js in this base URL currently.
+     */
+    private String loading;
+
+    private final JsArray<String> queue = JsArray.create();
+
     public void load(String baseURL) {
-        ScriptLoader.load(baseURL+"/package-list.js");
+        // load one at a time to retain the base URL information.
+        if (loading!=null) {
+            queue.push(baseURL);
+        } else {
+            loading = baseURL;
+            ScriptLoader.load(baseURL+"/package-list.js");
+        }
     }
 
     public void addListener(Listener l) {
@@ -36,18 +49,22 @@ public class ProjectLoader implements Iterable<Project> {
      * Loaded JavaScript will invoke this method.
      */
     static void define(JsArray<Project> prj) {
-        for (Project p : prj.iterable()) {
-            INSTANCE._define(p);
-        }
+        INSTANCE._define(prj);
     }
 
-    private void _define(Project prj) {
-        prj.init();
+    private void _define(JsArray<Project> prj) {
+        for (Project p : prj.iterable()) {
+            p.init(loading);
 
-        // TODO: version conflict resolution and duplicate reduction.
-        projects.put(prj.id(),prj);
-        for (int i=0; i<listeners.length(); i++)
-            listeners.get(i).onChange(prj);
+            // TODO: version conflict resolution and duplicate reduction.
+            projects.put(p.id(),p);
+            for (int i=0; i<listeners.length(); i++)
+                listeners.get(i).onChange(p);
+        }
+
+        loading = null;
+        if (queue.length()>0)
+            load(queue.pop());
     }
 
     public static ProjectLoader INSTANCE = new ProjectLoader();

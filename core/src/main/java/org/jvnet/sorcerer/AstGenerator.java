@@ -77,7 +77,8 @@ public class AstGenerator {
      *      The writer to receive JavaScript. This writer must be closed by the caller.
      */
     public void write(JavaScriptStreamWriter out) throws IOException {
-        out.writeHeader(getRelativePath(),projectId);
+        String path = getRelativePath();
+        out.writeHeader(path.substring(0,path.lastIndexOf('.')),projectId); // trim off the '.js' portion
         Root tree = buildTree();
         out.writeBody(tree);
         out.writeFooter();

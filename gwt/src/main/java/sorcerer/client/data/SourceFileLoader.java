@@ -4,7 +4,7 @@ import sorcerer.client.LazyDataLoader;
 import sorcerer.client.data.pkg.Project;
 import sorcerer.client.data.pkg.SourceFile;
 
-import static java.lang.Math.min;
+import static java.lang.Math.max;
 
 /**
  * Loads the encoded Java source code as necessary.
@@ -27,7 +27,7 @@ public class SourceFileLoader extends LazyDataLoader<SourceFile,AST> {
         Project p = Project.get(projectId);
         int idx = fileName.lastIndexOf('/');
         SourceFile s = new SourceFile(
-                p.getPackage(fileName.substring(0,min(0,idx)).replace('.','/')),
+                p.getPackage(fileName.substring(0,max(0,idx)).replace('.','/')),
                 fileName.substring(idx+1));
         INSTANCE.onLoaded(s,ast);
     }

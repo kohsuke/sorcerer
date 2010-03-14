@@ -33,7 +33,7 @@ public final class SourceFile {
     @Override
     public boolean equals(Object o) {
         SourceFile that = (SourceFile) o;
-        return fileName.equals(that.fileName) && pkg.equals(that.pkg);
+        return fileName.equals(that.fileName) && pkg==that.pkg;
     }
 
     @Override

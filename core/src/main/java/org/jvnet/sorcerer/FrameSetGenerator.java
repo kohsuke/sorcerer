@@ -47,7 +47,7 @@ public class FrameSetGenerator extends AbstractWriter {
      */
     private final PackageElement unnamed;
 
-    private final UUID id = UUID.randomUUID();
+    public final UUID id = UUID.randomUUID();
 
     public FrameSetGenerator(ParsedSourceSet pss) {
         super(pss);
