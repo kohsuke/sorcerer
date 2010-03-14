@@ -5,6 +5,7 @@ import com.smartgwt.client.widgets.tree.TreeGrid;
 import com.smartgwt.client.widgets.tree.TreeNode;
 import sorcerer.client.Application;
 import sorcerer.client.data.AST;
+import sorcerer.client.linker.SorcererLinker;
 
 /**
  * Outline tree view.
@@ -29,7 +30,7 @@ public class OutlineTreeWidget extends TreeGrid {
 
     public void load(AST ast) {
         root.setChildren(new TreeNode[0]);
-        ast.accept(new OutlineBuilder(tree));
+        ast.accept(new OutlineBuilder(tree, new SorcererLinker()));
     }
 
     public static OutlineTreeWidget get() {

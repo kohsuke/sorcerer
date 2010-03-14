@@ -18,12 +18,12 @@ public class OutlineNode extends TreeNode {
      * @param decl
      *      The declaration to be wrapped into a node.
      */
-    public OutlineNode(TableItem decl, boolean local) {
+    public OutlineNode(TableItem decl, String href, boolean local) {
         super();
         this.kind = decl.kind().toLowerCase();
         this.isLocal = local;
         setAccess("default"); // unless later overridden otherwise
-        setTitle("<a href='"+decl.href()+"'>"+decl.outlineTitle()+"</a>");
+        setTitle("<a href='"+href+"'>"+decl.outlineTitle()+"</a>");
     }
 
     public void setAccess(String access) {

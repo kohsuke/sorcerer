@@ -9,6 +9,7 @@ import sorcerer.client.data.TableItem;
 import sorcerer.client.data.Type;
 import sorcerer.client.data.Variable;
 import sorcerer.client.js.JsFunction;
+import sorcerer.client.linker.Linker;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -16,16 +17,21 @@ import sorcerer.client.js.JsFunction;
 public class OutlineBuilder extends ASTVisitor {
     private final Tree tree;
     private OutlineNode node;
+    private final Linker linker;
 
     /**
      * If we are visiting inside a {@link Type}, set to that type.
      */
     private Type currentType;
 
-    public OutlineBuilder(Tree tree) {
+    public OutlineBuilder(Tree tree, Linker linker) {
         this.tree = tree;
+        this.linker = linker;
     }
 
+    /**
+     * As we figure out the access modifier for the current declaration, updates its icon.
+     */
     @Override
     public void reservedWord(String name) {
         if (name.equals("public") || name.equals("protected") || name.equals("private")) {
@@ -40,7 +46,7 @@ public class OutlineBuilder extends ASTVisitor {
      */
     private void decl(TableItem type, boolean isLocal, JsFunction children) {
         OutlineNode parent = node;
-        node = new OutlineNode(type,isLocal);
+        node = new OutlineNode(type,type.href(),isLocal);
         tree.add(node, parent!=null ? parent : tree.getRoot());
 
         children.invoke();
@@ -68,7 +74,7 @@ public class OutlineBuilder extends ASTVisitor {
         decl(new Field(currentType,name), true,children);
     }
 
-    //
+//
 // No-ops
 //
     @Override
@@ -127,5 +133,6 @@ public class OutlineBuilder extends ASTVisitor {
 
     @Override
     public void variableDef(Variable v, JsFunction children) {
+        children.invoke();
     }
 }

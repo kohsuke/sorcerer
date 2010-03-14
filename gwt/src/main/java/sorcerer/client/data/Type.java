@@ -1,5 +1,8 @@
 package sorcerer.client.data;
 
+import sorcerer.client.linker.Linker;
+import sorcerer.client.linker.SorcererLinker;
+
 /**
  * Represents a type in AST.
  * 
@@ -18,6 +21,11 @@ public class Type extends TableItem {
 
     public final String packageName;
 
+    /**
+     * Linker to use for declarations in this type.
+     * TODO: depending on where we load it, use the right instance.
+     */
+    public final Linker linker = SorcererLinker.INSTANCE;
 
     /**
      * Builds a richer in memory information about a type from {@link TypeEntry}
@@ -43,6 +51,9 @@ public class Type extends TableItem {
         return shortName;
     }
 
+    /**
+     * Fully qualified class name all separated by '.' and not '$'.
+     */
     public String fullDisplayName() {
         return binaryName.replace('$','.');
     }
@@ -58,14 +69,7 @@ public class Type extends TableItem {
 
     @Override
     public String href() {
-        // TODO: it'd be nice if the source view page can be loaded on its own.
-        // the way it's done today requires package view to be loaded.
-//        t.linker = window.top.packageView.main.linker.get(t.packageName);
-        // YAHOO.log("linker for ["+t.packageName+"] is "+t.linker.name());
-
-//        t.href = t.linker.type(t);
-        // TODO
-        return "TODO";
+        return linker.href(this);
     }
 
     @Override

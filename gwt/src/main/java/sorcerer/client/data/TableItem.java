@@ -1,5 +1,7 @@
 package sorcerer.client.data;
 
+import sorcerer.client.linker.Linker;
+
 /**
  * @author Kohsuke Kawaguchi
  */
@@ -15,7 +17,7 @@ public abstract class TableItem {
     public final String css;
 
     /**
-     * Link to the definition of this method
+     * Hyperlink to the definition.
      */
     public abstract String href();
 

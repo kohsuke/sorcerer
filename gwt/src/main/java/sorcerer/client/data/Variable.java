@@ -1,5 +1,7 @@
 package sorcerer.client.data;
 
+import sorcerer.client.linker.Linker;
+
 /**
  * @author Kohsuke Kawaguchi
  */
@@ -20,7 +22,8 @@ public class Variable extends TableItem {
 
     @Override
     public String href() {
-        return href;
+        // TODO: return linker.href(this);
+        return "TODO";
     }
 
     @Override

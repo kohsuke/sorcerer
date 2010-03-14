@@ -3,6 +3,7 @@ package sorcerer.client.data;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayString;
 import sorcerer.client.js.JsArray;
+import sorcerer.client.linker.Linker;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -56,8 +57,7 @@ public class Method extends TableItem {
 
     @Override
     public String href() {
-        // TODO
-        return "TODO";
+        return owner.linker.href(this);
     }
 
     @Override

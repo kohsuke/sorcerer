@@ -5,7 +5,7 @@ import sorcerer.client.LazyDataLoader.Callback;
 import sorcerer.client.data.AST;
 
 /**
- * Represents a type.
+ * Represents a top-level type in the package structure.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -54,6 +54,11 @@ public final class Klass extends JavaScriptObject {
     native void pkg(Package value) /*-{ this.pkg = value; }-*/;
 
     public Project project() { return pkg().owner(); }
+
+    public String fullName() {
+        String fn = pkg().fullName();
+        return fn.length()>0 ? fn+'.'+shortName() : shortName();
+    }
 
     /**
      * Gets the {@link SourceFile} that contains this type.
