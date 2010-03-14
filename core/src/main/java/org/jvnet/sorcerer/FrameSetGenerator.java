@@ -148,11 +148,11 @@ public class FrameSetGenerator extends AbstractWriter {
         try {
             w.println("setProject(");
             JsonWriter jw = new JsonWriter(w);
-            jw.object(id.toString());
             jw.startArray();
             {// write self
                 jw.startObject();
                 jw.property("name","Project"); // TODO
+                jw.property("id",id.toString());
                 jw.propertyUnquoted("linker","linker.self");
                 jw.property("packages",packageNames);
                 jw.endObject();

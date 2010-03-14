@@ -25,7 +25,7 @@ class PackageTreeNode extends OnDemandTreeNode implements NodeClickHandler {
     }
 
     protected void load() {
-        ClassListLoader.INSTANCE.retrieve(pkg.fullName(),new Callback<JsArray<Klass>>() {
+        pkg.retrieveClassList(new Callback<JsArray<Klass>>() {
             public void call(JsArray<Klass> klasses) {
                 for (Klass k : klasses.iterable())
                     tree.add(new KlassNode(k), PackageTreeNode.this);

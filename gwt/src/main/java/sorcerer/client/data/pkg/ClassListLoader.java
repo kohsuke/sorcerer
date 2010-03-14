@@ -11,25 +11,27 @@ import sorcerer.client.js.JsArray;
  *
  * @author Kohsuke Kawaguchi
  */
-public class ClassListLoader extends LazyDataLoader<String, JsArray<Klass>> {
+public class ClassListLoader extends LazyDataLoader<Package, JsArray<Klass>> {
     @Override
-    protected String href(String key) {
-        return "data/"+key.replace('.','/')+"/class-list.js";
+    protected String href(Package key) {
+        return key.baseURL()+"/class-list.js";
     }
 
     /**
      * Loaded JavaScript will invoke this method.
      */
-    public static void define(String packageName, JsArray<Klass> ast) {
+    public static void define(String packageName, String projectId, JsArray<Klass> ast) {
+        Project p = Project.get(projectId);
+        Package pkg = p.getPackage(packageName);
         for (Klass k : ast.iterable())
-            k.packageName(packageName);
-        INSTANCE.onLoaded(packageName,ast);
+            k.pkg(pkg);
+        INSTANCE.onLoaded(pkg,ast);
     }
 
     public static ClassListLoader INSTANCE = new ClassListLoader();
 
     public native static void export() /*-{
-        $wnd.setClassList = $entry(@sorcerer.client.data.pkg.ClassListLoader::define(Ljava/lang/String;Lsorcerer/client/js/JsArray;));
+        $wnd.setClassList = $entry(@sorcerer.client.data.pkg.ClassListLoader::define(Ljava/lang/String;Ljava/lang/String;Lsorcerer/client/js/JsArray;));
     }-*/;
 
     static {

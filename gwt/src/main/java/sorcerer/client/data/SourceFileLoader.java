@@ -1,6 +1,10 @@
 package sorcerer.client.data;
 
 import sorcerer.client.LazyDataLoader;
+import sorcerer.client.data.pkg.Project;
+import sorcerer.client.data.pkg.SourceFile;
+
+import static java.lang.Math.min;
 
 /**
  * Loads the encoded Java source code as necessary.
@@ -10,23 +14,28 @@ import sorcerer.client.LazyDataLoader;
  *
  * @author Kohsuke Kawaguchi
  */
-public class SourceFileLoader extends LazyDataLoader<String,AST> {
+public class SourceFileLoader extends LazyDataLoader<SourceFile,AST> {
     @Override
-    protected String href(String key) {
-        return key+".js";
+    protected String href(SourceFile key) {
+        return key.getAstURL();
     }
 
     /**
      * Loaded JavaScript will invoke this method.
      */
-    public static void define(String fileName, AST ast) {
-        INSTANCE.onLoaded(fileName,ast);
+    public static void define(String fileName, String projectId, AST ast) {
+        Project p = Project.get(projectId);
+        int idx = fileName.lastIndexOf('/');
+        SourceFile s = new SourceFile(
+                p.getPackage(fileName.substring(0,min(0,idx)).replace('.','/')),
+                fileName.substring(idx+1));
+        INSTANCE.onLoaded(s,ast);
     }
 
     public static SourceFileLoader INSTANCE = new SourceFileLoader();
 
     public native static void export() /*-{
-        $wnd.defineStructure = $entry(@sorcerer.client.data.SourceFileLoader::define(Ljava/lang/String;Lsorcerer/client/data/AST;));
+        $wnd.defineStructure = $entry(@sorcerer.client.data.SourceFileLoader::define(Ljava/lang/String;Ljava/lang/String;Lsorcerer/client/data/AST;));
     }-*/;
 
     static {

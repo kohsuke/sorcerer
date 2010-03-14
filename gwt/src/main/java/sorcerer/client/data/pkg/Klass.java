@@ -3,8 +3,6 @@ package sorcerer.client.data.pkg;
 import com.google.gwt.core.client.JavaScriptObject;
 import sorcerer.client.LazyDataLoader.Callback;
 import sorcerer.client.data.AST;
-import sorcerer.client.data.SourceFileLoader;
-import sorcerer.client.sourceview.SourceViewWidget;
 
 /**
  * Represents a type.
@@ -48,17 +46,29 @@ public final class Klass extends JavaScriptObject {
 // Properties computed later
 //
 
-    public native String packageName() /*-{ return this.packageName; }-*/;
+    /**
+     * {@link Package} that this class belongs to.
+     */
+    public native Package pkg() /*-{ return this.pkg; }-*/;
 
-    public native void packageName(String value) /*-{ this.packageName = value; }-*/;
+    native void pkg(Package value) /*-{ this.pkg = value; }-*/;
+
+    public Project project() { return pkg().owner(); }
+
+    /**
+     * Gets the {@link SourceFile} that contains this type.
+     */
+    public SourceFile getSourceFile() {
+        return new SourceFile(pkg(),file());
+    }
 
     /**
      * Show this class in the source view.
      */
     public void show() {
-        SourceFileLoader.INSTANCE.retrieve(packageName()+'/'+file(),new Callback<AST>() {
+        getSourceFile().retrieveAST(new Callback<AST>() {
             public void call(AST ast) {
-                SourceViewWidget.get().load(ast);
+                ast.show();
             }
         });
     }

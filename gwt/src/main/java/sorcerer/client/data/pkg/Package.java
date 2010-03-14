@@ -1,6 +1,7 @@
 package sorcerer.client.data.pkg;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import sorcerer.client.LazyDataLoader.Callback;
 import sorcerer.client.js.JsArray;
 
 /**
@@ -30,14 +31,37 @@ public final class Package extends JavaScriptObject {
         return n;
     }
 
+    /**
+     * {@link Project} that owns this package.
+     */
+    public native Project owner() /*-{ return this.owner; }-*/;
+    private native void owner(Project value) /*-{ this.owner = value; }-*/;
+
+    public String baseURL() {
+        return owner().baseURL()+'/'+fullName().replace('.','/');
+    }
+
     private native void intermediate(Package child) /*-{ this.intermediate=child; }-*/;
 
-    /*package*/ void init(String prefix) {
-        fullName(prefix+shortName());
+    /**
+     * Loads the classes in this package and calls back.
+     */
+    public void retrieveClassList(Callback<JsArray<Klass>> callback) {
+        ClassListLoader.INSTANCE.retrieve(this,callback);
+    }
+
+
+    /*package*/ void init(Project owner, String prefix) {
+        owner(owner);
+        
+        String fn = prefix + shortName();
+        fullName(fn);
+        owner.packages().put(fn,this);
+
         if (!isLeaf() && children().length()==1)
             intermediate(children().get(0));
 
         for (Package c : children().iterable())
-            c.init(fullName()+ (fullName().length()>0 ? "." : ""));
+            c.init(owner,fn+ (fn.length()>0 ? "." : ""));
     }
 }

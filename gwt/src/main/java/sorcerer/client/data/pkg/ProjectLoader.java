@@ -3,7 +3,9 @@ package sorcerer.client.data.pkg;
 import sorcerer.client.ScriptLoader;
 import sorcerer.client.js.JsArray;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Loads <tt>package-list.js</tt> as necessary.
@@ -11,7 +13,7 @@ import java.util.Iterator;
  * @author Kohsuke Kawaguchi
  */
 public class ProjectLoader implements Iterable<Project> {
-    private final JsArray<Project> projects = JsArray.create();
+    private final Map<String,Project> projects = new HashMap<String, Project>();
     private final JsArray<Listener> listeners = JsArray.create();
 
     public void load(String baseURL) {
@@ -23,7 +25,11 @@ public class ProjectLoader implements Iterable<Project> {
     }
 
     public Iterator<Project> iterator() {
-        return projects.iterable().iterator();
+        return projects.values().iterator();
+    }
+
+    public Project get(String id) {
+        return projects.get(id);
     }
 
     /**
@@ -36,10 +42,10 @@ public class ProjectLoader implements Iterable<Project> {
     }
 
     private void _define(Project prj) {
-        prj.rootPackage().init("");
+        prj.init();
 
         // TODO: version conflict resolution and duplicate reduction.
-        projects.push(prj);
+        projects.put(prj.id(),prj);
         for (int i=0; i<listeners.length(); i++)
             listeners.get(i).onChange(prj);
     }

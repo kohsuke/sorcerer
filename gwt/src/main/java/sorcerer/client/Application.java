@@ -6,14 +6,9 @@ import com.smartgwt.client.types.Overflow;
 import com.smartgwt.client.types.VisibilityMode;
 import com.smartgwt.client.util.Page;
 import com.smartgwt.client.widgets.Canvas;
-import com.smartgwt.client.widgets.IButton;
-import com.smartgwt.client.widgets.events.ClickEvent;
-import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.layout.HLayout;
 import com.smartgwt.client.widgets.layout.SectionStack;
 import com.smartgwt.client.widgets.layout.SectionStackSection;
-import sorcerer.client.LazyDataLoader.Callback;
-import sorcerer.client.data.AST;
 import sorcerer.client.data.SourceFileLoader;
 import sorcerer.client.data.pkg.ClassListLoader;
 import sorcerer.client.data.pkg.ProjectLoader;
@@ -41,24 +36,11 @@ public class Application implements EntryPoint {
 
         RootPanel.get().add(h);
 
-        IButton b = new IButton("render");
-        b.addClickHandler(new ClickHandler() {
-            public void onClick(ClickEvent clickEvent) {
-                SourceFileLoader.INSTANCE.retrieve("Tab",new Callback<AST>() {
-                    public void call(AST value) {
-                        mainCanvas.load(value);
-                    }
-                });
-            }
-        });
-        mainCanvas.addChild(b);
-
         SourceFileLoader.export();
         ProjectLoader.export();
         ClassListLoader.export();
 
         ProjectLoader.INSTANCE.load("data");
-        loadTestData();
     }
 
     private SectionStack createLeft() {
@@ -81,10 +63,6 @@ public class Application implements EntryPoint {
         left.setShowResizeBar(true);
         return left;
     }
-
-    private static native void loadTestData() /*-{
-        $wnd.test();
-    }-*/;
 
     private SectionStack createRightPane() {
         SectionStackSection pkg = new SectionStackSection("Source code");
@@ -130,34 +108,4 @@ public class Application implements EntryPoint {
     public static Application get() {
         return INSTANCE;
     }
-
-    //    public void onModuleLoad() {
-//        FlowPanel main = new FlowPanel();
-//
-//        SplitLayoutPanel p2 = new SplitLayoutPanel();
-//        p2.addNorth(new HTML("package"), 200);
-//        p2.add(new HTML("outline"));
-//
-//        // Create a three-pane layout with splitters.
-//        final SplitLayoutPanel p = new SplitLayoutPanel();
-//        p.addWest(p2, 128);
-//        final HTML south = new HTML("list");
-//        p.addSouth(south, 100);
-//        p.add(main);
-//
-//
-//        // Attach the LayoutPanel to the RootLayoutPanel. The latter will listen for
-//        // resize events on the window to ensure that its children are informed of
-//        // possible size changes.
-//        RootLayoutPanel rp = RootLayoutPanel.get();
-//        rp.add(p);
-//
-//        Button b = new Button("Press me!");
-//        main.add(b);
-//        b.addClickHandler(new ClickHandler() {
-//            public void onClick(ClickEvent event) {
-//                south.setHeight("0");
-//            }
-//        });
-//    }
 }
