@@ -156,7 +156,7 @@ public class SourceBuilder extends ASTVisitor {
 
     @Override
     public void whitespace(int n) {
-        while (n>8) {
+        while (n>=8) {
             appendText(WS8);
             n -= 8;
         }
