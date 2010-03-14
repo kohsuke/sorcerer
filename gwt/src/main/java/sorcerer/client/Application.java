@@ -36,11 +36,6 @@ public class Application implements EntryPoint {
     public void onModuleLoad() {
         INSTANCE = this;
         Page.setAppImgDir("resource-files/");
-        History.addValueChangeHandler(new ValueChangeHandler<String>() {
-            public void onValueChange(ValueChangeEvent<String> e) {
-                jumpTo(e.getValue());
-            }
-        });
 
         HLayout h = new HLayout();
         h.setWidth100();
@@ -56,6 +51,15 @@ public class Application implements EntryPoint {
         ClassListLoader.export();
 
         ProjectLoader.INSTANCE.load("data");
+
+        History.addValueChangeHandler(new ValueChangeHandler<String>() {
+            public void onValueChange(ValueChangeEvent<String> e) {
+                jumpTo(e.getValue());
+            }
+        });
+
+        // TODO: projects need to be loaded before we do this, or else it won't jump at all
+        jumpTo(History.getToken()); // reflect the initial state
     }
 
     private SectionStack createLeft() {
@@ -128,9 +132,12 @@ public class Application implements EntryPoint {
      * Restores the right state.
      */
     public void jumpTo(final String id) {
+        if (id.equals(""))  return; // defensive check
+
         if (Document.get().getElementById(id)!=null)
             return; // navigated already
 
+        // TODO: these need to wait for the projects to finish loading
         int sep = id.indexOf('-');
         if (sep<0) {
             // type name
