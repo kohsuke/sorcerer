@@ -5,11 +5,9 @@ package sorcerer.client.data;
  */
 public abstract class TableItem {
     /**
-     * Tag that identifies the kind of table.
-     *
-     * TODO: do we still need this?
+     * Tag that identifies the type of this declaration.
      */
-    public abstract String kind();
+    public abstract Kind kind();
 
     /**
      * CSS classes to be used for referencing this method

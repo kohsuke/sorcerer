@@ -50,8 +50,8 @@ public class Method extends TableItem {
 
 
     @Override
-    public String kind() {
-        return "method";
+    public Kind kind() {
+        return Kind.METHOD;
     }
 
     @Override

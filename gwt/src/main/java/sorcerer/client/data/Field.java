@@ -23,8 +23,8 @@ public class Field extends TableItem {
     }-*/;
 
     @Override
-    public String kind() {
-        return "field";
+    public Kind kind() {
+        return Kind.FIELD;
     }
 
     @Override

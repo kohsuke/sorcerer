@@ -14,8 +14,8 @@ public class Variable extends TableItem {
     }
 
     @Override
-    public String kind() {
-        return "localVariable";
+    public Kind kind() {
+        return Kind.LOCALVARIABLE;
     }
 
     @Override

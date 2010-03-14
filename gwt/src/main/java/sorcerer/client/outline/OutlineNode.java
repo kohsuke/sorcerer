@@ -1,8 +1,11 @@
 package sorcerer.client.outline;
 
 import com.smartgwt.client.widgets.tree.TreeNode;
+import sorcerer.client.data.TableItem;
 
 /**
+ * {@likn TreeNode} in {@link OutlineTreeWidget}.
+ *
  * @author Kohsuke Kawaguchi
  */
 public class OutlineNode extends TreeNode {
@@ -11,10 +14,16 @@ public class OutlineNode extends TreeNode {
     private final String kind;
     private final boolean isLocal;
 
-    public OutlineNode(String title, String kind, boolean local) {
-        super(title);
-        this.kind = kind;
+    /**
+     * @param decl
+     *      The declaration to be wrapped into a node.
+     */
+    public OutlineNode(TableItem decl, boolean local) {
+        super();
+        this.kind = decl.kind().toLowerCase();
         this.isLocal = local;
+        setAccess("default"); // unless later overridden otherwise
+        setTitle("<a href='"+decl.href()+"'>"+decl.outlineTitle()+"</a>");
     }
 
     public void setAccess(String access) {

@@ -38,9 +38,9 @@ public class OutlineBuilder extends ASTVisitor {
     /**
      * Creates a new tree node for each declaration.
      */
-    private void decl(TableItem type, String kind, boolean isLocal, JsFunction children) {
+    private void decl(TableItem type, boolean isLocal, JsFunction children) {
         OutlineNode parent = node;
-        node = new OutlineNode(type.outlineTitle(),kind,isLocal);
+        node = new OutlineNode(type,isLocal);
         tree.add(node, parent!=null ? parent : tree.getRoot());
 
         children.invoke();
@@ -54,18 +54,18 @@ public class OutlineBuilder extends ASTVisitor {
     public void typeDef(Type t, JsArrayInteger descendants, JsFunction children) {
         Type old = currentType;
         currentType = t;
-        decl(t,t.getType(),false,children);
+        decl(t, false,children);
         currentType = old;
     }
 
     @Override
     public void methodDef(Method m, JsArrayInteger superMethods, JsArrayInteger subMethods, JsFunction children) {
-        decl(m,"method",true,children);
+        decl(m, true,children);
     }
 
     @Override
     public void fieldDef(String name, JsFunction children) {
-        decl(new Field(currentType,name),"field",true,children);
+        decl(new Field(currentType,name), true,children);
     }
 
     //

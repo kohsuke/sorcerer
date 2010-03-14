@@ -48,8 +48,12 @@ public class Type extends TableItem {
     }
 
     @Override
-    public String kind() {
-        return "type";
+    public Kind kind() {
+        if(this.css.contains("cl"))  return Kind.CLASS;
+        if(this.css.contains("an"))  return Kind.ANNOTATION;
+        if(this.css.contains("en"))  return Kind.ENUM;
+        if(this.css.contains("it"))  return Kind.INTERFACE;
+        throw new AssertionError(this.css);
     }
 
     @Override
@@ -67,13 +71,5 @@ public class Type extends TableItem {
     @Override
     public String usageKey() {
         return binaryName+"#this";
-    }
-
-    public String getType() {
-        if(this.css.contains("cl"))  return "class";
-        if(this.css.contains("an"))  return "annotation";
-        if(this.css.contains("en"))  return "enum";
-        if(this.css.contains("it"))  return "interface";
-        return null;
     }
 }
