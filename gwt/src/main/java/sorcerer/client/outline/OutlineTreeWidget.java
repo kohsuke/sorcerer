@@ -21,13 +21,14 @@ public class OutlineTreeWidget extends TreeGrid {
         setShowHeader(false);
         setShowSelectedStyle(false);
         setShowOpenIcons(false);
+        setLeaveScrollbarGap(false);
         setData(tree = new Tree());
         tree.setShowRoot(false);
         tree.setRoot(root = new TreeNode());
     }
 
     public void load(AST ast) {
-        tree.getRoot().setChildren(new TreeNode[0]);
+        root.setChildren(new TreeNode[0]);
         ast.accept(new OutlineBuilder(tree));
     }
 

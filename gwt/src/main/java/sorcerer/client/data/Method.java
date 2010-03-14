@@ -82,7 +82,7 @@ public class Method extends TableItem {
     }
 
     private String shortName(String s) {
-        return s.substring(s.indexOf('.')+1);
+        return s.substring(s.lastIndexOf('.')+1);
     }
 
     /**

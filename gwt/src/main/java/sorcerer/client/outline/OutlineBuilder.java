@@ -35,6 +35,9 @@ public class OutlineBuilder extends ASTVisitor {
         }
     }
 
+    /**
+     * Creates a new tree node for each declaration.
+     */
     private void decl(TableItem type, String kind, boolean isLocal, JsFunction children) {
         OutlineNode parent = node;
         node = new OutlineNode(type.outlineTitle(),kind,isLocal);
@@ -42,6 +45,8 @@ public class OutlineBuilder extends ASTVisitor {
 
         children.invoke();
 
+        if (parent==null) // open top-most nodes
+            tree.openFolder(node);
         node = parent;
     }
 
