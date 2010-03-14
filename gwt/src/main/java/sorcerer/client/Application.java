@@ -1,6 +1,7 @@
 package sorcerer.client;
 
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
@@ -14,10 +15,8 @@ import com.smartgwt.client.widgets.layout.SectionStack;
 import com.smartgwt.client.widgets.layout.SectionStackSection;
 import sorcerer.client.LazyDataLoader.Callback;
 import sorcerer.client.data.SourceFileLoader;
-import sorcerer.client.data.pkg.ClassListLoader;
-import sorcerer.client.data.pkg.Klass;
-import sorcerer.client.data.pkg.Project;
-import sorcerer.client.data.pkg.ProjectLoader;
+import sorcerer.client.data.pkg.*;
+import sorcerer.client.data.pkg.Package;
 import sorcerer.client.js.JsArray;
 import sorcerer.client.outline.OutlineTreeWidget;
 import sorcerer.client.pkg.PackageTreeWidget;
@@ -128,22 +127,44 @@ public class Application implements EntryPoint {
     /**
      * Restores the right state.
      */
-    public void jumpTo(String historyId) {
-        String pkgName = historyId.substring(0, max(0,historyId.lastIndexOf('.')));
-        final String shortName = historyId.substring(historyId.lastIndexOf('.')+1);
+    public void jumpTo(final String id) {
+        if (Document.get().getElementById(id)!=null)
+            return; // navigated already
+
+        int sep = id.indexOf('-');
+        if (sep<0) {
+            // type name
+            jumpToType(id,null);
+        } else {
+            // jump to something inside type
+            jumpToType(id.substring(0,sep),new Callback<Void>() {
+                public void call(Void value) {
+                    Document.get().getElementById(id).scrollIntoView();
+                }
+            });
+        }
+    }
+
+    private void jumpToType(String fqcn, final Callback<Void> callback) {
+        String pkgName = fqcn.substring(0, max(0,fqcn.lastIndexOf('.')));
+        final String shortName = fqcn.substring(fqcn.lastIndexOf('.')+1);
         for (Project p : ProjectLoader.INSTANCE) {
-            p.getPackage(pkgName).retrieveClassList(new Callback<JsArray<Klass>>() {
+            Package pkg = p.getPackage(pkgName);
+            if (pkg==null)      continue;   // not in this project
+            pkg.retrieveClassList(new Callback<JsArray<Klass>>() {
                 public void call(JsArray<Klass> value) {
                     for (Klass k : value.iterable()) {
                         if (k.shortName().equals(shortName)) {
                             k.show();
+                            if (callback!=null) callback.call(null);
+                            return;
                         }
                     }
                 }
             });
         }
     }
-    
+
     public static Application get() {
         return INSTANCE;
     }

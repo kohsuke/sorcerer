@@ -12,7 +12,12 @@ import sorcerer.client.source.SourceBuilder;
  * @author Kohsuke Kawaguchi
  */
 public class SourceViewWidget extends HTMLPane {
+    private AST showing;
+
     public void load(AST ast) {
+        if (showing==ast)   return;
+        showing = ast;
+
         SourceBuilder b = ast.accept(new SourceBuilder());
         String html = b.toHTML();
 
