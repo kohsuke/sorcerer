@@ -63,7 +63,6 @@ public class Application implements EntryPoint {
 
         // TODO: projects need to be loaded before we do this, or else it won't jump at all
         jumpTo(History.getToken()); // reflect the initial state
-        mainCanvas.postInit();
     }
 
     private SectionStack createLeft() {

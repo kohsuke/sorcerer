@@ -3,10 +3,11 @@ package sorcerer.client.sourceview;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
-import com.google.gwt.user.client.Window;
 import com.smartgwt.client.types.Visibility;
 import com.smartgwt.client.widgets.HTMLPane;
-import com.smartgwt.client.widgets.menu.IMenuButton;
+import com.smartgwt.client.widgets.IButton;
+import com.smartgwt.client.widgets.events.ClickEvent;
+import com.smartgwt.client.widgets.events.ClickHandler;
 import com.smartgwt.client.widgets.menu.Menu;
 import com.smartgwt.client.widgets.menu.MenuItem;
 import sorcerer.client.Application;
@@ -22,7 +23,7 @@ import sorcerer.client.source.SourceBuilder;
 public class SourceViewWidget extends HTMLPane {
     private AST showing;
     private Menu menu;
-    private IMenuButton menuButton;
+    private IButton menuButton;
 
     public SourceViewWidget() {
         menu = new Menu();
@@ -34,10 +35,18 @@ public class SourceViewWidget extends HTMLPane {
             new MenuItem("Find Usage")
         );
 
-        menuButton = new IMenuButton("",menu);
+        menuButton = new IButton();
         menuButton.setZIndex(999999);
-        menuButton.setWidth(32);
-        menuButton.setBackgroundColor("white");
+        menuButton.setWidth(24);
+        menuButton.setHeight(24);
+        menuButton.setIcon("menu_button.png");
+        menuButton.setVisibility(Visibility.HIDDEN);
+        menuButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                menu.showNextTo(menuButton,"bottom");
+            }
+        });
+        menuButton.draw();
 
         /*
              For whatever reason, I just couldn't manage to get the mousemove event handler
@@ -46,25 +55,31 @@ public class SourceViewWidget extends HTMLPane {
         installMouseMove(Document.get().getBody());
     }
 
-    public void postInit() {
-        menuButton.draw();
-    }
+    private Rect boundingBox = new Rect();
 
     private void onMouseMove(NativeEvent ev) {
-//        Document.get().setTitle(ev.getEventTarget()+" x="+ev.getScreenX());
         Element e = Element.as(ev.getEventTarget());
+        int mx = e.getAbsoluteLeft();
+        int my = e.getAbsoluteTop();
+
         String u = e.getAttribute("u");
         if (u==null || u.length()==0) {// getAttribute seems to return "" instead of null.
-            menuButton.setVisibility(Visibility.HIDDEN);
+            if (!boundingBox.contains(mx,my))
+                menuButton.setVisibility(Visibility.HIDDEN);
             return;
         }
 
-        String html = e.getInnerHTML();
-        html = html.substring(0,Math.min(10,html.length()));
-        Window.setTitle(e.getTagName()+" u="+u+" html="+html);
+        int w = e.getOffsetWidth();
+
+        // show the menu button right next to the token in the source view.
         menuButton.setVisibility(Visibility.VISIBLE);
-        menuButton.setLeft(e.getAbsoluteLeft()+e.getOffsetWidth());
-        menuButton.setTop(e.getAbsoluteTop());
+        menuButton.setLeft(mx+w);
+        menuButton.setTop(my-(menuButton.getOffsetHeight()-e.getOffsetHeight())/2);
+
+        // if the mouse leaves the bounding box around the token and the menu button, hide the button.
+        boundingBox = new Rect(e);
+        boundingBox.fatten(16);
+        boundingBox.x2 += w; // should include the button
     }
 
     private native void installMouseMove(Element e) /*-{
