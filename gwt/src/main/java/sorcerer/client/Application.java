@@ -2,7 +2,6 @@ package sorcerer.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
@@ -64,20 +63,8 @@ public class Application implements EntryPoint {
 
         // TODO: projects need to be loaded before we do this, or else it won't jump at all
         jumpTo(History.getToken()); // reflect the initial state
-
-        installMouseMove();
+        mainCanvas.postInit();
     }
-
-    private void onMouseMove(NativeEvent ev) {
-        Document.get().setTitle(ev.getEventTarget()+" x="+ev.getScreenX());
-    }
-
-    private native void installMouseMove() /*-{
-        var self = this;
-        $doc.body.addEventListener("mousemove",function (ev) {
-            self.@sorcerer.client.Application::onMouseMove(Lcom/google/gwt/dom/client/NativeEvent;)(ev);
-        },false);
-    }-*/;
 
     private SectionStack createLeft() {
         SectionStackSection pkg = new SectionStackSection("Package");
