@@ -15,6 +15,9 @@ import sorcerer.client.data.AST;
 import sorcerer.client.js.JsArray;
 import sorcerer.client.source.SourceBuilder;
 
+import static com.smartgwt.client.types.Visibility.HIDDEN;
+import static com.smartgwt.client.types.Visibility.VISIBLE;
+
 /**
  * The main portion that renders the source file.
  *
@@ -40,7 +43,7 @@ public class SourceViewWidget extends HTMLPane {
         menuButton.setWidth(24);
         menuButton.setHeight(24);
         menuButton.setIcon("menu_button.png");
-        menuButton.setVisibility(Visibility.HIDDEN);
+        menuButton.setVisibility(HIDDEN);
         menuButton.addClickHandler(new ClickHandler() {
             public void onClick(ClickEvent event) {
                 menu.showNextTo(menuButton,"bottom");
@@ -57,6 +60,10 @@ public class SourceViewWidget extends HTMLPane {
 
     private Rect boundingBox = new Rect();
 
+    /**
+     * OnMouseMove event handler.
+     * Controls the position and visibility of the context menu button. 
+     */
     private void onMouseMove(NativeEvent ev) {
         Element e = Element.as(ev.getEventTarget());
         int mx = e.getAbsoluteLeft();
@@ -65,14 +72,14 @@ public class SourceViewWidget extends HTMLPane {
         String u = e.getAttribute("u");
         if (u==null || u.length()==0) {// getAttribute seems to return "" instead of null.
             if (!boundingBox.contains(mx,my))
-                menuButton.setVisibility(Visibility.HIDDEN);
+                menuButton.setVisibility(HIDDEN);
             return;
         }
 
         int w = e.getOffsetWidth();
 
         // show the menu button right next to the token in the source view.
-        menuButton.setVisibility(Visibility.VISIBLE);
+        menuButton.setVisibility(VISIBLE);
         menuButton.setLeft(mx+w);
         menuButton.setTop(my-(menuButton.getOffsetHeight()-e.getOffsetHeight())/2);
 
@@ -108,6 +115,8 @@ public class SourceViewWidget extends HTMLPane {
         setContents(
             "<div id=main>"+html+"</div>\n" +
             "<pre id=lineNumberTable>"+lnt.join("")+"</pre>");
+
+        menuButton.setVisibility(HIDDEN);
 
         // TODO: bookmark processing
 /*
