@@ -24,6 +24,7 @@ public class OutlineTreeWidget extends TreeGrid2 {
         setShowSelectedStyle(false);
         setShowOpenIcons(false);
         setLeaveScrollbarGap(false);
+        setShowConnectors(true);
         setData(tree = new Tree());
         tree.setShowRoot(false);
         tree.setRoot(root = new TreeNode());

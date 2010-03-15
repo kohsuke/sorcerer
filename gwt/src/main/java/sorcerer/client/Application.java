@@ -2,6 +2,7 @@ package sorcerer.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.History;
@@ -15,8 +16,11 @@ import com.smartgwt.client.widgets.layout.SectionStack;
 import com.smartgwt.client.widgets.layout.SectionStackSection;
 import sorcerer.client.LazyDataLoader.Callback;
 import sorcerer.client.data.SourceFileLoader;
-import sorcerer.client.data.pkg.*;
+import sorcerer.client.data.pkg.ClassListLoader;
+import sorcerer.client.data.pkg.Klass;
 import sorcerer.client.data.pkg.Package;
+import sorcerer.client.data.pkg.Project;
+import sorcerer.client.data.pkg.ProjectLoader;
 import sorcerer.client.js.JsArray;
 import sorcerer.client.outline.OutlineTreeWidget;
 import sorcerer.client.pkg.PackageTreeWidget;
@@ -60,7 +64,20 @@ public class Application implements EntryPoint {
 
         // TODO: projects need to be loaded before we do this, or else it won't jump at all
         jumpTo(History.getToken()); // reflect the initial state
+
+        installMouseMove();
     }
+
+    private void onMouseMove(NativeEvent ev) {
+        Document.get().setTitle(ev.getEventTarget()+" x="+ev.getScreenX());
+    }
+
+    private native void installMouseMove() /*-{
+        var self = this;
+        $doc.body.addEventListener("mousemove",function (ev) {
+            self.@sorcerer.client.Application::onMouseMove(Lcom/google/gwt/dom/client/NativeEvent;)(ev);
+        },false);
+    }-*/;
 
     private SectionStack createLeft() {
         SectionStackSection pkg = new SectionStackSection("Package");

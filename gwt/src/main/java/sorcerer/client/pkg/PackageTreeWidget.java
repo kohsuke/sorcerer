@@ -22,6 +22,7 @@ public class PackageTreeWidget extends OnDemandTreeGrid {
         setShowHeader(false);
         setShowSelectedStyle(false); // TODO: if we support this, we need to update this when user navigates to different class
         setShowOpenIcons(true);
+        setShowConnectors(true);
         setLeaveScrollbarGap(false);
         setData(tree = new Tree());
         tree.setShowRoot(false);
