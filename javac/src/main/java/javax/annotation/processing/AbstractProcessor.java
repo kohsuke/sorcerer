@@ -1,12 +1,12 @@
 /*
- * Copyright 2005-2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package javax.annotation.processing;
@@ -28,6 +28,7 @@ package javax.annotation.processing;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Collections;
+import java.util.Objects;
 import javax.lang.model.element.*;
 import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
@@ -37,7 +38,7 @@ import javax.tools.Diagnostic;
  * superclass for most concrete annotation processors.  This class
  * examines annotation values to compute the {@linkplain
  * #getSupportedOptions options}, {@linkplain
- * #getSupportedAnnotationTypes annotations}, and {@linkplain
+ * #getSupportedAnnotationTypes annotation types}, and {@linkplain
  * #getSupportedSourceVersion source version} supported by its
  * subtypes.
  *
@@ -45,7 +46,7 @@ import javax.tools.Diagnostic;
  * warnings} about noteworthy conditions using the facilities available
  * after the processor has been {@linkplain #isInitialized
  * initialized}.
- * 
+ *
  * <p>Subclasses are free to override the implementation and
  * specification of any of the methods in this class as long as the
  * general {@link javax.annotation.processing.Processor Processor}
@@ -54,7 +55,6 @@ import javax.tools.Diagnostic;
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version 1.14 07/05/05
  * @since 1.6
  */
 public abstract class AbstractProcessor implements Processor {
@@ -79,11 +79,11 @@ public abstract class AbstractProcessor implements Processor {
      * set if none
      */
     public Set<String> getSupportedOptions() {
-	SupportedOptions so = this.getClass().getAnnotation(SupportedOptions.class);
-	if  (so == null) 
-	    return Collections.emptySet();
-	else
-	    return arrayToSet(so.value()); 
+        SupportedOptions so = this.getClass().getAnnotation(SupportedOptions.class);
+        if  (so == null)
+            return Collections.emptySet();
+        else
+            return arrayToSet(so.value());
     }
 
     /**
@@ -96,18 +96,18 @@ public abstract class AbstractProcessor implements Processor {
      * processor, or an empty set if none
      */
     public Set<String> getSupportedAnnotationTypes() {
-	    SupportedAnnotationTypes sat = this.getClass().getAnnotation(SupportedAnnotationTypes.class);
-	    if  (sat == null) {
-		if (isInitialized())
-		    processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING,
-							     "No SupportedAnnotationTypes annotation " +
-							     "found on " + this.getClass().getName() +
-							     ", returning an empty set.");
-		return Collections.emptySet();
-	    }
-	    else
-		return arrayToSet(sat.value()); 
-	}
+            SupportedAnnotationTypes sat = this.getClass().getAnnotation(SupportedAnnotationTypes.class);
+            if  (sat == null) {
+                if (isInitialized())
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING,
+                                                             "No SupportedAnnotationTypes annotation " +
+                                                             "found on " + this.getClass().getName() +
+                                                             ", returning an empty set.");
+                return Collections.emptySet();
+            }
+            else
+                return arrayToSet(sat.value());
+        }
 
     /**
      * If the processor class is annotated with {@link
@@ -118,47 +118,46 @@ public abstract class AbstractProcessor implements Processor {
      * @return the latest source version supported by this processor
      */
     public SourceVersion getSupportedSourceVersion() {
-	SupportedSourceVersion ssv = this.getClass().getAnnotation(SupportedSourceVersion.class);
-	SourceVersion sv = null;
-	if (ssv == null) {
-	    sv = SourceVersion.RELEASE_6;
-	    if (isInitialized())
-		processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING,
-							 "No SupportedSourceVersion annotation " +
-							 "found on " + this.getClass().getName() +
-							 ", returning " + sv + ".");
-	} else
-	    sv = ssv.value();
-	return sv;
+        SupportedSourceVersion ssv = this.getClass().getAnnotation(SupportedSourceVersion.class);
+        SourceVersion sv = null;
+        if (ssv == null) {
+            sv = SourceVersion.RELEASE_6;
+            if (isInitialized())
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING,
+                                                         "No SupportedSourceVersion annotation " +
+                                                         "found on " + this.getClass().getName() +
+                                                         ", returning " + sv + ".");
+        } else
+            sv = ssv.value();
+        return sv;
     }
 
-    
+
     /**
      * Initializes the processor with the processing environment by
      * setting the {@code processingEnv} field to the value of the
      * {@code processingEnv} argument.  An {@code
      * IllegalStateException} will be thrown if this method is called
      * more than once on the same object.
-     * 
+     *
      * @param processingEnv environment to access facilities the tool framework
      * provides to the processor
      * @throws IllegalStateException if this method is called more than once.
      */
     public synchronized void init(ProcessingEnvironment processingEnv) {
-	if (initialized)
-	    throw new IllegalStateException("Cannot call init more than once.");
-	if (processingEnv == null)
-	    throw new NullPointerException("Tool provided null ProcessingEnvironment");
+        if (initialized)
+            throw new IllegalStateException("Cannot call init more than once.");
+        Objects.requireNonNull(processingEnv, "Tool provided null ProcessingEnvironment");
 
-	this.processingEnv = processingEnv;
-	initialized = true;
+        this.processingEnv = processingEnv;
+        initialized = true;
     }
 
     /**
      * {@inheritDoc}
      */
     public abstract boolean process(Set<? extends TypeElement> annotations,
-				    RoundEnvironment roundEnv);
+                                    RoundEnvironment roundEnv);
 
     /**
      * Returns an empty iterable of completions.
@@ -169,10 +168,10 @@ public abstract class AbstractProcessor implements Processor {
      * @param userText {@inheritDoc}
      */
     public Iterable<? extends Completion> getCompletions(Element element,
-							 AnnotationMirror annotation,
-							 ExecutableElement member,
-							 String userText) { 
-	return Collections.emptyList();
+                                                         AnnotationMirror annotation,
+                                                         ExecutableElement member,
+                                                         String userText) {
+        return Collections.emptyList();
     }
 
     /**
@@ -183,14 +182,14 @@ public abstract class AbstractProcessor implements Processor {
      * {@code false} otherwise.
      */
     protected synchronized boolean isInitialized() {
-	return initialized;
+        return initialized;
     }
 
     private static Set<String> arrayToSet(String[] array) {
-	assert array != null;
-	Set<String> set = new HashSet<String>(array.length);
-	for (String s : array)
-	    set.add(s);
-	return Collections.unmodifiableSet(set);
+        assert array != null;
+        Set<String> set = new HashSet<String>(array.length);
+        for (String s : array)
+            set.add(s);
+        return Collections.unmodifiableSet(set);
     }
 }

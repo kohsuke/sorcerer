@@ -1,12 +1,12 @@
 /*
- * Copyright 2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,27 +18,25 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.source.tree;
 
-import com.sun.source.tree.Tree;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
 
 /**
  * Interface for determining locally available program elements, such as
- * local variables and imports. 
- * Upon creation, a Scope is associated with a given program position; 
+ * local variables and imports.
+ * Upon creation, a Scope is associated with a given program position;
  * for example, a {@linkplain Tree tree node}. This position may be used to
  * infer an enclosing method and/or class.
- * 
- * <p>A Scope does not itself contain the details of the elements corresponding 
+ *
+ * <p>A Scope does not itself contain the details of the elements corresponding
  * to the parameters, methods and fields of the methods and classes containing
  * its position. However, these elements can be determined from the enclosing
  * elements.
@@ -50,22 +48,23 @@ import javax.lang.model.type.DeclaredType;
  *
  * @since 1.6
  */
+@jdk.Exported
 public interface Scope {
     /**
      * Returns the enclosing scope.
      */
     public Scope getEnclosingScope();
-    
+
     /**
      * Returns the innermost type element containing the position of this scope
      */
     public TypeElement getEnclosingClass();
-    
+
     /**
      * Returns the innermost executable element containing the position of this scope.
      */
     public ExecutableElement getEnclosingMethod();
-    
+
     /**
      * Returns the elements directly contained in this scope.
      */

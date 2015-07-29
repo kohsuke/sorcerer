@@ -1,12 +1,12 @@
 /*
- * Copyright 2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,52 +18,50 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.tree;
 
-import com.sun.source.tree.Tree;
 import com.sun.source.tree.*;
 import com.sun.tools.javac.tree.JCTree.*;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.ListBuffer;
-import java.util.Map;
 
 /**
  * Creates a copy of a tree, using a given TreeMaker.
  * Names, literal values, etc are shared with the original.
  *
- *  <p><b>This is NOT part of any API supported by Sun Microsystems.  If
- *  you write code that depends on this, you do so at your own risk.
+ *  <p><b>This is NOT part of any supported API.
+ *  If you write code that depends on this, you do so at your own risk.
  *  This code and its internal interfaces are subject to change or
  *  deletion without notice.</b>
  */
 public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
     private TreeMaker M;
-    
+
     /** Creates a new instance of TreeCopier */
     public TreeCopier(TreeMaker M) {
         this.M = M;
     }
-    
+
     public <T extends JCTree> T copy(T tree) {
         return copy(tree, null);
     }
-    
+
     @SuppressWarnings("unchecked")
     public <T extends JCTree> T copy(T tree, P p) {
         if (tree == null)
             return null;
         return (T) (tree.accept(this, p));
     }
-    
+
     public <T extends JCTree> List<T> copy(List<T> trees) {
         return copy(trees, null);
     }
-    
+
     public <T extends JCTree> List<T> copy(List<T> trees, P p) {
         if (trees == null)
             return null;
@@ -73,11 +71,26 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
         return lb.toList();
     }
 
+    public JCTree visitAnnotatedType(AnnotatedTypeTree node, P p) {
+        JCAnnotatedType t = (JCAnnotatedType) node;
+        List<JCAnnotation> annotations = copy(t.annotations, p);
+        JCExpression underlyingType = copy(t.underlyingType, p);
+        return M.at(t.pos).AnnotatedType(annotations, underlyingType);
+    }
+
     public JCTree visitAnnotation(AnnotationTree node, P p) {
         JCAnnotation t = (JCAnnotation) node;
         JCTree annotationType = copy(t.annotationType, p);
         List<JCExpression> args = copy(t.args, p);
-        return M.at(t.pos).Annotation(annotationType, args);
+        if (t.getKind() == Tree.Kind.TYPE_ANNOTATION) {
+            JCAnnotation newTA = M.at(t.pos).TypeAnnotation(annotationType, args);
+            newTA.attribute = t.attribute;
+            return newTA;
+        } else {
+            JCAnnotation newT = M.at(t.pos).Annotation(annotationType, args);
+            newT.attribute = t.attribute;
+            return newT;
+        }
     }
 
     public JCTree visitAssert(AssertTree node, P p) {
@@ -98,14 +111,14 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
         JCAssignOp t = (JCAssignOp) node;
         JCTree lhs = copy(t.lhs, p);
         JCTree rhs = copy(t.rhs, p);
-        return M.at(t.pos).Assignop(t.tag, lhs, rhs);
+        return M.at(t.pos).Assignop(t.getTag(), lhs, rhs);
     }
 
     public JCTree visitBinary(BinaryTree node, P p) {
         JCBinary t = (JCBinary) node;
         JCExpression lhs = copy(t.lhs, p);
         JCExpression rhs = copy(t.rhs, p);
-        return M.at(t.pos).Binary(t.tag, lhs, rhs);
+        return M.at(t.pos).Binary(t.getTag(), lhs, rhs);
     }
 
     public JCTree visitBlock(BlockTree node, P p) {
@@ -137,7 +150,7 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
         JCClassDecl t = (JCClassDecl) node;
         JCModifiers mods = copy(t.mods, p);
         List<JCTypeParameter> typarams = copy(t.typarams, p);
-        JCTree extending = copy(t.extending, p);
+        JCExpression extending = copy(t.extending, p);
         List<JCExpression> implementing = copy(t.implementing, p);
         List<JCTree> defs = copy(t.defs, p);
         return M.at(t.pos).ClassDef(mods, t.name, typarams, extending, implementing, defs);
@@ -221,7 +234,7 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
     public JCTree visitLabeledStatement(LabeledStatementTree node, P p) {
         JCLabeledStatement t = (JCLabeledStatement) node;
         JCStatement body = copy(t.body, p);
-        return M.at(t.pos).Labelled(t.label, t.body);
+        return M.at(t.pos).Labelled(t.label, body);
     }
 
     public JCTree visitLiteral(LiteralTree node, P p) {
@@ -235,10 +248,11 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
         JCExpression restype = copy(t.restype, p);
         List<JCTypeParameter> typarams = copy(t.typarams, p);
         List<JCVariableDecl> params = copy(t.params, p);
+        JCVariableDecl recvparam = copy(t.recvparam, p);
         List<JCExpression> thrown = copy(t.thrown, p);
         JCBlock body = copy(t.body, p);
         JCExpression defaultValue = copy(t.defaultValue, p);
-        return M.at(t.pos).MethodDef(mods, t.name, restype, typarams, params, thrown, body, defaultValue);
+        return M.at(t.pos).MethodDef(mods, t.name, restype, typarams, recvparam, params, thrown, body, defaultValue);
     }
 
     public JCTree visitMethodInvocation(MethodInvocationTree node, P p) {
@@ -273,6 +287,13 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
         return M.at(t.pos).NewClass(encl, typeargs, clazz, args, def);
     }
 
+    public JCTree visitLambdaExpression(LambdaExpressionTree node, P p) {
+        JCLambda t = (JCLambda) node;
+        List<JCVariableDecl> params = copy(t.params, p);
+        JCTree body = copy(t.body, p);
+        return M.at(t.pos).Lambda(params, body);
+    }
+
     public JCTree visitParenthesized(ParenthesizedTree node, P p) {
         JCParens t = (JCParens) node;
         JCExpression expr = copy(t.expr, p);
@@ -289,6 +310,13 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
         JCFieldAccess t = (JCFieldAccess) node;
         JCExpression selected = copy(t.selected, p);
         return M.at(t.pos).Select(selected, t.name);
+    }
+
+    public JCTree visitMemberReference(MemberReferenceTree node, P p) {
+        JCMemberReference t = (JCMemberReference) node;
+        JCExpression expr = copy(t.expr, p);
+        List<JCExpression> typeargs = copy(t.typeargs, p);
+        return M.at(t.pos).Reference(t.mode, t.name, expr, typeargs);
     }
 
     public JCTree visitEmptyStatement(EmptyStatementTree node, P p) {
@@ -312,7 +340,7 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
 
     public JCTree visitThrow(ThrowTree node, P p) {
         JCThrow t = (JCThrow) node;
-        JCTree expr = copy(t.expr, p);
+        JCExpression expr = copy(t.expr, p);
         return M.at(t.pos).Throw(expr);
     }
 
@@ -326,10 +354,11 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
 
     public JCTree visitTry(TryTree node, P p) {
         JCTry t = (JCTry) node;
+        List<JCTree> resources = copy(t.resources, p);
         JCBlock body = copy(t.body, p);
         List<JCCatch> catchers = copy(t.catchers, p);
         JCBlock finalizer = copy(t.finalizer, p);
-        return M.at(t.pos).Try(body, catchers, finalizer);
+        return M.at(t.pos).Try(resources, body, catchers, finalizer);
     }
 
     public JCTree visitParameterizedType(ParameterizedTypeTree node, P p) {
@@ -337,6 +366,18 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
         JCExpression clazz = copy(t.clazz, p);
         List<JCExpression> arguments = copy(t.arguments, p);
         return M.at(t.pos).TypeApply(clazz, arguments);
+    }
+
+    public JCTree visitUnionType(UnionTypeTree node, P p) {
+        JCTypeUnion t = (JCTypeUnion) node;
+        List<JCExpression> components = copy(t.alternatives, p);
+        return M.at(t.pos).TypeUnion(components);
+    }
+
+    public JCTree visitIntersectionType(IntersectionTypeTree node, P p) {
+        JCTypeIntersection t = (JCTypeIntersection) node;
+        List<JCExpression> bounds = copy(t.bounds, p);
+        return M.at(t.pos).TypeIntersection(bounds);
     }
 
     public JCTree visitArrayType(ArrayTypeTree node, P p) {
@@ -359,8 +400,9 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
 
     public JCTree visitTypeParameter(TypeParameterTree node, P p) {
         JCTypeParameter t = (JCTypeParameter) node;
+        List<JCAnnotation> annos = copy(t.annotations, p);
         List<JCExpression> bounds = copy(t.bounds, p);
-        return M.at(t.pos).TypeParameter(t.name, t.bounds);
+        return M.at(t.pos).TypeParameter(t.name, bounds, annos);
     }
 
     public JCTree visitInstanceOf(InstanceOfTree node, P p) {
@@ -373,15 +415,20 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
     public JCTree visitUnary(UnaryTree node, P p) {
         JCUnary t = (JCUnary) node;
         JCExpression arg = copy(t.arg, p);
-        return M.at(t.pos).Unary(t.tag, arg);
+        return M.at(t.pos).Unary(t.getTag(), arg);
     }
 
     public JCTree visitVariable(VariableTree node, P p) {
         JCVariableDecl t = (JCVariableDecl) node;
         JCModifiers mods = copy(t.mods, p);
         JCExpression vartype = copy(t.vartype, p);
-        JCExpression init = copy(t.init, p);
-        return M.at(t.pos).VarDef(mods, t.name, vartype, init);
+        if (t.nameexpr == null) {
+            JCExpression init = copy(t.init, p);
+            return M.at(t.pos).VarDef(mods, t.name, vartype, init);
+        } else {
+            JCExpression nameexpr = copy(t.nameexpr, p);
+            return M.at(t.pos).ReceiverVarDef(mods, nameexpr, vartype);
+        }
     }
 
     public JCTree visitWhileLoop(WhileLoopTree node, P p) {
@@ -400,16 +447,16 @@ public class TreeCopier<P> implements TreeVisitor<JCTree,P> {
 
     public JCTree visitOther(Tree node, P p) {
         JCTree tree = (JCTree) node;
-        switch (tree.tag) {
-            case JCTree.LETEXPR: {
+        switch (tree.getTag()) {
+            case LETEXPR: {
                 LetExpr t = (LetExpr) node;
                 List<JCVariableDecl> defs = copy(t.defs, p);
                 JCTree expr = copy(t.expr, p);
                 return M.at(t.pos).LetExpr(defs, expr);
             }
             default:
-                throw new AssertionError("unknown tree tag: " + tree.tag);
+                throw new AssertionError("unknown tree tag: " + tree.getTag());
         }
     }
-    
+
 }

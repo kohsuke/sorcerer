@@ -1,12 +1,12 @@
 /*
- * Copyright 2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.api;
@@ -29,14 +29,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import javax.tools.JavaFileObject.Kind;
-import javax.tools.*;
 
-// FIXME sb removed before promoting to javax.tools
-import com.sun.tools.javac.util.Version;
+import javax.tools.*;
+import javax.tools.JavaFileObject.Kind;
 
 /**
  * Wraps all calls to a given file manager.  Subclasses of this class
@@ -46,7 +43,7 @@ import com.sun.tools.javac.util.Version;
  * <p>This class might be moved to {@link javax.tools} in a future
  * release.
  *
- * <p><b>This is NOT part of any API supported by Sun Microsystems.
+ * <p><b>This is NOT part of any supported API.
  * If you write code that depends on this, you do so at your own
  * risk.  This code and its internal interfaces are subject to change
  * or deletion without notice.</b></p>
@@ -56,7 +53,6 @@ import com.sun.tools.javac.util.Version;
  * @author Peter von der Ah&eacute;
  * @since 1.6
  */
-@Version("@(#)WrappingJavaFileManager.java	1.10 07/05/05") // FIXME sb removed before promoting to javax.tools
 public class WrappingJavaFileManager<M extends JavaFileManager> extends ForwardingJavaFileManager<M> {
 
     /**
@@ -64,7 +60,7 @@ public class WrappingJavaFileManager<M extends JavaFileManager> extends Forwardi
      * @param fileManager file manager to be wrapped
      */
     protected WrappingJavaFileManager(M fileManager) {
-	super(fileManager);
+        super(fileManager);
     }
 
     /**
@@ -74,8 +70,8 @@ public class WrappingJavaFileManager<M extends JavaFileManager> extends Forwardi
      * @param fileObject a file object
      */
     protected FileObject wrap(FileObject fileObject) {
-	return fileObject;
-    } 
+        return fileObject;
+    }
 
     /**
      * This implementation forwards to {@link #wrap(FileObject)}.
@@ -86,8 +82,8 @@ public class WrappingJavaFileManager<M extends JavaFileManager> extends Forwardi
      * forwarded call is not a subtype of {@linkplain JavaFileObject}
      */
     protected JavaFileObject wrap(JavaFileObject fileObject) {
-	return (JavaFileObject)wrap((FileObject)fileObject);
-    } 
+        return (JavaFileObject)wrap((FileObject)fileObject);
+    }
 
     /**
      * This implementation returns the given file object.  Subclasses
@@ -96,7 +92,7 @@ public class WrappingJavaFileManager<M extends JavaFileManager> extends Forwardi
      * @param fileObject a file object
      */
     protected FileObject unwrap(FileObject fileObject) {
-	return fileObject;
+        return fileObject;
     }
 
     /**
@@ -108,7 +104,7 @@ public class WrappingJavaFileManager<M extends JavaFileManager> extends Forwardi
      * forwarded call is not a subtype of {@linkplain JavaFileObject}
      */
     protected JavaFileObject unwrap(JavaFileObject fileObject) {
-	return (JavaFileObject)unwrap((FileObject)fileObject);
+        return (JavaFileObject)unwrap((FileObject)fileObject);
     }
 
     /**
@@ -119,10 +115,10 @@ public class WrappingJavaFileManager<M extends JavaFileManager> extends Forwardi
      * @return the mapping
      */
     protected Iterable<JavaFileObject> wrap(Iterable<JavaFileObject> fileObjects) {
-	List<JavaFileObject> mapped = new ArrayList<JavaFileObject>();
-	for (JavaFileObject fileObject : fileObjects)
-	    mapped.add(wrap(fileObject));
-	return Collections.unmodifiableList(mapped);
+        List<JavaFileObject> mapped = new ArrayList<JavaFileObject>();
+        for (JavaFileObject fileObject : fileObjects)
+            mapped.add(wrap(fileObject));
+        return Collections.unmodifiableList(mapped);
     }
 
     /**
@@ -132,26 +128,26 @@ public class WrappingJavaFileManager<M extends JavaFileManager> extends Forwardi
      * @param uri a URI
      */
     protected URI unwrap(URI uri) {
-	return uri;
+        return uri;
     }
 
     /**
      * @throws IllegalStateException {@inheritDoc}
      */
     public Iterable<JavaFileObject> list(Location location,
-					 String packageName,
-					 Set<Kind> kinds,
-					 boolean recurse)
-	throws IOException
+                                         String packageName,
+                                         Set<Kind> kinds,
+                                         boolean recurse)
+        throws IOException
     {
-	return wrap(super.list(location, packageName, kinds, recurse));
+        return wrap(super.list(location, packageName, kinds, recurse));
     }
 
     /**
      * @throws IllegalStateException {@inheritDoc}
      */
     public String inferBinaryName(Location location, JavaFileObject file) {
-	return super.inferBinaryName(location, unwrap(file));
+        return super.inferBinaryName(location, unwrap(file));
     }
 
     /**
@@ -160,11 +156,11 @@ public class WrappingJavaFileManager<M extends JavaFileManager> extends Forwardi
      * @throws IllegalStateException {@inheritDoc}
      */
     public JavaFileObject getJavaFileForInput(Location location,
-					      String className,
-					      Kind kind)
-	throws IOException
+                                              String className,
+                                              Kind kind)
+        throws IOException
     {
-	return wrap(super.getJavaFileForInput(location, className, kind));
+        return wrap(super.getJavaFileForInput(location, className, kind));
     }
 
     /**
@@ -173,40 +169,40 @@ public class WrappingJavaFileManager<M extends JavaFileManager> extends Forwardi
      * @throws IllegalStateException {@inheritDoc}
      */
     public JavaFileObject getJavaFileForOutput(Location location,
-					       String className,
-					       Kind kind,
-					       FileObject sibling)
-	throws IOException
+                                               String className,
+                                               Kind kind,
+                                               FileObject sibling)
+        throws IOException
     {
-	return wrap(super.getJavaFileForOutput(location, className, kind, unwrap(sibling)));
+        return wrap(super.getJavaFileForOutput(location, className, kind, unwrap(sibling)));
     }
 
     /**
      * @throws IllegalArgumentException {@inheritDoc}
      * @throws IllegalStateException {@inheritDoc}
      */
-    public FileObject getFileForInput(Location location, 
-				      String packageName,
-				      String relativeName)
-	throws IOException
+    public FileObject getFileForInput(Location location,
+                                      String packageName,
+                                      String relativeName)
+        throws IOException
     {
-	return wrap(super.getFileForInput(location, packageName, relativeName));
+        return wrap(super.getFileForInput(location, packageName, relativeName));
     }
 
     /**
      * @throws IllegalArgumentException {@inheritDoc}
      * @throws IllegalStateException {@inheritDoc}
      */
-    public FileObject getFileForOutput(Location location, 
-				       String packageName,
-				       String relativeName,
-				       FileObject sibling)
-	throws IOException
+    public FileObject getFileForOutput(Location location,
+                                       String packageName,
+                                       String relativeName,
+                                       FileObject sibling)
+        throws IOException
     {
-	return wrap(super.getFileForOutput(location,
-					   packageName,
-					   relativeName,
-					   unwrap(sibling)));
+        return wrap(super.getFileForOutput(location,
+                                           packageName,
+                                           relativeName,
+                                           unwrap(sibling)));
     }
 
 }

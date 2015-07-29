@@ -1,12 +1,12 @@
 /*
- * Copyright 1999-2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,68 +18,59 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.code;
 
-import com.sun.tools.javac.util.Version;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.lang.model.element.Modifier;
+
+import com.sun.tools.javac.util.Assert;
 
 /** Access flags and other modifiers for Java classes and members.
  *
- *  <p><b>This is NOT part of any API supported by Sun Microsystems.  If
- *  you write code that depends on this, you do so at your own risk.
+ *  <p><b>This is NOT part of any supported API.
+ *  If you write code that depends on this, you do so at your own risk.
  *  This code and its internal interfaces are subject to change or
  *  deletion without notice.</b>
  */
-@Version("@(#)Flags.java	1.51 07/05/05")
 public class Flags {
 
     private Flags() {} // uninstantiable
 
     public static String toString(long flags) {
-        StringBuffer buf = new StringBuffer();
-        if ((flags&PUBLIC) != 0) buf.append("public ");
-        if ((flags&PRIVATE) != 0) buf.append("private ");
-        if ((flags&PROTECTED) != 0) buf.append("protected ");
-        if ((flags&STATIC) != 0) buf.append("static ");
-        if ((flags&FINAL) != 0) buf.append("final ");
-        if ((flags&SYNCHRONIZED) != 0) buf.append("synchronized ");
-        if ((flags&VOLATILE) != 0) buf.append("volatile ");
-        if ((flags&TRANSIENT) != 0) buf.append("transient ");
-        if ((flags&NATIVE) != 0) buf.append("native ");
-        if ((flags&INTERFACE) != 0) buf.append("interface ");
-        if ((flags&ABSTRACT) != 0) buf.append("abstract ");
-        if ((flags&STRICTFP) != 0) buf.append("strictfp ");
-        if ((flags&BRIDGE) != 0) buf.append("bridge ");
-        if ((flags&SYNTHETIC) != 0) buf.append("synthetic ");
-        if ((flags&DEPRECATED) != 0) buf.append("deprecated ");
-        if ((flags&HASINIT) != 0) buf.append("hasinit ");
-        if ((flags&ENUM) != 0) buf.append("enum ");
-        if ((flags&IPROXY) != 0) buf.append("iproxy ");
-        if ((flags&NOOUTERTHIS) != 0) buf.append("noouterthis ");
-        if ((flags&EXISTS) != 0) buf.append("exists ");
-        if ((flags&COMPOUND) != 0) buf.append("compound ");
-        if ((flags&CLASS_SEEN) != 0) buf.append("class_seen ");
-        if ((flags&SOURCE_SEEN) != 0) buf.append("source_seen ");
-        if ((flags&LOCKED) != 0) buf.append("locked ");
-        if ((flags&UNATTRIBUTED) != 0) buf.append("unattributed ");
-        if ((flags&ANONCONSTR) != 0) buf.append("anonconstr ");
-        if ((flags&ACYCLIC) != 0) buf.append("acyclic ");
-        if ((flags&PARAMETER) != 0) buf.append("parameter ");
-        if ((flags&VARARGS) != 0) buf.append("varargs ");
+        StringBuilder buf = new StringBuilder();
+        String sep = "";
+        for (Flag flag : asFlagSet(flags)) {
+            buf.append(sep);
+            buf.append(flag);
+            sep = " ";
+        }
         return buf.toString();
+    }
+
+    public static EnumSet<Flag> asFlagSet(long flags) {
+        EnumSet<Flag> flagSet = EnumSet.noneOf(Flag.class);
+        for (Flag flag : Flag.values()) {
+            if ((flags & flag.value) != 0) {
+                flagSet.add(flag);
+                flags &= ~flag.value;
+            }
+        }
+        Assert.check(flags == 0, "Flags parameter contains unknown flags " + flags);
+        return flagSet;
     }
 
     /* Standard Java flags.
      */
-    public static final int PUBLIC       = 1<<0;
+    public static final int PUBLIC       = 1;
     public static final int PRIVATE      = 1<<1;
     public static final int PROTECTED    = 1<<2;
     public static final int STATIC       = 1<<3;
@@ -101,6 +92,9 @@ public class Flags {
     /** An enumeration type or an enumeration constant, added in
      *  classfile v49.0. */
     public static final int ENUM         = 1<<14;
+
+    /** Added in SE8, represents constructs implicitly declared in source. */
+    public static final int MANDATED     = 1<<15;
 
     public static final int StandardFlags = 0x0fff;
 
@@ -137,9 +131,9 @@ public class Flags {
 
     /** Flag is set for nested classes that do not access instance members
      *  or `this' of an outer class and therefore don't need to be passed
-     *  a this$n reference.  This flag is currently set only for anonymous
+     *  a this$n reference.  This value is currently set only for anonymous
      *  classes in superclass constructor calls and only for pre 1.4 targets.
-     *  todo: use this flag for optimizing away this$n parameters in
+     *  todo: use this value for optimizing away this$n parameters in
      *  other cases.
      */
     public static final int NOOUTERTHIS  = 1<<22;
@@ -210,14 +204,76 @@ public class Flags {
 
     /** Flag that marks a hypothetical method that need not really be
      *  generated in the binary, but is present in the symbol table to
-     *  simplify checking for erasure clashes.
+     *  simplify checking for erasure clashes - also used for 292 poly sig methods.
      */
     public static final long HYPOTHETICAL   = 1L<<37;
 
     /**
-     * Flag that marks a Sun proprietary class.
+     * Flag that marks an internal proprietary class.
      */
     public static final long PROPRIETARY = 1L<<38;
+
+    /**
+     * Flag that marks a multi-catch parameter.
+     */
+    public static final long UNION = 1L<<39;
+
+    /**
+     * Flag that marks a special kind of bridge method (the ones that
+     * come from restricted supertype bounds).
+     */
+    public static final long OVERRIDE_BRIDGE = 1L<<40;
+
+    /**
+     * Flag that marks an 'effectively final' local variable.
+     */
+    public static final long EFFECTIVELY_FINAL = 1L<<41;
+
+    /**
+     * Flag that marks non-override equivalent methods with the same signature.
+     */
+    public static final long CLASH = 1L<<42;
+
+    /**
+     * Flag that marks either a default method or an interface containing default methods.
+     */
+    public static final long DEFAULT = 1L<<43;
+
+    /**
+     * Flag that marks class as auxiliary, ie a non-public class following
+     * the public class in a source file, that could block implicit compilation.
+     */
+    public static final long AUXILIARY = 1L<<44;
+
+    /**
+     * Flag that marks that a symbol is not available in the current profile
+     */
+    public static final long NOT_IN_PROFILE = 1L<<45;
+
+    /**
+     * Flag that indicates that an override error has been detected by Check.
+     */
+    public static final long BAD_OVERRIDE = 1L<<45;
+
+    /**
+     * Flag that indicates a signature polymorphic method (292).
+     */
+    public static final long SIGNATURE_POLYMORPHIC = 1L<<46;
+
+    /**
+     * Flag that indicates that an inference variable is used in a 'throws' clause.
+     */
+    public static final long THROWS = 1L<<47;
+
+    /**
+     * Flag that marks potentially ambiguous overloads
+     */
+    public static final long POTENTIALLY_AMBIGUOUS = 1L<<48;
+
+    /**
+     * Flag that marks a synthetic method body for a lambda expression
+     */
+    public static final long LAMBDA_METHOD = 1L<<49;
 
     /** Modifier masks.
      */
@@ -234,7 +290,12 @@ public class Flags {
         MethodFlags           = AccessFlags | ABSTRACT | STATIC | NATIVE |
                                 SYNCHRONIZED | FINAL | STRICTFP;
     public static final long
-        LocalVarFlags         = FINAL | PARAMETER;
+        ExtendedStandardFlags       = (long)StandardFlags | DEFAULT,
+        ModifierFlags               = ((long)StandardFlags & ~INTERFACE) | DEFAULT,
+        InterfaceMethodMask         = ABSTRACT | STATIC | PUBLIC | STRICTFP | DEFAULT,
+        AnnotationTypeElementMask   = ABSTRACT | PUBLIC,
+        LocalVarFlags               = FINAL | PARAMETER;
+
 
     public static Set<Modifier> asModifierSet(long flags) {
         Set<Modifier> modifiers = modifierSets.get(flags);
@@ -252,6 +313,7 @@ public class Flags {
                                           modifiers.add(Modifier.SYNCHRONIZED);
             if (0 != (flags & NATIVE))    modifiers.add(Modifier.NATIVE);
             if (0 != (flags & STRICTFP))  modifiers.add(Modifier.STRICTFP);
+            if (0 != (flags & DEFAULT))   modifiers.add(Modifier.DEFAULT);
             modifiers = Collections.unmodifiableSet(modifiers);
             modifierSets.put(flags, modifiers);
         }
@@ -259,7 +321,7 @@ public class Flags {
     }
 
     // Cache of modifier sets.
-    private static Map<Long, Set<Modifier>> modifierSets =
+    private static final Map<Long, Set<Modifier>> modifierSets =
         new java.util.concurrent.ConcurrentHashMap<Long, Set<Modifier>>(64);
 
     public static boolean isStatic(Symbol symbol) {
@@ -273,4 +335,69 @@ public class Flags {
     public static boolean isConstant(Symbol.VarSymbol symbol) {
         return symbol.getConstValue() != null;
     }
+
+
+    public enum Flag {
+        PUBLIC(Flags.PUBLIC),
+        PRIVATE(Flags.PRIVATE),
+        PROTECTED(Flags.PROTECTED),
+        STATIC(Flags.STATIC),
+        FINAL(Flags.FINAL),
+        SYNCHRONIZED(Flags.SYNCHRONIZED),
+        VOLATILE(Flags.VOLATILE),
+        TRANSIENT(Flags.TRANSIENT),
+        NATIVE(Flags.NATIVE),
+        INTERFACE(Flags.INTERFACE),
+        ABSTRACT(Flags.ABSTRACT),
+        DEFAULT(Flags.DEFAULT),
+        STRICTFP(Flags.STRICTFP),
+        BRIDGE(Flags.BRIDGE),
+        SYNTHETIC(Flags.SYNTHETIC),
+        ANNOTATION(Flags.ANNOTATION),
+        DEPRECATED(Flags.DEPRECATED),
+        HASINIT(Flags.HASINIT),
+        BLOCK(Flags.BLOCK),
+        ENUM(Flags.ENUM),
+        MANDATED(Flags.MANDATED),
+        IPROXY(Flags.IPROXY),
+        NOOUTERTHIS(Flags.NOOUTERTHIS),
+        EXISTS(Flags.EXISTS),
+        COMPOUND(Flags.COMPOUND),
+        CLASS_SEEN(Flags.CLASS_SEEN),
+        SOURCE_SEEN(Flags.SOURCE_SEEN),
+        LOCKED(Flags.LOCKED),
+        UNATTRIBUTED(Flags.UNATTRIBUTED),
+        ANONCONSTR(Flags.ANONCONSTR),
+        ACYCLIC(Flags.ACYCLIC),
+        PARAMETER(Flags.PARAMETER),
+        VARARGS(Flags.VARARGS),
+        ACYCLIC_ANN(Flags.ACYCLIC_ANN),
+        GENERATEDCONSTR(Flags.GENERATEDCONSTR),
+        HYPOTHETICAL(Flags.HYPOTHETICAL),
+        PROPRIETARY(Flags.PROPRIETARY),
+        UNION(Flags.UNION),
+        OVERRIDE_BRIDGE(Flags.OVERRIDE_BRIDGE),
+        EFFECTIVELY_FINAL(Flags.EFFECTIVELY_FINAL),
+        CLASH(Flags.CLASH),
+        AUXILIARY(Flags.AUXILIARY),
+        NOT_IN_PROFILE(Flags.NOT_IN_PROFILE),
+        BAD_OVERRIDE(Flags.BAD_OVERRIDE),
+        SIGNATURE_POLYMORPHIC(Flags.SIGNATURE_POLYMORPHIC),
+        THROWS(Flags.THROWS),
+        LAMBDA_METHOD(Flags.LAMBDA_METHOD);
+
+        Flag(long flag) {
+            this.value = flag;
+            this.lowercaseName = name().toLowerCase();
+        }
+
+        @Override
+        public String toString() {
+            return lowercaseName;
+        }
+
+        final long value;
+        final String lowercaseName;
+    }
+
 }

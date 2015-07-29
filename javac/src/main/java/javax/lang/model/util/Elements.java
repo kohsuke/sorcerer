@@ -1,12 +1,12 @@
 /*
- * Copyright 2005-2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2005, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package javax.lang.model.util;
@@ -42,7 +42,6 @@ import javax.lang.model.type.*;
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version 1.17 07/05/05
  * @see javax.annotation.processing.ProcessingEnvironment#getElementUtils
  * @since 1.6
  */
@@ -66,21 +65,37 @@ public interface Elements {
 
     /**
      * Returns the values of an annotation's elements, including defaults.
-     * 
+     *
      * @see AnnotationMirror#getElementValues()
      * @param a  annotation to examine
      * @return the values of the annotation's elements, including defaults
      */
     Map<? extends ExecutableElement, ? extends AnnotationValue>
-	    getElementValuesWithDefaults(AnnotationMirror a);
+            getElementValuesWithDefaults(AnnotationMirror a);
 
     /**
      * Returns the text of the documentation (&quot;Javadoc&quot;)
      * comment of an element.
      *
+     * <p> A documentation comment of an element is a comment that
+     * begins with "{@code /**}" , ends with a separate
+     * "<code>*&#47;</code>", and immediately precedes the element,
+     * ignoring white space.  Therefore, a documentation comment
+     * contains at least three"{@code *}" characters.  The text
+     * returned for the documentation comment is a processed form of
+     * the comment as it appears in source code.  The leading "{@code
+     * /**}" and trailing "<code>*&#47;</code>" are removed.  For lines
+     * of the comment starting after the initial "{@code /**}",
+     * leading white space characters are discarded as are any
+     * consecutive "{@code *}" characters appearing after the white
+     * space or starting the line.  The processed lines are then
+     * concatenated together (including line terminators) and
+     * returned.
+     *
      * @param e  the element being examined
      * @return the documentation comment of the element, or {@code null}
-     *		if there is none
+     *          if there is none
+     * @jls 3.6 White Space
      */
     String getDocComment(Element e);
 
@@ -99,7 +114,7 @@ public interface Elements {
      * @return the binary name
      *
      * @see TypeElement#getQualifiedName
-     * @jls3 13.1 The Form of a Binary
+     * @jls 13.1 The Form of a Binary
      */
     Name getBinaryName(TypeElement type);
 
@@ -128,12 +143,13 @@ public interface Elements {
     List<? extends Element> getAllMembers(TypeElement type);
 
     /**
-     * Returns all annotations of an element, whether
-     * inherited or directly present.
+     * Returns all annotations <i>present</i> on an element, whether
+     * directly present or present via inheritance.
      *
      * @param e  the element being examined
      * @return all annotations of the element
      * @see Element#getAnnotationMirrors
+     * @see javax.lang.model.AnnotatedConstruct
      */
     List<? extends AnnotationMirror> getAllAnnotationMirrors(Element e);
 
@@ -143,7 +159,7 @@ public interface Elements {
      * @param hider   the first element
      * @param hidden  the second element
      * @return {@code true} if and only if the first element hides
-     *		the second
+     *          the second
      */
     boolean hides(Element hider, Element hidden);
 
@@ -165,7 +181,7 @@ public interface Elements {
      * {@code assert elements.overrides(m1, m2,
      *          elements.getTypeElement("java.lang.String")); }
      * </blockquote>
-     * 
+     *
      * A more interesting case can be illustrated by the following example
      * in which a method in type {@code A} does not override a
      * like-named method in type {@code B}:
@@ -179,8 +195,8 @@ public interface Elements {
      * {@code assert ! elements.overrides(m1, m2,
      *          elements.getTypeElement("A")); }
      * </blockquote>
-     * 
-     * When viewed as a member of a third type {@code C}, however, 
+     *
+     * When viewed as a member of a third type {@code C}, however,
      * the method in {@code A} does override the one in {@code B}:
      *
      * <blockquote>
@@ -194,12 +210,12 @@ public interface Elements {
      * @param overridden  the second method, possibly being overridden
      * @param type   the type of which the first method is a member
      * @return {@code true} if and only if the first method overrides
-     *		the second
-     * @jls3 8.4.8 Inheritance, Overriding, and Hiding
-     * @jls3 9.4.1 Inheritance and Overriding
+     *          the second
+     * @jls 8.4.8 Inheritance, Overriding, and Hiding
+     * @jls 9.4.1 Inheritance and Overriding
      */
     boolean overrides(ExecutableElement overrider, ExecutableElement overridden,
-		      TypeElement type);
+                      TypeElement type);
 
     /**
      * Returns the text of a <i>constant expression</i> representing a
@@ -210,7 +226,7 @@ public interface Elements {
      * @param value  a primitive value or string
      * @return the text of a constant expression
      * @throws IllegalArgumentException if the argument is not a primitive
-     *		value or string
+     *          value or string
      *
      * @see VariableElement#getConstantValue()
      */
@@ -232,6 +248,17 @@ public interface Elements {
      * argument.
      *
      * @param cs the character sequence to return as a name
+     * @return a name with the same sequence of characters as the argument
      */
     Name getName(CharSequence cs);
+
+    /**
+     * Returns {@code true} if the type element is a functional interface, {@code false} otherwise.
+     *
+     * @param type the type element being examined
+     * @return {@code true} if the element is a functional interface, {@code false} otherwise
+     * @jls 9.8 Functional Interfaces
+     * @since 1.8
+     */
+    boolean isFunctionalInterface(TypeElement type);
 }

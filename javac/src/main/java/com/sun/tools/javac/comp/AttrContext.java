@@ -1,12 +1,12 @@
 /*
- * Copyright 1999-2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 1999, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.comp;
@@ -31,12 +31,11 @@ import com.sun.tools.javac.code.*;
 /** Contains information specific to the attribute and enter
  *  passes, to be used in place of the generic field in environments.
  *
- *  <p><b>This is NOT part of any API supported by Sun Microsystems.  If
- *  you write code that depends on this, you do so at your own risk.
+ *  <p><b>This is NOT part of any supported API.
+ *  If you write code that depends on this, you do so at your own risk.
  *  This code and its internal interfaces are subject to change or
  *  deletion without notice.</b>
  */
-@Version("@(#)AttrContext.java	1.32 07/05/05")
 public class AttrContext {
 
     /** The scope of local symbols.
@@ -57,44 +56,61 @@ public class AttrContext {
 
     /** Are arguments to current function applications boxed into an array for varargs?
      */
-    boolean varArgs = false;
-
-    /** A list of type variables that are all-quantifed in current context.
-     */
-    List<Type> tvars = List.nil();
+    Resolve.MethodResolutionPhase pendingResolutionPhase = null;
 
     /** A record of the lint/SuppressWarnings currently in effect
      */
     Lint lint;
 
+    /** The variable whose initializer is being attributed
+     * useful for detecting self-references in variable initializers
+     */
+    Symbol enclVar = null;
+
+    /** ResultInfo to be used for attributing 'return' statement expressions
+     * (set by Attr.visitMethod and Attr.visitLambda)
+     */
+    Attr.ResultInfo returnResult = null;
+
+    /** Symbol corresponding to the site of a qualified default super call
+     */
+    Type defaultSuperCallSite = null;
+
     /** Duplicate this context, replacing scope field and copying all others.
      */
     AttrContext dup(Scope scope) {
-	AttrContext info = new AttrContext();
-	info.scope = scope;
-	info.staticLevel = staticLevel;
-	info.isSelfCall = isSelfCall;
-	info.selectSuper = selectSuper;
-	info.varArgs = varArgs;
-	info.tvars = tvars;
-	info.lint = lint;
-	return info;
+        AttrContext info = new AttrContext();
+        info.scope = scope;
+        info.staticLevel = staticLevel;
+        info.isSelfCall = isSelfCall;
+        info.selectSuper = selectSuper;
+        info.pendingResolutionPhase = pendingResolutionPhase;
+        info.lint = lint;
+        info.enclVar = enclVar;
+        info.returnResult = returnResult;
+        info.defaultSuperCallSite = defaultSuperCallSite;
+        return info;
     }
 
     /** Duplicate this context, copying all fields.
      */
     AttrContext dup() {
-	return dup(scope);
+        return dup(scope);
     }
-    
+
     public Iterable<Symbol> getLocalElements() {
         if (scope == null)
             return List.nil();
         return scope.getElements();
     }
-    
+
+    boolean lastResolveVarargs() {
+        return pendingResolutionPhase != null &&
+                pendingResolutionPhase.isVarargsRequired();
+    }
+
+    @Override
     public String toString() {
         return "AttrContext[" + scope.toString() + "]";
     }
 }
-

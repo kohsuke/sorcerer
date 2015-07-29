@@ -1,12 +1,12 @@
 /*
- * Copyright 1999-2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,63 +18,164 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.util;
 
 import java.io.*;
-import java.nio.CharBuffer;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
-import com.sun.tools.javac.code.Source;
-import com.sun.tools.javac.tree.JCTree;
+
+import com.sun.tools.javac.api.DiagnosticFormatter;
+import com.sun.tools.javac.main.Main;
+import com.sun.tools.javac.main.Option;
+import com.sun.tools.javac.tree.EndPosTable;
 import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
 import com.sun.tools.javac.util.JCDiagnostic.DiagnosticType;
-import com.sun.tools.javac.util.JCDiagnostic.SimpleDiagnosticPosition;
-import static com.sun.tools.javac.util.LayoutCharacters.*;
+
+import static com.sun.tools.javac.main.Option.*;
 
 /** A class for error logs. Reports errors and warnings, and
  *  keeps track of error numbers and positions.
  *
- *  <p><b>This is NOT part of any API supported by Sun Microsystems.  If
- *  you write code that depends on this, you do so at your own risk.
+ *  <p><b>This is NOT part of any supported API.
+ *  If you write code that depends on this, you do so at your own risk.
  *  This code and its internal interfaces are subject to change or
  *  deletion without notice.</b>
  */
-@Version("@(#)Log.java	1.72 07/05/05")
-public class Log {
+public class Log extends AbstractLog {
     /** The context key for the log. */
     public static final Context.Key<Log> logKey
-	= new Context.Key<Log>();
+        = new Context.Key<Log>();
 
     /** The context key for the output PrintWriter. */
     public static final Context.Key<PrintWriter> outKey =
-	new Context.Key<PrintWriter>();
+        new Context.Key<PrintWriter>();
 
-    //@Deprecated
-    public final PrintWriter errWriter;
-    
-    //@Deprecated
-    public final PrintWriter warnWriter;
-    
-    //@Deprecated
-    public final PrintWriter noticeWriter;
+    /* TODO: Should unify this with prefix handling in JCDiagnostic.Factory. */
+    public enum PrefixKind {
+        JAVAC("javac."),
+        COMPILER_MISC("compiler.misc.");
+        PrefixKind(String v) {
+            value = v;
+        }
+        public String key(String k) {
+            return value + k;
+        }
+        final String value;
+    }
+
+    /**
+     * DiagnosticHandler's provide the initial handling for diagnostics.
+     * When a diagnostic handler is created and has been initialized, it
+     * should install itself as the current diagnostic handler. When a
+     * client has finished using a handler, the client should call
+     * {@code log.removeDiagnosticHandler();}
+     *
+     * Note that javax.tools.DiagnosticListener (if set) is called later in the
+     * diagnostic pipeline.
+     */
+    public static abstract class DiagnosticHandler {
+        /**
+         * The previously installed diagnostic handler.
+         */
+        protected DiagnosticHandler prev;
+
+        /**
+         * Install this diagnostic handler as the current one,
+         * recording the previous one.
+         */
+        protected void install(Log log) {
+            prev = log.diagnosticHandler;
+            log.diagnosticHandler = this;
+        }
+
+        /**
+         * Handle a diagnostic.
+         */
+        public abstract void report(JCDiagnostic diag);
+    }
+
+    /**
+     * A DiagnosticHandler that discards all diagnostics.
+     */
+    public static class DiscardDiagnosticHandler extends DiagnosticHandler {
+        public DiscardDiagnosticHandler(Log log) {
+            install(log);
+        }
+
+        public void report(JCDiagnostic diag) { }
+    }
+
+    /**
+     * A DiagnosticHandler that can defer some or all diagnostics,
+     * by buffering them for later examination and/or reporting.
+     * If a diagnostic is not deferred, or is subsequently reported
+     * with reportAllDiagnostics(), it will be reported to the previously
+     * active diagnostic handler.
+     */
+    public static class DeferredDiagnosticHandler extends DiagnosticHandler {
+        private Queue<JCDiagnostic> deferred = new ListBuffer<>();
+        private final Filter<JCDiagnostic> filter;
+
+        public DeferredDiagnosticHandler(Log log) {
+            this(log, null);
+        }
+
+        public DeferredDiagnosticHandler(Log log, Filter<JCDiagnostic> filter) {
+            this.filter = filter;
+            install(log);
+        }
+
+        public void report(JCDiagnostic diag) {
+            if (!diag.isFlagSet(JCDiagnostic.DiagnosticFlag.NON_DEFERRABLE) &&
+                (filter == null || filter.accepts(diag))) {
+                deferred.add(diag);
+            } else {
+                prev.report(diag);
+            }
+        }
+
+        public Queue<JCDiagnostic> getDiagnostics() {
+            return deferred;
+        }
+
+        /** Report all deferred diagnostics. */
+        public void reportDeferredDiagnostics() {
+            reportDeferredDiagnostics(EnumSet.allOf(JCDiagnostic.Kind.class));
+        }
+
+        /** Report selected deferred diagnostics. */
+        public void reportDeferredDiagnostics(Set<JCDiagnostic.Kind> kinds) {
+            JCDiagnostic d;
+            while ((d = deferred.poll()) != null) {
+                if (kinds.contains(d.getKind()))
+                    prev.report(d);
+            }
+            deferred = null; // prevent accidental ongoing use
+        }
+    }
+
+    public enum WriterKind { NOTICE, WARNING, ERROR };
+
+    protected PrintWriter errWriter;
+
+    protected PrintWriter warnWriter;
+
+    protected PrintWriter noticeWriter;
 
     /** The maximum number of errors/warnings that are reported.
      */
-    public final int MaxErrors;
-    public final int MaxWarnings;
-
-    /** Whether or not to display the line of source containing a diagnostic.
-     */
-    private final boolean showSourceLine;
+    protected int MaxErrors;
+    protected int MaxWarnings;
 
     /** Switch: prompt user on each error.
      */
@@ -84,9 +185,9 @@ public class Log {
      */
     public boolean emitWarnings;
 
-    /** Enforce mandatory warnings.
+    /** Switch: suppress note messages.
      */
-    private boolean enforceMandatoryWarnings;
+    public boolean suppressNotes;
 
     /** Print stack trace on errors?
      */
@@ -95,94 +196,136 @@ public class Log {
     /** Print multiple errors for same source locations.
      */
     public boolean multipleErrors;
-  
+
     /**
      * Diagnostic listener, if provided through programmatic
      * interface to javac (JSR 199).
      */
     protected DiagnosticListener<? super JavaFileObject> diagListener;
-    /**
-     * Formatter for diagnostics
-     */
-    private DiagnosticFormatter diagFormatter;
 
     /**
-     * Factory for diagnostics
+     * Formatter for diagnostics.
      */
-    private JCDiagnostic.Factory diags;
+    private DiagnosticFormatter<JCDiagnostic> diagFormatter;
 
+    /**
+     * Keys for expected diagnostics.
+     */
+    public Set<String> expectDiagKeys;
+
+    /**
+     * Set to true if a compressed diagnostic is reported
+     */
+    public boolean compressedOutput;
+
+    /**
+     * JavacMessages object used for localization.
+     */
+    private JavacMessages messages;
+
+    /**
+     * Handler for initial dispatch of diagnostics.
+     */
+    private DiagnosticHandler diagnosticHandler;
 
     /** Construct a log with given I/O redirections.
      */
-    @Deprecated
     protected Log(Context context, PrintWriter errWriter, PrintWriter warnWriter, PrintWriter noticeWriter) {
-	context.put(logKey, this);
-	this.errWriter = errWriter;
-	this.warnWriter = warnWriter;
-	this.noticeWriter = noticeWriter;
+        super(JCDiagnostic.Factory.instance(context));
+        context.put(logKey, this);
+        this.errWriter = errWriter;
+        this.warnWriter = warnWriter;
+        this.noticeWriter = noticeWriter;
 
-	this.diags = JCDiagnostic.Factory.instance(context);
+        @SuppressWarnings("unchecked") // FIXME
+        DiagnosticListener<? super JavaFileObject> dl =
+            context.get(DiagnosticListener.class);
+        this.diagListener = dl;
 
-	Options options = Options.instance(context);
-	this.dumpOnError = options.get("-doe") != null;
-	this.promptOnError = options.get("-prompt") != null;
-	this.emitWarnings = options.get("-Xlint:none") == null;
-	this.MaxErrors = getIntOption(options, "-Xmaxerrs", 100);
-	this.MaxWarnings = getIntOption(options, "-Xmaxwarns", 100);
-	this.showSourceLine = options.get("rawDiagnostics") == null;
+        diagnosticHandler = new DefaultDiagnosticHandler();
 
-	this.diagFormatter = DiagnosticFormatter.instance(context);
-	@SuppressWarnings("unchecked") // FIXME
-	DiagnosticListener<? super JavaFileObject> diagListener =
-	    context.get(DiagnosticListener.class);
-	this.diagListener = diagListener;
+        messages = JavacMessages.instance(context);
+        messages.add(Main.javacBundleName);
 
-	Source source = Source.instance(context);
-	this.enforceMandatoryWarnings = source.enforceMandatoryWarnings();
+        final Options options = Options.instance(context);
+        initOptions(options);
+        options.addListener(new Runnable() {
+            public void run() {
+                initOptions(options);
+            }
+        });
     }
     // where
-	private int getIntOption(Options options, String optionName, int defaultValue) {
-	    String s = options.get(optionName);
-	    try {
-		if (s != null) return Integer.parseInt(s);
-	    } catch (NumberFormatException e) {
-		// silently ignore ill-formed numbers
-	    }
-	    return defaultValue;
-	}
+        private void initOptions(Options options) {
+            this.dumpOnError = options.isSet(DOE);
+            this.promptOnError = options.isSet(PROMPT);
+            this.emitWarnings = options.isUnset(XLINT_CUSTOM, "none");
+            this.suppressNotes = options.isSet("suppressNotes");
+            this.MaxErrors = getIntOption(options, XMAXERRS, getDefaultMaxErrors());
+            this.MaxWarnings = getIntOption(options, XMAXWARNS, getDefaultMaxWarnings());
+
+            boolean rawDiagnostics = options.isSet("rawDiagnostics");
+            this.diagFormatter = rawDiagnostics ? new RawDiagnosticFormatter(options) :
+                                                  new BasicDiagnosticFormatter(options, messages);
+
+            String ek = options.get("expectKeys");
+            if (ek != null)
+                expectDiagKeys = new HashSet<String>(Arrays.asList(ek.split(", *")));
+        }
+
+        private int getIntOption(Options options, Option option, int defaultValue) {
+            String s = options.get(option);
+            try {
+                if (s != null) {
+                    int n = Integer.parseInt(s);
+                    return (n <= 0 ? Integer.MAX_VALUE : n);
+                }
+            } catch (NumberFormatException e) {
+                // silently ignore ill-formed numbers
+            }
+            return defaultValue;
+        }
+
+        /** Default value for -Xmaxerrs.
+         */
+        protected int getDefaultMaxErrors() {
+            return 100;
+        }
+
+        /** Default value for -Xmaxwarns.
+         */
+        protected int getDefaultMaxWarnings() {
+            return 100;
+        }
 
     /** The default writer for diagnostics
      */
-    static final PrintWriter defaultWriter(Context context) {
-	PrintWriter result = context.get(outKey);
-	if (result == null)
-	    context.put(outKey, result = new PrintWriter(System.err));
-	return result;
+    static PrintWriter defaultWriter(Context context) {
+        PrintWriter result = context.get(outKey);
+        if (result == null)
+            context.put(outKey, result = new PrintWriter(System.err));
+        return result;
     }
 
     /** Construct a log with default settings.
      */
     protected Log(Context context) {
-	this(context, defaultWriter(context));
+        this(context, defaultWriter(context));
     }
 
     /** Construct a log with all output redirected.
      */
     protected Log(Context context, PrintWriter defaultWriter) {
-	this(context, defaultWriter, defaultWriter, defaultWriter);
+        this(context, defaultWriter, defaultWriter, defaultWriter);
     }
 
     /** Get the Log instance for this context. */
     public static Log instance(Context context) {
-	Log instance = context.get(logKey);
-	if (instance == null)
-	    instance = new Log(context);
-	return instance;
+        Log instance = context.get(logKey);
+        if (instance == null)
+            instance = new Log(context);
+        return instance;
     }
-
-    /** The file that's currently translated.
-     */
-    protected JCDiagnostic.DiagnosticSource source;
 
     /** The number of errors encountered so far.
      */
@@ -197,115 +340,119 @@ public class Log {
      *  source file name and source code position of the error is added to the set.
      */
     private Set<Pair<JavaFileObject, Integer>> recorded = new HashSet<Pair<JavaFileObject,Integer>>();
-    
-    private Map<JavaFileObject, Map<JCTree, Integer>> endPosTables;
-
-    /** The buffer containing the file that's currently translated.
-     */
-    private char[] buf = null;
-
-    /** The position in the buffer at which last error was reported
-     */
-    private int bp;
-
-    /** number of the current source line; first line is 1
-     */
-    private int line;
-
-    /**  buffer index of the first character of the current source line
-     */
-    private int lineStart;
 
     public boolean hasDiagnosticListener() {
         return diagListener != null;
     }
-    
-    public void setEndPosTable(JavaFileObject name, Map<JCTree, Integer> table) {
-        if (endPosTables == null)
-            endPosTables = new HashMap<JavaFileObject, Map<JCTree, Integer>>();
-        endPosTables.put(name, table);
+
+    public void setEndPosTable(JavaFileObject name, EndPosTable endPosTable) {
+        name.getClass(); // null check
+        getSource(name).setEndPosTable(endPosTable);
     }
 
-    /** Re-assign source, returning previous setting.
+    /** Return current sourcefile.
      */
-    public JavaFileObject useSource(final JavaFileObject name) {
-	JavaFileObject prev = currentSource();
-	if (name != prev) {
-	    source = new JCDiagnostic.DiagnosticSource() {
-		    public JavaFileObject getFile() {
-			return name;
-		    }
-		    public CharSequence getName() {
-			return JavacFileManager.getJavacBaseFileName(getFile());
-		    }
-		    public int getLineNumber(int pos) {
-			return Log.this.getLineNumber(pos);
-		    }
-		    public int getColumnNumber(int pos) {
-			return Log.this.getColumnNumber(pos);
-		    }
-                    public Map<JCTree, Integer> getEndPosTable() {
-                        return (endPosTables == null ? null : endPosTables.get(name));
-                    }
-		};
-	    buf = null;
-	}
-	return prev;
-    }
-
-    /** Re-assign source buffer for existing source name.
-     */
-    protected void setBuf(char[] newBuf) {
-	buf = newBuf;
-	bp = 0;
-	lineStart = 0;
-	line = 1;
-    }
-
-    protected char[] getBuf() {
-	return buf;
-    }
-
-    /** Return current source name.
-     */
-    public JavaFileObject currentSource() {
+    public JavaFileObject currentSourceFile() {
         return source == null ? null : source.getFile();
+    }
+
+    /** Get the current diagnostic formatter.
+     */
+    public DiagnosticFormatter<JCDiagnostic> getDiagnosticFormatter() {
+        return diagFormatter;
+    }
+
+    /** Set the current diagnostic formatter.
+     */
+    public void setDiagnosticFormatter(DiagnosticFormatter<JCDiagnostic> diagFormatter) {
+        this.diagFormatter = diagFormatter;
+    }
+
+    public PrintWriter getWriter(WriterKind kind) {
+        switch (kind) {
+            case NOTICE:    return noticeWriter;
+            case WARNING:   return warnWriter;
+            case ERROR:     return errWriter;
+            default:        throw new IllegalArgumentException();
+        }
+    }
+
+    public void setWriter(WriterKind kind, PrintWriter pw) {
+        pw.getClass();
+        switch (kind) {
+            case NOTICE:    noticeWriter = pw;  break;
+            case WARNING:   warnWriter = pw;    break;
+            case ERROR:     errWriter = pw;     break;
+            default:        throw new IllegalArgumentException();
+        }
+    }
+
+    public void setWriters(PrintWriter pw) {
+        pw.getClass();
+        noticeWriter = warnWriter = errWriter = pw;
+    }
+
+    /**
+     * Propagate the previous log's information.
+     */
+    public void initRound(Log other) {
+        this.noticeWriter = other.noticeWriter;
+        this.warnWriter = other.warnWriter;
+        this.errWriter = other.errWriter;
+        this.sourceMap = other.sourceMap;
+        this.recorded = other.recorded;
+        this.nerrors = other.nerrors;
+        this.nwarnings = other.nwarnings;
+    }
+
+    /**
+     * Replace the specified diagnostic handler with the
+     * handler that was current at the time this handler was created.
+     * The given handler must be the currently installed handler;
+     * it must be specified explicitly for clarity and consistency checking.
+     */
+    public void popDiagnosticHandler(DiagnosticHandler h) {
+        Assert.check(diagnosticHandler == h);
+        diagnosticHandler = h.prev;
     }
 
     /** Flush the logs
      */
     public void flush() {
-	errWriter.flush();
-	warnWriter.flush();
-	noticeWriter.flush();
+        errWriter.flush();
+        warnWriter.flush();
+        noticeWriter.flush();
+    }
+
+    public void flush(WriterKind kind) {
+        getWriter(kind).flush();
     }
 
     /** Returns true if an error needs to be reported for a given
      * source name and pos.
      */
     protected boolean shouldReport(JavaFileObject file, int pos) {
-	if (multipleErrors || file == null)
-	    return true;
+        if (multipleErrors || file == null)
+            return true;
 
         Pair<JavaFileObject,Integer> coords = new Pair<JavaFileObject,Integer>(file, pos);
         boolean shouldReport = !recorded.contains(coords);
         if (shouldReport)
             recorded.add(coords);
         return shouldReport;
-    }        
+    }
 
     /** Prompt user after an error.
      */
     public void prompt() {
         if (promptOnError) {
-            System.err.println(getLocalizedString("resume.abort"));
-            char ch;
+            System.err.println(localize("resume.abort"));
             try {
                 while (true) {
                     switch (System.in.read()) {
                     case 'a': case 'A':
-			System.exit(-1);
-			return;
+                        System.exit(-1);
+                        return;
                     case 'r': case 'R':
                         return;
                     case 'x': case 'X':
@@ -321,152 +468,80 @@ public class Log {
      *  @param pos   Buffer index of the error position, must be on current line
      */
     private void printErrLine(int pos, PrintWriter writer) {
-	if (!findLine(pos))
-	    return;
+        String line = (source == null ? null : source.getLine(pos));
+        if (line == null)
+            return;
+        int col = source.getColumnNumber(pos, false);
 
-	int lineEnd = lineStart;
-	while (lineEnd < buf.length && buf[lineEnd] != CR && buf[lineEnd] != LF)
-	    lineEnd++;
-	if (lineEnd - lineStart == 0)
-	    return;
-	printLines(writer, new String(buf, lineStart, lineEnd - lineStart));
-	for (bp = lineStart; bp < pos; bp++) {
-	    writer.print((buf[bp] == '\t') ? "\t" : " ");
-	}
-	writer.println("^");
-	writer.flush();
-    }
-
-    protected static char[] getCharContent(JavaFileObject fileObject) throws IOException {
-        CharSequence cs = fileObject.getCharContent(true);
-        if (cs instanceof CharBuffer) {
-            return JavacFileManager.toArray((CharBuffer)cs);
-        } else {
-            return cs.toString().toCharArray();
+        printRawLines(writer, line);
+        for (int i = 0; i < col - 1; i++) {
+            writer.print((line.charAt(i) == '\t') ? "\t" : " ");
         }
+        writer.println("^");
+        writer.flush();
     }
-    
-    /** Find the line in the buffer that contains the current position
-     * @param pos      Character offset into the buffer
-     */
-    private boolean findLine(int pos) {
-	if (pos == Position.NOPOS || currentSource() == null)
-	    return false;
-	try {
-	    if (buf == null) {
-		buf = getCharContent(currentSource());
-		lineStart = 0;
-		line = 1;
-	    } else if (lineStart > pos) { // messages don't come in order
-		lineStart = 0;
-		line = 1;
-	    }
-	    bp = lineStart;
-	    while (bp < buf.length && bp < pos) {
-		switch (buf[bp++]) {
-		case CR:
-		    if (bp < buf.length && buf[bp] == LF) bp++;
-		    line++;
-		    lineStart = bp;
-		    break;
-		case LF:
-		    line++;
-		    lineStart = bp;
-		    break;
-		}
-	    }
-	    return bp <= buf.length;
-	} catch (IOException e) {
-	    //e.printStackTrace();
-            // FIXME: include e.getLocalizedMessage() in error message
-	    printLines(errWriter, getLocalizedString("source.unavailable"));
-	    errWriter.flush();
-	    buf = new char[0];
-	}
-	return false;
+
+    public void printNewline() {
+        noticeWriter.println();
+    }
+
+    public void printNewline(WriterKind wk) {
+        getWriter(wk).println();
+    }
+
+    public void printLines(String key, Object... args) {
+        printRawLines(noticeWriter, localize(key, args));
+    }
+
+    public void printLines(PrefixKind pk, String key, Object... args) {
+        printRawLines(noticeWriter, localize(pk, key, args));
+    }
+
+    public void printLines(WriterKind wk, String key, Object... args) {
+        printRawLines(getWriter(wk), localize(key, args));
+    }
+
+    public void printLines(WriterKind wk, PrefixKind pk, String key, Object... args) {
+        printRawLines(getWriter(wk), localize(pk, key, args));
     }
 
     /** Print the text of a message, translating newlines appropriately
      *  for the platform.
      */
-    public static void printLines(PrintWriter writer, String msg) {
-	int nl;
-	while ((nl = msg.indexOf('\n')) != -1) {
-	    writer.println(msg.substring(0, nl));
-	    msg = msg.substring(nl+1);
-	}
-	if (msg.length() != 0) writer.println(msg);
+    public void printRawLines(String msg) {
+        printRawLines(noticeWriter, msg);
     }
 
-    /** Report an error, unless another error was already reported at same
-     *  source position.
-     *  @param key    The key for the localized error message.
-     *  @param args   Fields of the error message.
+    /** Print the text of a message, translating newlines appropriately
+     *  for the platform.
      */
-    public void error(String key, Object ... args) {
-	report(diags.error(source, null, key, args));
+    public void printRawLines(WriterKind kind, String msg) {
+        printRawLines(getWriter(kind), msg);
     }
 
-    /** Report an error, unless another error was already reported at same
-     *  source position.
-     *  @param pos    The source position at which to report the error.
-     *  @param key    The key for the localized error message.
-     *  @param args   Fields of the error message.
+    /** Print the text of a message, translating newlines appropriately
+     *  for the platform.
      */
-    public void error(DiagnosticPosition pos, String key, Object ... args) {
-	report(diags.error(source, pos, key, args));
+    public static void printRawLines(PrintWriter writer, String msg) {
+        int nl;
+        while ((nl = msg.indexOf('\n')) != -1) {
+            writer.println(msg.substring(0, nl));
+            msg = msg.substring(nl+1);
+        }
+        if (msg.length() != 0) writer.println(msg);
     }
 
-    /** Report an error, unless another error was already reported at same
-     *  source position.
-     *  @param pos    The source position at which to report the error.
-     *  @param key    The key for the localized error message.
-     *  @param args   Fields of the error message.
+    /**
+     * Print the localized text of a "verbose" message to the
+     * noticeWriter stream.
      */
-    public void error(int pos, String key, Object ... args) {
-	report(diags.error(source, wrap(pos), key, args));
+    public void printVerbose(String key, Object... args) {
+        printRawLines(noticeWriter, localize("verbose." + key, args));
     }
 
-    /** Report a warning, unless suppressed by the  -nowarn option or the
-     *  maximum number of warnings has been reached.
-     *  @param pos    The source position at which to report the warning.
-     *  @param key    The key for the localized warning message.
-     *  @param args   Fields of the warning message.
-     */
-    public void warning(String key, Object ... args) {
-        report(diags.warning(source, null, key, args));
-    }
-
-    /** Report a warning, unless suppressed by the  -nowarn option or the
-     *  maximum number of warnings has been reached.
-     *  @param pos    The source position at which to report the warning.
-     *  @param key    The key for the localized warning message.
-     *  @param args   Fields of the warning message.
-     */
-    public void warning(DiagnosticPosition pos, String key, Object ... args) {
-        report(diags.warning(source, pos, key, args));
-    }
-
-    /** Report a warning, unless suppressed by the  -nowarn option or the
-     *  maximum number of warnings has been reached.
-     *  @param pos    The source position at which to report the warning.
-     *  @param key    The key for the localized warning message.
-     *  @param args   Fields of the warning message.
-     */
-    public void warning(int pos, String key, Object ... args) {
-        report(diags.warning(source, wrap(pos), key, args));
-    }
-
-    /** Report a warning.
-     *  @param pos    The source position at which to report the warning.
-     *  @param key    The key for the localized warning message.
-     *  @param args   Fields of the warning message.
-     */
-    public void mandatoryWarning(DiagnosticPosition pos, String key, Object ... args) {
-	if (enforceMandatoryWarnings)
-	    report(diags.mandatoryWarning(source, pos, key, args));
-	else
-	    report(diags.warning(source, pos, key, args));
+    protected void directError(String key, Object... args) {
+        printRawLines(errWriter, localize(key, args));
+        errWriter.flush();
     }
 
     /** Report a warning that cannot be suppressed.
@@ -479,101 +554,58 @@ public class Log {
         nwarnings++;
     }
 
-    /** Provide a non-fatal notification, unless suppressed by the -nowarn option.
-     *  @param key    The key for the localized notification message.
-     *  @param args   Fields of the notification message.
+    /**
+     * Primary method to report a diagnostic.
+     * @param diagnostic
      */
-    public void note(String key, Object ... args) {
-	report(diags.note(source, null, key, args));
-    }
-
-    /** Provide a non-fatal notification, unless suppressed by the -nowarn option.
-     *  @param key    The key for the localized notification message.
-     *  @param args   Fields of the notification message.
-     */
-    public void note(DiagnosticPosition pos, String key, Object ... args) {
-	report(diags.note(source, pos, key, args));
-    }
-
-    /** Provide a non-fatal notification, unless suppressed by the -nowarn option.
-     *  @param key    The key for the localized notification message.
-     *  @param args   Fields of the notification message.
-     */
-    public void note(int pos, String key, Object ... args) {
-	report(diags.note(source, wrap(pos), key, args));
-    }
-
-    /** Provide a non-fatal notification, unless suppressed by the -nowarn option.
-     *  @param key    The key for the localized notification message.
-     *  @param args   Fields of the notification message.
-     */
-    public void mandatoryNote(final JavaFileObject file, String key, Object ... args) {
-        JCDiagnostic.DiagnosticSource wrapper = null;
-        if (file != null) {
-            wrapper = new JCDiagnostic.DiagnosticSource() {
-                    public JavaFileObject getFile() {
-                        return file;
-                    }
-                    public CharSequence getName() {
-                        return JavacFileManager.getJavacBaseFileName(getFile());
-                    }
-                    public int getLineNumber(int pos) {
-                        return Log.this.getLineNumber(pos);
-                    }
-                    public int getColumnNumber(int pos) {
-                        return Log.this.getColumnNumber(pos);
-                    }
-                    public Map<JCTree, Integer> getEndPosTable() {
-                        return (endPosTables == null ? null : endPosTables.get(file));
-                    }
-                };
-        }
-        if (enforceMandatoryWarnings)
-            report(diags.mandatoryNote(wrapper, key, args));
-        else
-            report(diags.note(wrapper, null, key, args));
-    }
-
-    private DiagnosticPosition wrap(int pos) {
-	return (pos == Position.NOPOS ? null : new SimpleDiagnosticPosition(pos));
-    }
+    public void report(JCDiagnostic diagnostic) {
+        diagnosticHandler.report(diagnostic);
+     }
 
     /**
      * Common diagnostic handling.
      * The diagnostic is counted, and depending on the options and how many diagnostics have been
      * reported so far, the diagnostic may be handed off to writeDiagnostic.
      */
-    public void report(JCDiagnostic diagnostic) {
-	switch (diagnostic.getType()) {
-	case FRAGMENT: 
-	    throw new IllegalArgumentException();
+    private class DefaultDiagnosticHandler extends DiagnosticHandler {
+        public void report(JCDiagnostic diagnostic) {
+            if (expectDiagKeys != null)
+                expectDiagKeys.remove(diagnostic.getCode());
 
-	case NOTE:
-	    // Print out notes only when we are permitted to report warnings
-	    // Notes are only generated at the end of a compilation, so should be small
-	    // in number.
-	    if (emitWarnings || diagnostic.isMandatory()) {
-		writeDiagnostic(diagnostic);
-	    }
-	    break;
+            switch (diagnostic.getType()) {
+            case FRAGMENT:
+                throw new IllegalArgumentException();
 
-	case WARNING:
-	    if (emitWarnings || diagnostic.isMandatory()) {
-		if (nwarnings < MaxWarnings) {
-		    writeDiagnostic(diagnostic);
-		    nwarnings++;
-		}
-	    }
-	    break;
+            case NOTE:
+                // Print out notes only when we are permitted to report warnings
+                // Notes are only generated at the end of a compilation, so should be small
+                // in number.
+                if ((emitWarnings || diagnostic.isMandatory()) && !suppressNotes) {
+                    writeDiagnostic(diagnostic);
+                }
+                break;
 
-	case ERROR:
-	    if (nerrors < MaxErrors
-                && shouldReport(diagnostic.getSource(), diagnostic.getIntPosition())) {
-		writeDiagnostic(diagnostic);
-		nerrors++;
-	    }
-	    break;
-	}
+            case WARNING:
+                if (emitWarnings || diagnostic.isMandatory()) {
+                    if (nwarnings < MaxWarnings) {
+                        writeDiagnostic(diagnostic);
+                        nwarnings++;
+                    }
+                }
+                break;
+
+            case ERROR:
+                if (nerrors < MaxErrors
+                    && shouldReport(diagnostic.getSource(), diagnostic.getIntPosition())) {
+                    writeDiagnostic(diagnostic);
+                    nerrors++;
+                }
+                break;
+            }
+            if (diagnostic.isFlagSet(JCDiagnostic.DiagnosticFlag.COMPRESSED)) {
+                compressedOutput = true;
+            }
+        }
     }
 
     /**
@@ -581,140 +613,122 @@ public class Log {
      */
     protected void writeDiagnostic(JCDiagnostic diag) {
         if (diagListener != null) {
-	    try {
-		diagListener.report(diag);
-		return;
-	    }
-	    catch (Throwable t) {
-		throw new ClientCodeException(t);
-	    }
+            diagListener.report(diag);
+            return;
         }
 
-	PrintWriter writer = getWriterForDiagnosticType(diag.getType());
+        PrintWriter writer = getWriterForDiagnosticType(diag.getType());
 
-	printLines(writer, diagFormatter.format(diag));
-	if (showSourceLine) {
-	    int pos = diag.getIntPosition();
-	    if (pos != Position.NOPOS) {
-		JavaFileObject prev = useSource(diag.getSource());
-		printErrLine(pos, writer);
-		useSource(prev);
-	    }
-	}
+        printRawLines(writer, diagFormatter.format(diag, messages.getCurrentLocale()));
 
-	if (promptOnError) {
-	    switch (diag.getType()) {
-	    case ERROR:
-	    case WARNING:
-		prompt();
-	    }
-	}
-	
-	if (dumpOnError)
-	    new RuntimeException().printStackTrace(writer);
+        if (promptOnError) {
+            switch (diag.getType()) {
+            case ERROR:
+            case WARNING:
+                prompt();
+            }
+        }
 
-	writer.flush();
+        if (dumpOnError)
+            new RuntimeException().printStackTrace(writer);
+
+        writer.flush();
     }
 
     @Deprecated
     protected PrintWriter getWriterForDiagnosticType(DiagnosticType dt) {
-	switch (dt) {
-	case FRAGMENT: 
-	    throw new IllegalArgumentException();
+        switch (dt) {
+        case FRAGMENT:
+            throw new IllegalArgumentException();
 
-	case NOTE:     
-	    return noticeWriter;
+        case NOTE:
+            return noticeWriter;
 
-	case WARNING:  
-	    return warnWriter;
-   
-	case ERROR:    
-	    return errWriter; 
-   
-	default:       
-	    throw new Error();
-	}
+        case WARNING:
+            return warnWriter;
+
+        case ERROR:
+            return errWriter;
+
+        default:
+            throw new Error();
+        }
+    }
+
+    /** Find a localized string in the resource bundle.
+     *  Because this method is static, it ignores the locale.
+     *  Use localize(key, args) when possible.
+     *  @param key    The key for the localized string.
+     *  @param args   Fields to substitute into the string.
+     */
+    public static String getLocalizedString(String key, Object ... args) {
+        return JavacMessages.getDefaultLocalizedString(PrefixKind.COMPILER_MISC.key(key), args);
     }
 
     /** Find a localized string in the resource bundle.
      *  @param key    The key for the localized string.
      *  @param args   Fields to substitute into the string.
      */
-    public static String getLocalizedString(String key, Object ... args) {
-	return Messages.getDefaultLocalizedString("compiler.misc." + key, args);
+    public String localize(String key, Object... args) {
+        return localize(PrefixKind.COMPILER_MISC, key, args);
     }
+
+    /** Find a localized string in the resource bundle.
+     *  @param key    The key for the localized string.
+     *  @param args   Fields to substitute into the string.
+     */
+    public String localize(PrefixKind pk, String key, Object... args) {
+        if (useRawMessages)
+            return pk.key(key);
+        else
+            return messages.getLocalizedString(pk.key(key), args);
+    }
+    // where
+        // backdoor hook for testing, should transition to use -XDrawDiagnostics
+        private static boolean useRawMessages = false;
 
 /***************************************************************************
  * raw error messages without internationalization; used for experimentation
  * and quick prototyping
  ***************************************************************************/
 
-/** print an error or warning message:
- */
+    /** print an error or warning message:
+     */
     private void printRawError(int pos, String msg) {
-	if (!findLine(pos)) {
-	    printLines(errWriter, "error: " + msg);
-	} else {
-            JavaFileObject file = currentSource();
+        if (source == null || pos == Position.NOPOS) {
+            printRawLines(errWriter, "error: " + msg);
+        } else {
+            int line = source.getLineNumber(pos);
+            JavaFileObject file = source.getFile();
             if (file != null)
-                printLines(errWriter,
-			   JavacFileManager.getJavacFileName(file) + ":" +
-			   line + ": " + msg);
-	    printErrLine(pos, errWriter);
-	}
-	errWriter.flush();
+                printRawLines(errWriter,
+                           file.getName() + ":" +
+                           line + ": " + msg);
+            printErrLine(pos, errWriter);
+        }
+        errWriter.flush();
     }
 
-/** report an error:
- */
+    /** report an error:
+     */
     public void rawError(int pos, String msg) {
-        if (nerrors < MaxErrors && shouldReport(currentSource(), pos)) {
+        if (nerrors < MaxErrors && shouldReport(currentSourceFile(), pos)) {
             printRawError(pos, msg);
             prompt();
             nerrors++;
         }
-	errWriter.flush();
+        errWriter.flush();
     }
 
-/** report a warning:
- */
+    /** report a warning:
+     */
     public void rawWarning(int pos, String msg) {
         if (nwarnings < MaxWarnings && emitWarnings) {
-	    printRawError(pos, "warning: " + msg);
+            printRawError(pos, "warning: " + msg);
         }
-	prompt();
-	nwarnings++;
-	errWriter.flush();
-    }
-
-    /** Return the one-based line number associated with a given pos 
-     * for the current source file.  Zero is returned if no line exists 
-     * for the given position.
-     */
-    protected int getLineNumber(int pos) {
-	if (findLine(pos))
-	    return line;
-	return 0;
-    }
-
-    /** Return the one-based column number associated with a given pos 
-     * for the current source file.  Zero is returned if no column exists 
-     * for the given position.
-     */
-    protected int getColumnNumber(int pos) {
-	if (findLine(pos)) {
-	    int column = 0;
-	    for (bp = lineStart; bp < pos; bp++) {
-		if (bp >= buf.length)
-		    return 0;
-		if (buf[bp] == '\t') 
-		    column = (column / TabInc * TabInc) + TabInc;
-		else
-		    column++;
-	    }
-	    return column + 1; // positions are one-based
-	}
-	return 0;
+        prompt();
+        nwarnings++;
+        errWriter.flush();
     }
 
     public static String format(String fmt, Object... args) {

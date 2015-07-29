@@ -1,12 +1,12 @@
 /*
- * Copyright 1999-2005 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 1999, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.util;
@@ -31,12 +31,11 @@ import java.io.*;
  *  appended. There are also methods to append names to byte buffers
  *  and to convert byte buffers to names.
  *
- *  <p><b>This is NOT part of any API supported by Sun Microsystems.  If
- *  you write code that depends on this, you do so at your own risk.
+ *  <p><b>This is NOT part of any supported API.
+ *  If you write code that depends on this, you do so at your own risk.
  *  This code and its internal interfaces are subject to change or
  *  deletion without notice.</b>
  */
-@Version("@(#)ByteBuffer.java	1.26 07/05/05")
 public class ByteBuffer {
 
     /** An array holding the bytes in this buffer; can be grown.
@@ -50,63 +49,57 @@ public class ByteBuffer {
     /** Create a new byte buffer.
      */
     public ByteBuffer() {
-	this(64);
+        this(64);
     }
 
     /** Create a new byte buffer with an initial elements array
      *  of given size.
      */
     public ByteBuffer(int initialSize) {
-	elems = new byte[initialSize];
-	length = 0;
-    }
-
-    private void copy(int size) {
-	byte[] newelems = new byte[size];
-	System.arraycopy(elems, 0, newelems, 0, elems.length);
-	elems = newelems;
+        elems = new byte[initialSize];
+        length = 0;
     }
 
     /** Append byte to this buffer.
      */
     public void appendByte(int b) {
-	if (length >= elems.length) copy(elems.length * 2);
-	elems[length++] = (byte)b;
+        elems = ArrayUtils.ensureCapacity(elems, length);
+        elems[length++] = (byte)b;
     }
 
     /** Append `len' bytes from byte array,
      *  starting at given `start' offset.
      */
     public void appendBytes(byte[] bs, int start, int len) {
-	while (length + len > elems.length) copy(elems.length * 2);
-	System.arraycopy(bs, start, elems, length, len);
-	length += len;
+        elems = ArrayUtils.ensureCapacity(elems, length + len);
+        System.arraycopy(bs, start, elems, length, len);
+        length += len;
     }
 
     /** Append all bytes from given byte array.
      */
     public void appendBytes(byte[] bs) {
-	appendBytes(bs, 0, bs.length);
+        appendBytes(bs, 0, bs.length);
     }
 
     /** Append a character as a two byte number.
      */
     public void appendChar(int x) {
-	while (length + 1 >= elems.length) copy(elems.length * 2);
-	elems[length  ] = (byte)((x >>  8) & 0xFF);
+        elems = ArrayUtils.ensureCapacity(elems, length + 1);
+        elems[length  ] = (byte)((x >>  8) & 0xFF);
         elems[length+1] = (byte)((x      ) & 0xFF);
-	length = length + 2;
+        length = length + 2;
     }
 
     /** Append an integer as a four byte number.
      */
     public void appendInt(int x) {
-	while (length + 3 >= elems.length) copy(elems.length * 2);
-	elems[length  ] = (byte)((x >> 24) & 0xFF);
+        elems = ArrayUtils.ensureCapacity(elems, length + 3);
+        elems[length  ] = (byte)((x >> 24) & 0xFF);
         elems[length+1] = (byte)((x >> 16) & 0xFF);
-	elems[length+2] = (byte)((x >>  8) & 0xFF);
+        elems[length+2] = (byte)((x >>  8) & 0xFF);
         elems[length+3] = (byte)((x      ) & 0xFF);
-	length = length + 4;
+        length = length + 4;
     }
 
     /** Append a long as an eight byte number.
@@ -151,26 +144,18 @@ public class ByteBuffer {
     /** Append a name.
      */
     public void appendName(Name name) {
-	appendBytes(name.table.names, name.index, name.len);
+        appendBytes(name.getByteArray(), name.getByteOffset(), name.getByteLength());
     }
 
     /** Reset to zero length.
      */
     public void reset() {
-	length = 0;
+        length = 0;
     }
 
     /** Convert contents to name.
      */
-    public Name toName(Name.Table names) {
-	return names.fromUtf(elems, 0, length);
+    public Name toName(Names names) {
+        return names.fromUtf(elems, 0, length);
     }
 }
-	
-	
-	
-
-
-
-
-

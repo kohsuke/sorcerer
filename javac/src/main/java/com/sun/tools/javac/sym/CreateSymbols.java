@@ -1,12 +1,12 @@
 /*
- * Copyright 2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.sym;
@@ -33,13 +33,13 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.jvm.ClassReader;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.jvm.Pool;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
-import com.sun.tools.javac.util.Name;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +47,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Properties;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -79,14 +79,17 @@ import javax.tools.ToolProvider;
  * <dd>Specifies the destination directory.</dd>
  * </dl>
  *
- * <p><b>This is NOT part of any API supported by Sun Microsystems.
+ * <p><b>This is NOT part of any supported API.
  * If you write code that depends on this, you do so at your own
  * risk.  This code and its internal interfaces are subject to change
  * or deletion without notice.</b></p>
  *
  * @author Peter von der Ah\u00e9
  */
-@SupportedOptions({"com.sun.tools.javac.sym.Jar","com.sun.tools.javac.sym.Dest"})
+@SupportedOptions({
+    "com.sun.tools.javac.sym.Jar",
+    "com.sun.tools.javac.sym.Dest",
+    "com.sun.tools.javac.sym.Profiles"})
 @SupportedAnnotationTypes("*")
 public class CreateSymbols extends AbstractProcessor {
 
@@ -104,14 +107,21 @@ public class CreateSymbols extends AbstractProcessor {
             if (renv.processingOver())
                 createSymbols();
         } catch (IOException e) {
+            CharSequence msg = e.getLocalizedMessage();
+            if (msg == null)
+                msg = e.toString();
             processingEnv.getMessager()
-                .printMessage(Diagnostic.Kind.ERROR, e.getLocalizedMessage());
+                .printMessage(Diagnostic.Kind.ERROR, msg);
         } catch (Throwable t) {
+            t.printStackTrace();
             Throwable cause = t.getCause();
             if (cause == null)
                 cause = t;
+            CharSequence msg = cause.getLocalizedMessage();
+            if (msg == null)
+                msg = cause.toString();
             processingEnv.getMessager()
-                .printMessage(Diagnostic.Kind.ERROR, cause.getLocalizedMessage());
+                .printMessage(Diagnostic.Kind.ERROR, msg);
         }
         return true;
     }
@@ -122,12 +132,17 @@ public class CreateSymbols extends AbstractProcessor {
         Set<String> documented = new HashSet<String>();
         Set<PackageSymbol> packages =
             ((JavacProcessingEnvironment)processingEnv).getSpecifiedPackages();
-        String jarName = processingEnv.getOptions().get("com.sun.tools.javac.sym.Jar");
+        Map<String,String> pOptions = processingEnv.getOptions();
+        String jarName = pOptions.get("com.sun.tools.javac.sym.Jar");
         if (jarName == null)
             throw new RuntimeException("Must use -Acom.sun.tools.javac.sym.Jar=LOCATION_OF_JAR");
-        String destName = processingEnv.getOptions().get("com.sun.tools.javac.sym.Dest");
+        String destName = pOptions.get("com.sun.tools.javac.sym.Dest");
         if (destName == null)
             throw new RuntimeException("Must use -Acom.sun.tools.javac.sym.Dest=LOCATION_OF_JAR");
+        String profileSpec=pOptions.get("com.sun.tools.javac.sym.Profiles");
+        if (profileSpec == null)
+            throw new RuntimeException("Must use -Acom.sun.tools.javac.sym.Profiles=PROFILES_SPEC");
+        Profiles profiles = Profiles.read(new File(profileSpec));
 
         for (PackageSymbol psym : packages) {
             String name = psym.getQualifiedName().toString();
@@ -167,15 +182,23 @@ public class CreateSymbols extends AbstractProcessor {
             tool.getTask(null, fm, null, options, null, null);
         com.sun.tools.javac.main.JavaCompiler compiler =
             com.sun.tools.javac.main.JavaCompiler.instance(task.getContext());
-        ClassReader reader = ClassReader.instance(task.getContext());
         ClassWriter writer = ClassWriter.instance(task.getContext());
         Symtab syms = Symtab.instance(task.getContext());
-        Attribute.Compound proprietary =
+        Names names = Names.instance(task.getContext());
+        Attribute.Compound proprietaryAnno =
             new Attribute.Compound(syms.proprietaryType,
                                    List.<Pair<Symbol.MethodSymbol,Attribute>>nil());
+        Attribute.Compound[] profileAnnos = new Attribute.Compound[profiles.getProfileCount() + 1];
+        Symbol.MethodSymbol profileValue = (MethodSymbol) syms.profileType.tsym.members().lookup(names.value).sym;
+        for (int i = 1; i < profileAnnos.length; i++) {
+            profileAnnos[i] = new Attribute.Compound(syms.profileType,
+                    List.<Pair<Symbol.MethodSymbol, Attribute>>of(
+                    new Pair<Symbol.MethodSymbol, Attribute>(profileValue, new Attribute.Constant(syms.intType, i))));
+        }
 
         Type.moreInfo = true;
-        Pool pool = new Pool();
+        Types types = Types.instance(task.getContext());
+        Pool pool = new Pool(types);
         for (JavaFileObject file : fm.list(jarLocation, "", EnumSet.of(CLASS), true)) {
             String className = fm.inferBinaryName(jarLocation, file);
             int index = className.lastIndexOf('.');
@@ -208,10 +231,11 @@ public class CreateSymbols extends AbstractProcessor {
             }
             ClassSymbol cs = (ClassSymbol) sym;
             if (addLegacyAnnotation) {
-                cs.attributes_field = (cs.attributes_field == null)
-                    ? List.of(proprietary)
-                    : cs.attributes_field.prepend(proprietary);
+                cs.prependAttributes(List.of(proprietaryAnno));
             }
+            int p = profiles.getProfile(cs.fullname.toString().replace(".", "/"));
+            if (0 < p && p < profileAnnos.length)
+                cs.prependAttributes(List.of(profileAnnos[p]));
             writeClass(pool, cs, writer);
         }
 

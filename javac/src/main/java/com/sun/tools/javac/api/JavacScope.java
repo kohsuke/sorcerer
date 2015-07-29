@@ -1,12 +1,12 @@
 /*
- * Copyright 2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2006, 2008, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,54 +18,27 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.api;
 
-import java.io.IOException;
-import java.lang.ref.SoftReference;
-import java.util.Iterator;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.tools.JavaFileObject;
 
-import com.sun.source.tree.Tree;
-import com.sun.source.util.SourcePositions;
-import com.sun.source.util.TreePath;
-import com.sun.source.util.Trees;
-import com.sun.tools.javac.code.Scope;
-import com.sun.tools.javac.code.Symbol.ClassSymbol;
-import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.AttrContext;
-import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.comp.Env;
-import com.sun.tools.javac.comp.MemberEnter;
-import com.sun.tools.javac.comp.Resolve;
-import com.sun.tools.javac.tree.JCTree.JCClassDecl;
-import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
-import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
-import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
-import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.TreeCopier;
-import com.sun.tools.javac.tree.TreeInfo;
-import com.sun.tools.javac.tree.TreeMaker;
-import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.List;
-import com.sun.tools.javac.util.Log;
 
-import static com.sun.source.tree.Tree.Kind.*;
 
 
 /**
  * Provides an implementation of Scope.
  *
- * <p><b>This is NOT part of any API supported by Sun Microsystems.
+ * <p><b>This is NOT part of any supported API.
  * If you write code that depends on this, you do so at your own
  * risk.  This code and its internal interfaces are subject to change
  * or deletion without notice.</b></p>
@@ -74,7 +47,7 @@ import static com.sun.source.tree.Tree.Kind.*;
  */
 public class JavacScope implements com.sun.source.tree.Scope {
     protected final Env<AttrContext> env;
-    
+
     /** Creates a new instance of JavacScope */
     JavacScope(Env<AttrContext> env) {
         env.getClass(); // null-check
@@ -106,30 +79,30 @@ public class JavacScope implements com.sun.source.tree.Scope {
     }
 
     public ExecutableElement getEnclosingMethod() {
-	return (env.enclMethod == null ? null : env.enclMethod.sym);
+        return (env.enclMethod == null ? null : env.enclMethod.sym);
     }
 
     public Iterable<? extends Element> getLocalElements() {
         return env.info.getLocalElements();
     }
-    
+
     public Env<AttrContext> getEnv() {
         return env;
     }
-    
+
     public boolean isStarImportScope() {
         return false;
     }
-    
+
     public boolean equals(Object other) {
         if (other instanceof JavacScope) {
             JavacScope s = (JavacScope) other;
-            return (env.equals(s.env) 
+            return (env.equals(s.env)
                 && isStarImportScope() == s.isStarImportScope());
         } else
             return false;
     }
-    
+
     public int hashCode() {
         return env.hashCode() + (isStarImportScope() ? 1 : 0);
     }
@@ -138,4 +111,3 @@ public class JavacScope implements com.sun.source.tree.Scope {
         return "JavacScope[env=" + env + ",starImport=" + isStarImportScope() + "]";
     }
 }
-

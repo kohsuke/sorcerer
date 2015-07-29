@@ -1,12 +1,12 @@
 /*
- * Copyright 1999-2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,9 +18,9 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.util;
@@ -28,12 +28,29 @@ package com.sun.tools.javac.util;
 /** Utility class for static conversion methods between numbers
  *  and strings in various formats.
  *
- *  <p><b>This is NOT part of any API supported by Sun Microsystems.  If
- *  you write code that depends on this, you do so at your own risk.
+ *  <p>Note regarding UTF-8.
+ *  The JVMS defines its own version of the UTF-8 format so that it
+ *  contains no zero bytes (modified UTF-8). This is not actually the same
+ *  as Charset.forName("UTF-8").
+ *
+ *  <p>
+ *  See also:
+ *  <ul>
+ *  <li><a href="http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.7">
+ *    JVMS 4.4.7 </a></li>
+ *  <li><a href="http://docs.oracle.com/javase/7/docs/api/java/io/DataInput.html#modified-utf-8">
+      java.io.DataInput: Modified UTF-8 </a></li>
+    <li><a href="https://en.wikipedia.org/wiki/UTF-8#Modified_UTF-8">
+      Modified UTF-8 (wikipedia) </a></li>
+ *  </ul>
+ *
+ *  The methods here support modified UTF-8.
+ *
+ *  <p><b>This is NOT part of any supported API.
+ *  If you write code that depends on this, you do so at your own risk.
  *  This code and its internal interfaces are subject to change or
  *  deletion without notice.</b>
  */
-@Version("@(#)Convert.java	1.29 07/05/05")
 public class Convert {
 
     /** Convert string to integer.
@@ -240,9 +257,9 @@ public class Convert {
         case '\"':  return "\\\"";
         case '\\':  return "\\\\";
         default:
-            return (ch > 127 || isPrintableAscii(ch))
+            return (isPrintableAscii(ch))
                 ? String.valueOf(ch)
-                : String.format("\\%03o", (int) ch);
+                : String.format("\\u%04x", (int) ch);
         }
     }
 
@@ -261,7 +278,7 @@ public class Convert {
         while (i < len) {
             char ch = s.charAt(i);
             if (ch > 255) {
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 buf.append(s.substring(0, i));
                 while (i < len) {
                     ch = s.charAt(i);
@@ -290,7 +307,7 @@ public class Convert {
      */
     public static Name shortName(Name classname) {
         return classname.subName(
-            classname.lastIndexOf((byte)'.') + 1, classname.len);
+            classname.lastIndexOf((byte)'.') + 1, classname.getByteLength());
     }
 
     public static String shortName(String classname) {

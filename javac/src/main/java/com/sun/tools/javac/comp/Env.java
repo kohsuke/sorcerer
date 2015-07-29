@@ -1,12 +1,12 @@
 /*
- * Copyright 1999-2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,14 +18,13 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package com.sun.tools.javac.comp;
 
-import com.sun.tools.javac.util.*;
 import com.sun.tools.javac.tree.*;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -37,12 +36,11 @@ import java.util.NoSuchElementException;
  *  a generic component, represented as a type parameter, to carry further
  *  information specific to individual passes.
  *
- *  <p><b>This is NOT part of any API supported by Sun Microsystems.  If
- *  you write code that depends on this, you do so at your own risk.
+ *  <p><b>This is NOT part of any supported API.
+ *  If you write code that depends on this, you do so at your own risk.
  *  This code and its internal interfaces are subject to change or
  *  deletion without notice.</b>
  */
-@Version("@(#)Env.java	1.29 07/05/05")
 public class Env<A> implements Iterable<Env<A>> {
 
     /** The next enclosing environment.
@@ -81,51 +79,61 @@ public class Env<A> implements Iterable<Env<A>> {
      *  with a given info field.
      */
     public Env(JCTree tree, A info) {
-	this.next = null;
-	this.outer = null;
-	this.tree = tree;
-	this.toplevel = null;
-	this.enclClass = null;
-	this.enclMethod = null;
-	this.info = info;
+        this.next = null;
+        this.outer = null;
+        this.tree = tree;
+        this.toplevel = null;
+        this.enclClass = null;
+        this.enclMethod = null;
+        this.info = info;
     }
 
     /** Duplicate this environment, updating with given tree and info,
      *  and copying all other fields.
      */
     public Env<A> dup(JCTree tree, A info) {
-	return dupto(new Env<A>(tree, info));
+        return dupto(new Env<A>(tree, info));
     }
 
     /** Duplicate this environment into a given Environment,
      *  using its tree and info, and copying all other fields.
      */
     public Env<A> dupto(Env<A> that) {
-	that.next = this;
-	that.outer = this.outer;
-	that.toplevel = this.toplevel;
- 	that.enclClass = this.enclClass;
-	that.enclMethod = this.enclMethod;
-	return that;
+        that.next = this;
+        that.outer = this.outer;
+        that.toplevel = this.toplevel;
+        that.enclClass = this.enclClass;
+        that.enclMethod = this.enclMethod;
+        return that;
     }
 
     /** Duplicate this environment, updating with given tree,
      *  and copying all other fields.
      */
     public Env<A> dup(JCTree tree) {
-	return dup(tree, this.info);
+        return dup(tree, this.info);
     }
 
     /** Return closest enclosing environment which points to a tree with given tag.
      */
-    public Env<A> enclosing(int tag) {
-	Env<A> env1 = this;
-	while (env1 != null && env1.tree.tag != tag) env1 = env1.next;
-	return env1;
+    public Env<A> enclosing(JCTree.Tag tag) {
+        Env<A> env1 = this;
+        while (env1 != null && !env1.tree.hasTag(tag)) env1 = env1.next;
+        return env1;
     }
-    
+
+    @Override
     public String toString() {
-        return "Env[" + info + (outer == null ? "" : ",outer=" + outer) + "]";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Env[").append(info);
+//        if (enclMethod != null)
+//            sb.append(",enclMethod=").append(Pretty.toSimpleString(enclMethod));
+//        if (enclClass != null)
+//            sb.append(",enclClass=").append(Pretty.toSimpleString(enclClass));
+        if (outer != null)
+            sb.append(",outer=").append(outer);
+        sb.append("]");
+        return sb.toString();
     }
 
     public Iterator<Env<A>> iterator() {

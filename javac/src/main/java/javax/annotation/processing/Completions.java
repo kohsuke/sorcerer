@@ -1,12 +1,12 @@
 /*
- * Copyright 2006 Sun Microsystems, Inc.  All Rights Reserved.
+ * Copyright (c) 2006, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Sun designates this
+ * published by the Free Software Foundation.  Oracle designates this
  * particular file as subject to the "Classpath" exception as provided
- * by Sun in the LICENSE file that accompanied this code.
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -18,14 +18,12 @@
  * 2 along with this work; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * Please contact Sun Microsystems, Inc., 4150 Network Circle, Santa Clara,
- * CA 95054 USA or visit www.sun.com if you need additional information or
- * have any questions.
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
  */
 
 package javax.annotation.processing;
-
-import java.util.Arrays;
 
 /**
  * Utility class for assembling {@link Completion} objects.
@@ -33,7 +31,6 @@ import java.util.Arrays;
  * @author Joseph D. Darcy
  * @author Scott Seligman
  * @author Peter von der Ah&eacute;
- * @version 1.8 07/05/05
  * @since 1.6
  */
 public class Completions {
@@ -41,30 +38,30 @@ public class Completions {
     private Completions() {}
 
     private static class SimpleCompletion implements Completion {
-	private String value;
-	private String message;
+        private String value;
+        private String message;
 
-	SimpleCompletion(String value, String message) {
-	    if (value == null || message == null)
-		throw new NullPointerException("Null completion strings not accepted.");
-	    this.value = value;
-	    this.message = message;
-	}
+        SimpleCompletion(String value, String message) {
+            if (value == null || message == null)
+                throw new NullPointerException("Null completion strings not accepted.");
+            this.value = value;
+            this.message = message;
+        }
 
-	public String getValue() {
-	    return value;
-	}
+        public String getValue() {
+            return value;
+        }
 
 
-	public String getMessage() {
-	    return message;
-	}
+        public String getMessage() {
+            return message;
+        }
 
-	@Override
-	public String toString() {
-	    return "[\"" + value + "\", \"" + message + "\"]";
-	}
-	// Default equals and hashCode are fine.
+        @Override
+        public String toString() {
+            return "[\"" + value + "\", \"" + message + "\"]";
+        }
+        // Default equals and hashCode are fine.
     }
 
     /**
@@ -75,7 +72,7 @@ public class Completions {
      * @return a completion of the provided value and message
      */
     public static Completion of(String value, String message) {
-	return new SimpleCompletion(value, message);
+        return new SimpleCompletion(value, message);
     }
 
     /**
@@ -85,6 +82,6 @@ public class Completions {
      * @return a completion of the value and an empty message
      */
     public static Completion of(String value) {
-	return new SimpleCompletion(value, "");
+        return new SimpleCompletion(value, "");
     }
 }
