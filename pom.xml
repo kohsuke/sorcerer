@@ -6,7 +6,7 @@
   <packaging>pom</packaging>
   <name>Sorcerer</name>
   <version>0.9-SNAPSHOT</version>
-  <url>https://sorcerer.dev.java.net/</url>
+  <url>http://sorcerer.kohsuke.org/</url>
   <developers>
     <developer>
       <id>kohsuke</id>
@@ -20,9 +20,8 @@
     </license>
   </licenses>
   <scm>
-    <connection>scm:svn:https://sorcerer.dev.java.net/svn/sorcerer/trunk/sorcerer</connection>
-    <developerConnection>scm:svn:https://sorcerer.dev.java.net/svn/sorcerer/trunk/sorcerer</developerConnection>
-    <url>https://sorcerer.dev.java.net/source/browse/sorcerer</url>
+    <connection>scm:git:git://github.com/kohsuke/sorcerer.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/kohsuke/sorcerer.git</developerConnection>
   </scm>
   <build>
     <plugins>
@@ -41,20 +40,7 @@
           <descriptor>src/assembly.xml</descriptor>
         </configuration>
       </plugin>
-      <plugin>
-        <artifactId>maven-release-plugin</artifactId>
-        <configuration>
-          <tagBase>${project.url}svn/sorcerer/tags</tagBase>
-        </configuration>
-      </plugin>
     </plugins>
-    <extensions>
-      <extension>
-        <groupId>org.jvnet.wagon-svn</groupId>
-        <artifactId>wagon-svn</artifactId>
-        <version>1.8</version>
-      </extension>
-    </extensions>
   </build>
   <modules>
     <module>javac</module>
