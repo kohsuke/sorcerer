@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>sorcerer</artifactId>
-    <groupId>org.jvnet.sorcerer</groupId>
+    <groupId>org.kohsuke.sorcerer</groupId>
     <version>0.9-SNAPSHOT</version>
   </parent>
   <artifactId>sorcerer-gwt</artifactId>
