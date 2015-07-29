@@ -10,7 +10,7 @@ public class GwtTestSample
 
    public String getModuleName()
    {
-      return "test.Application";
+      return "sorcerer.Application";
    }
 
    public void testSomething()
