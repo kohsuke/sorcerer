@@ -23,6 +23,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-antlr-plugin</artifactId>
+        <version>2.0-beta-1</version>
         <executions>
           <execution>
             <goals>
@@ -41,7 +42,7 @@
     <dependency>
       <groupId>org.kohsuke.sorcerer</groupId>
       <artifactId>sorcerer-javac</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>antlr</groupId>
