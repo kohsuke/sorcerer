@@ -2,18 +2,18 @@
   <parent>
     <artifactId>sorcerer</artifactId>
     <groupId>org.kohsuke.sorcerer</groupId>
-    <version>0.9</version>
+    <version>0.10-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>maven-sorcerer-plugin</artifactId>
   <packaging>maven-plugin</packaging>
   <name>Maven Sorcerer Plugin</name>
-  <version>0.9</version>
+  <version>0.10-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>org.kohsuke.sorcerer</groupId>
       <artifactId>sorcerer-core</artifactId>
-      <version>0.9</version>
+      <version>0.10-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.reporting</groupId>
@@ -42,7 +42,7 @@
       <plugin>
         <groupId>org.kohsuke.sorcerer</groupId>
         <artifactId>maven-sorcerer-plugin</artifactId>
-        <version>0.9</version>
+        <version>0.10-SNAPSHOT</version>
         <configuration>
           <javadocs>
             <javadoc>
