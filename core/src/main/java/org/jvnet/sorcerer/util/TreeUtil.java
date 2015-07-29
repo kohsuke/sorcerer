@@ -103,20 +103,20 @@ public class TreeUtil {
      */
     private static Element getElement(JCTree t) {
         t = TreeInfo.skipParens(t);
-        switch (t.tag) {
-        case JCTree.CLASSDEF:
+        switch (t.getTag()) {
+        case CLASSDEF:
             return ((JCClassDecl)t).sym;
-        case JCTree.METHODDEF:
+        case METHODDEF:
             return ((JCMethodDecl)t).sym;
-        case JCTree.VARDEF:
+        case VARDEF:
             return ((JCVariableDecl)t).sym;
-        case JCTree.SELECT:
+        case SELECT:
             return ((JCFieldAccess)t).sym;
-        case JCTree.APPLY:
+        case APPLY:
             return getElement(((JCMethodInvocation)t).meth);
-        case JCTree.IDENT:
+        case IDENT:
             return ((JCIdent)t).sym;
-        case JCTree.NEWCLASS:
+        case NEWCLASS:
             return ((JCNewClass)t).constructor;
         default:
             return null;

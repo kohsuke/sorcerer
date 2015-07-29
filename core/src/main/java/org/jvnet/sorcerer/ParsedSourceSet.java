@@ -21,6 +21,7 @@ import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.TreeScanner;
 import com.sun.source.util.Trees;
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import org.jvnet.sorcerer.Tag.ClassDecl;
 import org.jvnet.sorcerer.Tag.DeclName;
@@ -449,7 +450,7 @@ public class ParsedSourceSet {
             public Void visitMethod(MethodTree mt, Void _) {
                 ExecutableElement e = (ExecutableElement) TreeUtil.getElement(mt);
                 if(e!=null) {
-                    if (((MethodSymbol)e).isSynthetic())
+                    if ((((MethodSymbol)e).flags() & Flags.SYNTHETIC) != 0)
                         return _; // this is a synthesized constructor 
 
                     // mark up the method name
