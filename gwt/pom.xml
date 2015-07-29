@@ -4,7 +4,7 @@
   <parent>
     <artifactId>sorcerer</artifactId>
     <groupId>org.kohsuke.sorcerer</groupId>
-    <version>0.10-SNAPSHOT</version>
+    <version>0.10</version>
   </parent>
   <artifactId>sorcerer-gwt</artifactId>
   <packaging>war</packaging>
