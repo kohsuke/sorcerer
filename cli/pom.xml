@@ -2,13 +2,13 @@
   <parent>
     <artifactId>sorcerer</artifactId>
     <groupId>org.kohsuke.sorcerer</groupId>
-    <version>0.11-SNAPSHOT</version>
+    <version>0.11</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.kohsuke.sorcerer</groupId>
   <artifactId>sorcerer-cli</artifactId>
   <name>Sorcerer CLI</name>
-  <version>0.11-SNAPSHOT</version>
+  <version>0.11</version>
   <build>
     <plugins>
       <plugin>
@@ -37,7 +37,7 @@
     <dependency>
       <groupId>org.kohsuke.sorcerer</groupId>
       <artifactId>sorcerer-core</artifactId>
-      <version>0.11-SNAPSHOT</version>
+      <version>0.11</version>
     </dependency>
     <dependency>
       <groupId>args4j</groupId>

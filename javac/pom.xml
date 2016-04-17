@@ -2,13 +2,13 @@
   <parent>
     <artifactId>sorcerer</artifactId>
     <groupId>org.kohsuke.sorcerer</groupId>
-    <version>0.11-SNAPSHOT</version>
+    <version>0.11</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.kohsuke.sorcerer</groupId>
   <artifactId>sorcerer-javac</artifactId>
   <name>Javac compiler</name>
-  <version>0.11-SNAPSHOT</version>
+  <version>0.11</version>
   
   <licenses>
     <license>
