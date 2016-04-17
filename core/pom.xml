@@ -2,13 +2,13 @@
   <parent>
     <artifactId>sorcerer</artifactId>
     <groupId>org.kohsuke.sorcerer</groupId>
-    <version>0.11</version>
+    <version>0.12-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.kohsuke.sorcerer</groupId>
   <artifactId>sorcerer-core</artifactId>
   <name>Sorcerer Core</name>
-  <version>0.11</version>
+  <version>0.12-SNAPSHOT</version>
   <build>
     <resources>
       <resource>
