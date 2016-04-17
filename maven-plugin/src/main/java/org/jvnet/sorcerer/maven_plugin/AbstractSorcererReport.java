@@ -105,6 +105,13 @@ public abstract class AbstractSorcererReport
     private Javadoc[] javadocs;
 
     /**
+     * Source code version
+     *
+     * @parameter expression="${source}
+     */
+    private String source;
+
+    /**
      * Is this an aggregator mojo that handles all the submodules at once?
      */
     protected boolean isAggregator() {
@@ -222,6 +229,7 @@ public abstract class AbstractSorcererReport
                 a.setSourceEncoding(encoding);
                 a.setLocale(locale);
                 a.setTabWidth(tabWidth);
+                a.setSourceVersion(source);
                 ParsedSourceSet pss = a.analyze(new Listener(getLog()));
                 addDependencies(pss.getDependencies());
 

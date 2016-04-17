@@ -40,6 +40,7 @@ public class Analyzer {
     private Charset encoding;
     private Locale locale;
     private int tabWidth = 8;
+    private String sourceVersion;
 
     /**
      * Adds a single ".java" file for compilation.
@@ -163,6 +164,13 @@ public class Analyzer {
     }
 
     /**
+     * Set the java version to be passed to the javac '-source' switch.
+     */
+    public void setSourceVersion(String sourceVersion) {
+        this.sourceVersion = sourceVersion;
+    }
+
+    /**
      * Locale used to format error messages found during analysis.
      *
      * Null to use the default locale.
@@ -238,7 +246,10 @@ public class Analyzer {
         // Tree symbols created by the original JavacTask.parse() call to be thrown away,
         // which breaks later processing.
         // So for now, don't perform annotation processing
-        List<String> options = Arrays.asList("-proc:none");
+        List<String> options = new ArrayList<>();
+        options.add("-proc:none");
+        if (sourceVersion!=null)
+            options.addAll(Arrays.asList("-source",sourceVersion,"-target",sourceVersion));
 
         Iterable<? extends JavaFileObject> files = fileManager.getJavaFileObjectsFromFiles(sourceFiles);
         CompilationTask task = javac.getTask(null, fileManager, errorListener, options, null, files);
